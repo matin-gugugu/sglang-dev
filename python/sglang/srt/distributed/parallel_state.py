@@ -577,6 +577,19 @@ class GroupCoordinator:
             with maybe_pynccl_context, maybe_pymscclpp_context:
                 yield graph_capture_context
 
+    def _record_comm(
+        self, op: str, *values: Any, output_value: Any = None
+    ) -> None:
+        comm_profile.record(
+            op,
+            *values,
+            output_value=output_value,
+            group_id=f"{self.unique_name}:{list(self.ranks)}",
+            group_size=self.world_size,
+            group_ranks=self.ranks,
+            rank=self.rank,
+        )
+
     def all_reduce(self, input_: torch.Tensor) -> torch.Tensor:
         """
         User-facing all-reduce function before we actually call the
@@ -596,7 +609,7 @@ class GroupCoordinator:
         if self.world_size == 1:
             return input_
 
-        comm_profile.record("all_reduce", input_)
+        self._record_comm("all_reduce", input_, output_value=input_)
 
         if input_.is_cpu:
             if is_shm_available(input_.dtype, self.world_size, self.local_size):
@@ -679,7 +692,7 @@ class GroupCoordinator:
         if self.world_size == 1:
             return input_
 
-        comm_profile.record("quant_all_reduce", input_)
+        self._record_comm("quant_all_reduce", input_, output_value=input_)
 
         if self.npu_communicator is not None and not self.npu_communicator.disabled:
             return self.npu_communicator.quant_all_reduce(input_)
@@ -847,7 +860,7 @@ class GroupCoordinator:
         return output
 
     def reduce_scatter_tensor(self, output: torch.Tensor, input: torch.Tensor):
-        comm_profile.record("reduce_scatter_tensor", input)
+        self._record_comm("reduce_scatter_tensor", input, output_value=output)
         if _is_npu:
             self._reduce_scatter_tensor(output, input)
         elif self._maybe_aiter_reduce_scatter(output, input):
@@ -903,7 +916,7 @@ class GroupCoordinator:
         return True
 
     def _all_to_all_single(self, output: torch.Tensor, input: torch.Tensor) -> None:
-        comm_profile.record("all_to_all_single", input)
+        self._record_comm("all_to_all_single", input, output_value=output)
         torch.distributed.all_to_all_single(output, input, group=self.device_group)
 
     def all_to_all_single(self, output: torch.Tensor, input: torch.Tensor):
@@ -917,7 +930,7 @@ class GroupCoordinator:
         output: torch.Tensor,
         input_list: List[torch.Tensor],
     ) -> None:
-        comm_profile.record("reduce_scatter", input_list)
+        self._record_comm("reduce_scatter", input_list, output_value=output)
         # TODO(ch-wan): support other backends
         torch.distributed.reduce_scatter(output, input_list, group=self.device_group)
         return output
@@ -1022,7 +1035,7 @@ class GroupCoordinator:
         return envs.SGLANG_ENABLE_DETERMINISTIC_INFERENCE.get()
 
     def all_gather_into_tensor(self, output: torch.Tensor, input: torch.Tensor):
-        comm_profile.record("all_gather_into_tensor", input)
+        self._record_comm("all_gather_into_tensor", input, output_value=output)
         if _is_npu:
             self._all_gather_into_tensor(output, input)
         else:
@@ -1067,7 +1080,7 @@ class GroupCoordinator:
                 return input_
 
         if output_tensor_list is not None:
-            comm_profile.record("all_gather", input_)
+            self._record_comm("all_gather", input_)
             # TODO(ch-wan): support other backends
             return torch.distributed.all_gather(
                 output_tensor_list, input_, group=self.device_group

@@ -736,6 +736,7 @@ def latency_test_run_once(
     comm_profile.enable(bool(enable_comm_profile))
     comm_profile.reset()
     comm_profile.set_phase(None)
+    comm_profile.set_decode_step(None)
 
     tot_latency = 0
 
@@ -755,6 +756,7 @@ def latency_test_run_once(
 
     model_runner.synchronize()
     comm_profile.set_phase("prefill")
+    comm_profile.set_decode_step(None)
     tic = time.perf_counter()
     next_token_ids, _, batch = model_runner.extend(reqs)
     model_runner.synchronize()
@@ -803,11 +805,13 @@ def latency_test_run_once(
             )
 
         comm_profile.set_phase("decode")
+        comm_profile.set_decode_step(i)
         tic = time.perf_counter()
         next_token_ids, _ = model_runner.decode(next_token_ids, batch)
         model_runner.synchronize()
         latency = time.perf_counter() - tic
         comm_profile.set_phase(None)
+        comm_profile.set_decode_step(None)
 
         # Stop profiler after the specified number of steps
         if enable_profile_decode and profiler is not None and i >= profile_end - 1:
@@ -847,7 +851,16 @@ def latency_test_run_once(
     measurement_results["overall_throughput"] = throughput
 
     if enable_comm_profile:
-        local_comm_profile = {"tp_rank": tp_rank, "stats": comm_profile.snapshot()}
+        local_comm_profile = {
+            "tp_rank": tp_rank,
+            "stats": comm_profile.snapshot(),
+            "events": comm_profile.snapshot_events(),
+            "event_histograms": comm_profile.snapshot_event_histograms(),
+            "events_total": comm_profile.total_events(),
+            "events_truncated": (
+                comm_profile.total_events() > len(comm_profile.snapshot_events())
+            ),
+        }
         if dist.is_available() and dist.is_initialized():
             gathered_comm_profiles = [None for _ in range(dist.get_world_size())]
             dist.all_gather_object(gathered_comm_profiles, local_comm_profile)
@@ -855,6 +868,8 @@ def latency_test_run_once(
             gathered_comm_profiles = [local_comm_profile]
         if tp_rank == 0:
             measurement_results["comm_profile"] = gathered_comm_profiles
+            measurement_results["generated_output_tokens"] = output_len
+            measurement_results["actual_decode_steps"] = max(output_len - 1, 0)
 
     comm_profile.set_phase(None)
     model_runner.cleanup(batch)

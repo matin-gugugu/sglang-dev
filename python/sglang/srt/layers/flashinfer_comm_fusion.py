@@ -12,6 +12,7 @@ from sglang.srt.distributed import (
     get_moe_tp_group,
     get_tp_group,
 )
+from sglang.srt.distributed import comm_profile
 from sglang.srt.distributed.parallel_state import in_the_same_node_as
 from sglang.srt.runtime_context import get_parallel
 from sglang.srt.server_args import get_global_server_args
@@ -758,11 +759,14 @@ def flashinfer_allreduce_residual_rmsnorm(
         return None, None
 
     if use_attn_tp_group:
+        group = get_attn_tp_group()
         world_size = get_parallel().attn_tp_size
     else:
         if get_parallel().moe_ep_size > 1:
+            group = get_moe_ep_group()
             world_size = get_parallel().moe_ep_size
         else:
+            group = get_moe_tp_group()
             world_size = get_parallel().moe_tp_size
 
     if world_size <= 1:
@@ -813,6 +817,15 @@ def flashinfer_allreduce_residual_rmsnorm(
     )
     if _flashinfer_allreduce_supports_trigger_completion:
         kwargs["trigger_completion_at_end"] = trigger_completion_at_end
+    comm_profile.record(
+        "fused_allreduce_residual_rmsnorm",
+        input_tensor,
+        output_value=input_tensor,
+        group_id=f"{group.unique_name}:{list(group.ranks)}",
+        group_size=group.world_size,
+        group_ranks=group.ranks,
+        rank=group.rank,
+    )
     _flashinfer_comm.allreduce_fusion(**kwargs)
 
     return norm_out, residual_out
