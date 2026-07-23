@@ -1,0 +1,41 @@
+[1;33m'--disable-cuda-graph' is deprecated and will be removed in a future release. Use '--cuda-graph-backend-{decode,prefill}=disabled' instead.[0m
+TensorRT-LLM MHA only supports page_size of 16, 32 or 64, changing page_size from None to 64.
+[2026-07-23 12:47:15 TP0] Init torch distributed begin.
+[2026-07-23 12:47:15 TP1] Init torch distributed begin.
+[2026-07-23 12:47:16 TP0] sglang is using nccl==2.28.9
+[2026-07-23 12:47:17 TP0] Init torch distributed ends. elapsed=1.34 s, mem usage=1.16 GB
+[2026-07-23 12:47:17 TP1] Init torch distributed ends. elapsed=1.14 s, mem usage=1.16 GB
+[2026-07-23 12:47:18 TP1] Load weight begin. avail mem=176.54 GB
+[2026-07-23 12:47:18 TP0] Load weight begin. avail mem=176.54 GB
+Multi-thread loading shards:   0% Completed | 0/5 [00:00<?, ?it/s]Multi-thread loading shards:  20% Completed | 1/5 [00:00<00:02,  1.77it/s]Multi-thread loading shards:  40% Completed | 2/5 [00:01<00:01,  1.62it/s]Multi-thread loading shards:  60% Completed | 3/5 [00:01<00:01,  1.59it/s]Multi-thread loading shards:  80% Completed | 4/5 [00:02<00:00,  1.67it/s]Multi-thread loading shards: 100% Completed | 5/5 [00:02<00:00,  2.29it/s]Multi-thread loading shards: 100% Completed | 5/5 [00:02<00:00,  1.95it/s]
+[2026-07-23 12:47:21 TP1] Load weight end. elapsed=2.72 s, type=Qwen3ForCausalLM, avail mem=168.90 GB, mem usage=7.65 GB.
+[2026-07-23 12:47:21 TP0] Load weight end. elapsed=2.72 s, type=Qwen3ForCausalLM, avail mem=168.90 GB, mem usage=7.65 GB.
+[2026-07-23 12:47:21 TP1] KV Cache is allocated. dtype: torch.bfloat16, #tokens: 2073920, K size: 71.20 GB, V size: 71.20 GB
+[2026-07-23 12:47:21 TP1] Memory pool end. avail mem=25.81 GB
+[2026-07-23 12:47:21 TP0] KV Cache is allocated. dtype: torch.bfloat16, #tokens: 2073920, K size: 71.20 GB, V size: 71.20 GB
+[2026-07-23 12:47:21 TP0] Memory pool end. avail mem=25.81 GB
+[2026-07-23 12:47:21 TP1] Disable prefill CUDA graph because cuda_graph_config resolved prefill.backend='disabled' (e.g. via --cuda-graph-backend-prefill=disabled or auto-disable rules).
+[2026-07-23 12:47:21 TP0] Disable prefill CUDA graph because cuda_graph_config resolved prefill.backend='disabled' (e.g. via --cuda-graph-backend-prefill=disabled or auto-disable rules).
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W723 12:47:22.547022312 ProcessGroupNCCL.cpp:5188] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+max_total_num_tokens=2073920
+Warmup ...
+Prefill. latency: 2.75660 s, throughput:    743.31 token/s
+Decode 0. Batch size: 1, latency: 0.13050 s, throughput:      7.66 token/s
+Decode 1. Batch size: 1, latency: 0.02276 s, throughput:     43.94 token/s
+Decode 2. Batch size: 1, latency: 0.02197 s, throughput:     45.52 token/s
+Decode 3. Batch size: 1, latency: 0.02195 s, throughput:     45.56 token/s
+Decode 4. Batch size: 1, latency: 0.02202 s, throughput:     45.42 token/s
+Decode.  median latency: 0.02201 s, median throughput:     45.44 token/s
+Total. latency:  3.553 s, throughput:    585.65 token/s
+Benchmark ...
+Prefill. latency: 0.05870 s, throughput:  34908.36 token/s
+Decode 0. Batch size: 1, latency: 0.02309 s, throughput:     43.30 token/s
+Decode 1. Batch size: 1, latency: 0.02313 s, throughput:     43.23 token/s
+Decode 2. Batch size: 1, latency: 0.02302 s, throughput:     43.44 token/s
+Decode 3. Batch size: 1, latency: 0.02471 s, throughput:     40.46 token/s
+Decode 4. Batch size: 1, latency: 0.02294 s, throughput:     43.60 token/s
+Decode.  median latency: 0.02310 s, median throughput:     43.30 token/s
+Total. latency:  0.779 s, throughput:   2669.93 token/s
+kill_process_tree called: parent_pid=76853, include_parent=False, pid=76853

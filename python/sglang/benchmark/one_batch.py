@@ -211,6 +211,9 @@ class BenchArgs:
     profile_start_step: Optional[int] = None
     profile_steps: Optional[int] = None
     comm_profile: bool = False
+    comm_profile_mode: str = "full-trace"
+    output_lens_per_request: Tuple[int] = ()
+    prefill_chunk_size: int = 0
 
     @staticmethod
     def add_cli_args(parser: argparse.ArgumentParser):
@@ -284,6 +287,26 @@ class BenchArgs:
             "--comm-profile",
             action="store_true",
             help="Record per-phase collective communication calls and tensor bytes.",
+        )
+        parser.add_argument(
+            "--comm-profile-mode",
+            type=str,
+            default=BenchArgs.comm_profile_mode,
+            choices=["full-trace", "histogram-only"],
+            help="Store raw collective events or only the lossless aggregate histogram.",
+        )
+        parser.add_argument(
+            "--output-lens-per-request",
+            type=int,
+            nargs="+",
+            default=BenchArgs.output_lens_per_request,
+            help="Per-request exact output lengths for a draining mixed-length batch.",
+        )
+        parser.add_argument(
+            "--prefill-chunk-size",
+            type=int,
+            default=BenchArgs.prefill_chunk_size,
+            help="Controlled prefill chunk size for boundary experiments; 0 disables chunking.",
         )
 
     @classmethod
@@ -716,7 +739,25 @@ def latency_test_run_once(
     profile_start_step=None,
     profile_steps=None,
     enable_comm_profile=False,
+    comm_profile_mode="full-trace",
+    output_lens_per_request=None,
+    prefill_chunk_size=0,
+    full_input_ids=None,
 ):
+    effective_output_lens = (
+        list(output_lens_per_request)
+        if output_lens_per_request
+        else [output_len] * batch_size
+    )
+    if len(effective_output_lens) != batch_size:
+        raise ValueError(
+            "output_lens_per_request must contain exactly one value per request"
+        )
+    if min(effective_output_lens) < 1 or max(effective_output_lens) != output_len:
+        raise ValueError(
+            "Per-request output lengths must be positive and max must equal output_len"
+        )
+
     max_batch_size = model_runner.max_batch_size(input_len, output_len)
     if batch_size > max_batch_size:
         rank_print(
@@ -731,12 +772,15 @@ def latency_test_run_once(
         "batch_size": batch_size,
         "input_len": input_len,
         "output_len": output_len,
+        "output_lens_per_request": effective_output_lens,
     }
 
     comm_profile.enable(bool(enable_comm_profile))
+    comm_profile.set_capture_mode(comm_profile_mode)
     comm_profile.reset()
     comm_profile.set_phase(None)
     comm_profile.set_decode_step(None)
+    comm_profile.set_active_batch_size(None)
 
     tot_latency = 0
 
@@ -754,14 +798,61 @@ def latency_test_run_once(
             trace_filename=trace_filename_prefill,  # pass it in here for the MLX path only
         )
 
-    model_runner.synchronize()
-    comm_profile.set_phase("prefill")
-    comm_profile.set_decode_step(None)
-    tic = time.perf_counter()
-    next_token_ids, _, batch = model_runner.extend(reqs)
-    model_runner.synchronize()
-    prefill_latency = time.perf_counter() - tic
-    comm_profile.set_phase(None)
+    if prefill_chunk_size < 0:
+        raise ValueError("prefill_chunk_size must be non-negative")
+    if prefill_chunk_size > 0 and full_input_ids is None:
+        raise ValueError("full_input_ids are required for chunked prefill")
+
+    chunk_size = prefill_chunk_size or input_len
+    prefill_chunk_records = []
+    next_token_ids = None
+    batch = None
+    chunk_start = 0
+    chunk_index = 0
+    while chunk_start < input_len:
+        chunk_end = min(chunk_start + chunk_size, input_len)
+        if chunk_index > 0:
+            torch_runner = getattr(model_runner, "torch_runner", None)
+            if torch_runner is None:
+                raise RuntimeError(
+                    "Chunked prefill currently requires the PyTorch runner"
+                )
+            for request_index, req in enumerate(reqs):
+                req.full_untruncated_fill_ids.extend(
+                    int(token)
+                    for token in full_input_ids[request_index][chunk_start:chunk_end]
+                )
+                req.prefix_indices = torch_runner.req_to_token_pool.req_to_token[
+                    req.req_pool_idx, :chunk_start
+                ].to(req.prefix_indices.dtype)
+                req.logprob_start_len = -1
+                req.set_extend_range(chunk_start, chunk_end)
+
+        model_runner.synchronize()
+        comm_profile.set_phase("prefill")
+        comm_profile.set_decode_step(None)
+        comm_profile.set_active_batch_size(batch_size)
+        comm_profile.set_prefill_chunk(chunk_index, chunk_end - chunk_start)
+        tic = time.perf_counter()
+        next_token_ids, _, batch = model_runner.extend(reqs)
+        model_runner.synchronize()
+        chunk_latency = time.perf_counter() - tic
+        prefill_chunk_records.append(
+            {
+                "chunk_index": chunk_index,
+                "start_token": chunk_start,
+                "end_token": chunk_end,
+                "chunk_tokens_per_request": chunk_end - chunk_start,
+                "latency": chunk_latency,
+            }
+        )
+        comm_profile.set_phase(None)
+        comm_profile.set_active_batch_size(None)
+        comm_profile.set_prefill_chunk(None, None)
+        chunk_start = chunk_end
+        chunk_index += 1
+
+    prefill_latency = sum(item["latency"] for item in prefill_chunk_records)
 
     if enable_profile_prefill:
         stop_profile(
@@ -780,8 +871,12 @@ def latency_test_run_once(
     )
     measurement_results["prefill_latency"] = prefill_latency
     measurement_results["prefill_throughput"] = throughput
+    measurement_results["prefill_chunk_size"] = prefill_chunk_size
+    measurement_results["prefill_chunk_records"] = prefill_chunk_records
 
     decode_latencies = []
+    decode_step_records = []
+    active_req_indices = list(range(batch_size))
     # Determine profiling start step and end step
     profile_start = (
         profile_start_step if profile_start_step is not None else (output_len // 2)
@@ -791,6 +886,23 @@ def latency_test_run_once(
     trace_filename_decode = None
     profiler = None
     for i in range(output_len - 1):
+        keep_positions = [
+            pos
+            for pos, request_index in enumerate(active_req_indices)
+            if i < effective_output_lens[request_index] - 1
+        ]
+        if not keep_positions:
+            break
+        if len(keep_positions) != len(active_req_indices):
+            if not hasattr(batch, "filter_batch"):
+                raise RuntimeError(
+                    "Mixed output lengths require a runner with ScheduleBatch.filter_batch"
+                )
+            batch.filter_batch(keep_indices=keep_positions)
+            next_token_ids = next_token_ids[keep_positions]
+            active_req_indices = [active_req_indices[pos] for pos in keep_positions]
+        active_batch_size = len(active_req_indices)
+
         model_runner.synchronize()
         # Start profiler at the specified step
         if enable_profile_decode and i == profile_start:
@@ -806,12 +918,14 @@ def latency_test_run_once(
 
         comm_profile.set_phase("decode")
         comm_profile.set_decode_step(i)
+        comm_profile.set_active_batch_size(active_batch_size)
         tic = time.perf_counter()
         next_token_ids, _ = model_runner.decode(next_token_ids, batch)
         model_runner.synchronize()
         latency = time.perf_counter() - tic
         comm_profile.set_phase(None)
         comm_profile.set_decode_step(None)
+        comm_profile.set_active_batch_size(None)
 
         # Stop profiler after the specified number of steps
         if enable_profile_decode and profiler is not None and i >= profile_end - 1:
@@ -826,24 +940,38 @@ def latency_test_run_once(
             profiler = None
 
         tot_latency += latency
-        throughput = batch_size / latency
+        throughput = active_batch_size / latency
         decode_latencies.append(latency)
+        decode_step_records.append(
+            {
+                "decode_step": i,
+                "active_batch_size": active_batch_size,
+                "latency": latency,
+            }
+        )
         if i < 5 or (log_decode_step > 0 and i % log_decode_step == 0):
             rank_print(
-                f"Decode {i}. Batch size: {batch_size}, latency: {latency:6.5f} s, throughput: {throughput:9.2f} token/s"
+                f"Decode {i}. Batch size: {active_batch_size}, latency: {latency:6.5f} s, throughput: {throughput:9.2f} token/s"
             )
 
     # Record decode timing from 2nd output
     if output_len > 1:
         med_decode_latency = np.median(decode_latencies)
-        med_decode_throughput = batch_size / med_decode_latency
+        med_decode_throughput = np.median(
+            [
+                item["active_batch_size"] / item["latency"]
+                for item in decode_step_records
+            ]
+        )
         rank_print(
             f"Decode.  median latency: {med_decode_latency:6.5f} s, median throughput: {med_decode_throughput:9.2f} token/s"
         )
         measurement_results["median_decode_latency"] = med_decode_latency
         measurement_results["median_decode_throughput"] = med_decode_throughput
 
-    throughput = (input_len + output_len) * batch_size / tot_latency
+    measurement_results["decode_step_records"] = decode_step_records
+    total_tokens = input_len * batch_size + sum(effective_output_lens)
+    throughput = total_tokens / tot_latency
     rank_print(
         f"Total. latency: {tot_latency:6.3f} s, throughput: {throughput:9.2f} token/s"
     )
@@ -853,12 +981,15 @@ def latency_test_run_once(
     if enable_comm_profile:
         local_comm_profile = {
             "tp_rank": tp_rank,
+            "capture_mode": comm_profile.capture_mode(),
+            "raw_events_saved": comm_profile.raw_events_saved(),
             "stats": comm_profile.snapshot(),
             "events": comm_profile.snapshot_events(),
             "event_histograms": comm_profile.snapshot_event_histograms(),
             "events_total": comm_profile.total_events(),
             "events_truncated": (
-                comm_profile.total_events() > len(comm_profile.snapshot_events())
+                comm_profile.raw_events_saved()
+                and comm_profile.total_events() > len(comm_profile.snapshot_events())
             ),
         }
         if dist.is_available() and dist.is_initialized():
@@ -868,10 +999,17 @@ def latency_test_run_once(
             gathered_comm_profiles = [local_comm_profile]
         if tp_rank == 0:
             measurement_results["comm_profile"] = gathered_comm_profiles
-            measurement_results["generated_output_tokens"] = output_len
-            measurement_results["actual_decode_steps"] = max(output_len - 1, 0)
+            measurement_results["generated_output_tokens"] = (
+                effective_output_lens if output_lens_per_request else output_len
+            )
+            measurement_results["generated_output_tokens_per_request"] = (
+                effective_output_lens
+            )
+            measurement_results["actual_decode_steps"] = len(decode_step_records)
 
     comm_profile.set_phase(None)
+    comm_profile.set_active_batch_size(None)
+    comm_profile.set_prefill_chunk(None, None)
     model_runner.cleanup(batch)
     return measurement_results
 
@@ -958,7 +1096,21 @@ def latency_test(
                     [bs_aligned_inputs[-1]] * (bs - custom_input_len)
                 )
 
-        reqs = prepare_synthetic_inputs_for_latency_test(bs, il, bs_aligned_inputs)
+        if bench_args.prefill_chunk_size > 0:
+            if bs_aligned_inputs:
+                full_input_ids = [
+                    np.asarray(ids, dtype=np.int32) for ids in bs_aligned_inputs
+                ]
+            else:
+                full_input_ids = np.random.randint(0, 10000, (bs, il), dtype=np.int32)
+            first_chunk_end = min(bench_args.prefill_chunk_size, il)
+            first_chunk_inputs = [ids[:first_chunk_end] for ids in full_input_ids]
+            reqs = prepare_synthetic_inputs_for_latency_test(
+                bs, first_chunk_end, first_chunk_inputs
+            )
+        else:
+            full_input_ids = None
+            reqs = prepare_synthetic_inputs_for_latency_test(bs, il, bs_aligned_inputs)
         ret = latency_test_run_once(
             bench_args.run_name,
             model_runner,
@@ -977,6 +1129,10 @@ def latency_test(
             bench_args.profile_start_step,
             bench_args.profile_steps,
             bench_args.comm_profile,
+            bench_args.comm_profile_mode,
+            bench_args.output_lens_per_request,
+            bench_args.prefill_chunk_size,
+            full_input_ids,
         )
         if ret is not None:
             result_list.append(ret)

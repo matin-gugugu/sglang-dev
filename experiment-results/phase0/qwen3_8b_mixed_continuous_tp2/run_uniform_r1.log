@@ -1,0 +1,49 @@
+[1;33m'--disable-cuda-graph' is deprecated and will be removed in a future release. Use '--cuda-graph-backend-{decode,prefill}=disabled' instead.[0m
+TensorRT-LLM MHA only supports page_size of 16, 32 or 64, changing page_size from None to 64.
+[2026-07-23 12:40:54 TP0] Init torch distributed begin.
+[2026-07-23 12:40:54 TP1] Init torch distributed begin.
+[2026-07-23 12:40:54 TP0] sglang is using nccl==2.28.9
+[2026-07-23 12:40:55 TP0] Init torch distributed ends. elapsed=1.31 s, mem usage=1.16 GB
+[2026-07-23 12:40:55 TP1] Init torch distributed ends. elapsed=1.16 s, mem usage=1.16 GB
+[2026-07-23 12:40:57 TP1] Load weight begin. avail mem=176.54 GB
+[2026-07-23 12:40:57 TP0] Load weight begin. avail mem=176.54 GB
+Multi-thread loading shards:   0% Completed | 0/5 [00:00<?, ?it/s]Multi-thread loading shards:  20% Completed | 1/5 [00:00<00:01,  2.11it/s]Multi-thread loading shards:  40% Completed | 2/5 [00:01<00:01,  1.90it/s]Multi-thread loading shards:  60% Completed | 3/5 [00:01<00:01,  1.85it/s]Multi-thread loading shards:  80% Completed | 4/5 [00:02<00:00,  1.93it/s]Multi-thread loading shards: 100% Completed | 5/5 [00:02<00:00,  2.66it/s]Multi-thread loading shards: 100% Completed | 5/5 [00:02<00:00,  2.27it/s]
+[2026-07-23 12:40:59 TP0] Load weight end. elapsed=2.35 s, type=Qwen3ForCausalLM, avail mem=168.90 GB, mem usage=7.65 GB.
+[2026-07-23 12:40:59 TP1] Load weight end. elapsed=2.35 s, type=Qwen3ForCausalLM, avail mem=168.90 GB, mem usage=7.65 GB.
+[2026-07-23 12:40:59 TP0] KV Cache is allocated. dtype: torch.bfloat16, #tokens: 2073920, K size: 71.20 GB, V size: 71.20 GB
+[2026-07-23 12:40:59 TP1] KV Cache is allocated. dtype: torch.bfloat16, #tokens: 2073920, K size: 71.20 GB, V size: 71.20 GB
+[2026-07-23 12:40:59 TP0] Memory pool end. avail mem=25.81 GB
+[2026-07-23 12:40:59 TP1] Memory pool end. avail mem=25.81 GB
+[2026-07-23 12:40:59 TP0] Disable prefill CUDA graph because cuda_graph_config resolved prefill.backend='disabled' (e.g. via --cuda-graph-backend-prefill=disabled or auto-disable rules).
+[2026-07-23 12:40:59 TP1] Disable prefill CUDA graph because cuda_graph_config resolved prefill.backend='disabled' (e.g. via --cuda-graph-backend-prefill=disabled or auto-disable rules).
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W723 12:41:00.524921839 ProcessGroupNCCL.cpp:5188] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+max_total_num_tokens=2073920
+Warmup ...
+Prefill. latency: 2.69113 s, throughput:   1522.04 token/s
+Decode 0. Batch size: 8, latency: 0.10557 s, throughput:     75.78 token/s
+Decode 1. Batch size: 8, latency: 0.02328 s, throughput:    343.60 token/s
+Decode 2. Batch size: 8, latency: 0.02274 s, throughput:    351.79 token/s
+Decode 3. Batch size: 8, latency: 0.02274 s, throughput:    351.86 token/s
+Decode 4. Batch size: 8, latency: 0.02263 s, throughput:    353.48 token/s
+Decode.  median latency: 0.02257 s, median throughput:    354.40 token/s
+Total. latency:  3.477 s, throughput:   1251.76 token/s
+Benchmark ...
+Prefill. latency: 0.03011 s, throughput: 136039.79 token/s
+Decode 0. Batch size: 8, latency: 0.02388 s, throughput:    334.94 token/s
+Decode 1. Batch size: 8, latency: 0.02368 s, throughput:    337.79 token/s
+Decode 2. Batch size: 8, latency: 0.02366 s, throughput:    338.14 token/s
+Decode 3. Batch size: 8, latency: 0.02359 s, throughput:    339.06 token/s
+Decode 4. Batch size: 8, latency: 0.02515 s, throughput:    318.06 token/s
+Decode.  median latency: 0.02364 s, median throughput:    338.38 token/s
+Total. latency:  3.074 s, throughput:   1665.32 token/s
+Prefill. latency: 0.11694 s, throughput: 140100.27 token/s
+Decode 0. Batch size: 8, latency: 0.02405 s, throughput:    332.58 token/s
+Decode 1. Batch size: 8, latency: 0.02405 s, throughput:    332.63 token/s
+Decode 2. Batch size: 8, latency: 0.02384 s, throughput:    335.58 token/s
+Decode 3. Batch size: 8, latency: 0.02402 s, throughput:    333.07 token/s
+Decode 4. Batch size: 8, latency: 0.02580 s, throughput:    310.13 token/s
+Decode.  median latency: 0.02375 s, median throughput:    336.85 token/s
+Total. latency:  3.150 s, throughput:   5526.64 token/s
+kill_process_tree called: parent_pid=71881, include_parent=False, pid=71881

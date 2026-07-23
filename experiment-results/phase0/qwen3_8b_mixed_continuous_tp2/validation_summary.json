@@ -1,0 +1,133 @@
+{
+  "model": "Qwen3-8B",
+  "parallel_form": "TP",
+  "parallel_size": 2,
+  "capture_mode": "histogram-only",
+  "rows": 18,
+  "repeats": 3,
+  "all_total_output_tokens": 1024,
+  "all_decode_payload_bytes_equal": true,
+  "decode_payload_bytes": 607584256,
+  "rank_histogram_consistent": "18/18",
+  "stats_conservation_passed": "18/18",
+  "output_length_consistent": "18/18",
+  "pattern_exact_across_repeats": true,
+  "profiles": {
+    "uniform": {
+      "output_lens": [
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128
+      ],
+      "decode_scheduler_steps": 127,
+      "decode_calls": 9271,
+      "decode_payload_bytes": 607584256,
+      "decode_histogram": [
+        {
+          "active_batch_size": 8,
+          "payload_bytes": 65536,
+          "count": 9271
+        }
+      ],
+      "latency_by_prompt": {
+        "512": {
+          "total_latency_ms_mean": 3057.1473722035685,
+          "total_latency_ms_cv": 0.00403548066987275
+        },
+        "2048": {
+          "total_latency_ms_mean": 3143.0428296638033,
+          "total_latency_ms_cv": 0.0031936560400468907
+        }
+      }
+    },
+    "mixed": {
+      "output_lens": [
+        32,
+        32,
+        64,
+        64,
+        128,
+        128,
+        288,
+        288
+      ],
+      "decode_scheduler_steps": 287,
+      "decode_calls": 20951,
+      "decode_payload_bytes": 607584256,
+      "decode_histogram": [
+        {
+          "active_batch_size": 8,
+          "payload_bytes": 65536,
+          "count": 2263
+        },
+        {
+          "active_batch_size": 6,
+          "payload_bytes": 49152,
+          "count": 2336
+        },
+        {
+          "active_batch_size": 4,
+          "payload_bytes": 32768,
+          "count": 4672
+        },
+        {
+          "active_batch_size": 2,
+          "payload_bytes": 16384,
+          "count": 11680
+        }
+      ],
+      "latency_by_prompt": {
+        "512": {
+          "total_latency_ms_mean": 6810.637584577004,
+          "total_latency_ms_cv": 0.005125990473335665
+        },
+        "2048": {
+          "total_latency_ms_mean": 6865.736708976328,
+          "total_latency_ms_cv": 0.0038734981271081052
+        }
+      }
+    },
+    "long_tail": {
+      "output_lens": [
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        416,
+        416
+      ],
+      "decode_scheduler_steps": 415,
+      "decode_calls": 30295,
+      "decode_payload_bytes": 607584256,
+      "decode_histogram": [
+        {
+          "active_batch_size": 8,
+          "payload_bytes": 65536,
+          "count": 2263
+        },
+        {
+          "active_batch_size": 2,
+          "payload_bytes": 16384,
+          "count": 28032
+        }
+      ],
+      "latency_by_prompt": {
+        "512": {
+          "total_latency_ms_mean": 9709.931700179974,
+          "total_latency_ms_cv": 0.006813028834811029
+        },
+        "2048": {
+          "total_latency_ms_mean": 9831.776374019682,
+          "total_latency_ms_cv": 0.006959343674138899
+        }
+      }
+    }
+  }
+}

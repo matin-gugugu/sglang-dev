@@ -5,15 +5,23 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
+
 def canonical_hist(profile):
     histogram = profile.get("event_histograms")
     if histogram is None:
         rebuilt = {}
         for event in profile.get("events", []):
             key = (
-                event["phase"], event["op"], event["group_id"],
-                event.get("group_size"), event["input_payload_bytes"],
-                event.get("output_payload_bytes", 0), event.get("dtype"),
+                event["phase"],
+                event["op"],
+                event["group_id"],
+                event.get("group_size"),
+                event.get("active_batch_size"),
+                event.get("prefill_chunk_index"),
+                event.get("prefill_chunk_tokens"),
+                event["input_payload_bytes"],
+                event.get("output_payload_bytes", 0),
+                event.get("dtype"),
                 tuple(event.get("tensor_shape") or ()),
             )
             slot = rebuilt.get(key)
@@ -23,6 +31,9 @@ def canonical_hist(profile):
                     "op": event["op"],
                     "group_id": event["group_id"],
                     "group_size": event.get("group_size"),
+                    "active_batch_size": event.get("active_batch_size"),
+                    "prefill_chunk_index": event.get("prefill_chunk_index"),
+                    "prefill_chunk_tokens": event.get("prefill_chunk_tokens"),
                     "input_payload_bytes": event["input_payload_bytes"],
                     "output_payload_bytes": event.get("output_payload_bytes", 0),
                     "dtype": event.get("dtype"),
@@ -40,14 +51,31 @@ def canonical_hist(profile):
                 slot["first_decode_step"] = step if first is None else min(first, step)
                 slot["last_decode_step"] = step if last is None else max(last, step)
         histogram = list(rebuilt.values())
+    histogram = [
+        {
+            **item,
+            "active_batch_size": item.get("active_batch_size"),
+            "prefill_chunk_index": item.get("prefill_chunk_index"),
+            "prefill_chunk_tokens": item.get("prefill_chunk_tokens"),
+            "output_payload_bytes": item.get("output_payload_bytes", 0),
+        }
+        for item in histogram
+    ]
     return sorted(
         histogram,
         key=lambda x: (
-            x["phase"], x["op"], x["group_id"],
-            x["input_payload_bytes"], x["output_payload_bytes"],
+            x["phase"],
+            x["op"],
+            x["group_id"],
+            x.get("active_batch_size"),
+            x.get("prefill_chunk_index"),
+            x.get("prefill_chunk_tokens"),
+            x["input_payload_bytes"],
+            x["output_payload_bytes"],
             tuple(x.get("tensor_shape") or ()),
         ),
     )
+
 
 def aggregate_row(row, model, parallel_form, parallel_size, source):
     profiles = sorted(row["comm_profile"], key=lambda x: x["tp_rank"])
@@ -96,6 +124,8 @@ def aggregate_row(row, model, parallel_form, parallel_size, source):
             "batch_size": row["batch_size"],
             "input_len": row["input_len"],
             "output_len": row["output_len"],
+            "output_lens_per_request": row.get("output_lens_per_request"),
+            "prefill_chunk_size": row.get("prefill_chunk_size", 0),
         },
         "execution": {
             "run_name": row["run_name"],
@@ -112,11 +142,18 @@ def aggregate_row(row, model, parallel_form, parallel_size, source):
             "rank_histogram_consistent": rank_hist_consistent,
             "stats_conservation_passed": stats_conservation,
             "output_length_consistent": (
-                row.get("generated_output_tokens", row["output_len"]) == row["output_len"]
+                row.get("generated_output_tokens_per_request")
+                == row.get("output_lens_per_request")
+                if row.get("generated_output_tokens_per_request") is not None
+                else row.get("generated_output_tokens", row["output_len"])
+                == row["output_len"]
             ),
-            "raw_events_truncated": any(p.get("events_truncated", False) for p in profiles),
+            "raw_events_truncated": any(
+                p.get("events_truncated", False) for p in profiles
+            ),
         },
     }
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -146,6 +183,7 @@ def main():
                     )
                     fout.write(json.dumps(result, ensure_ascii=False) + "\n")
     print(f"wrote {output} from {len(paths)} files")
+
 
 if __name__ == "__main__":
     main()

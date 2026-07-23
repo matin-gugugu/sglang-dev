@@ -1,0 +1,264 @@
+{
+  "model": "Qwen3-8B",
+  "parallel_form": "TP",
+  "parallel_size": 2,
+  "capture_mode": "histogram-only",
+  "prefill_chunk_size": 2048,
+  "rows": 54,
+  "repeats": 3,
+  "workloads": {
+    "batch_size": [
+      1,
+      4
+    ],
+    "input_len": [
+      2047,
+      2048,
+      2049,
+      4095,
+      4096,
+      4097,
+      8191,
+      8192,
+      8193
+    ],
+    "output_len": 32
+  },
+  "rank_histogram_consistent": "54/54",
+  "stats_conservation_passed": "54/54",
+  "output_length_consistent": "54/54",
+  "chunk_structure_formula_passed": "54/54",
+  "pattern_exact_across_repeats": true,
+  "mechanism_formula": {
+    "prefill_calls": "73 * ceil(input_len / 2048)",
+    "message_payload_bytes": "batch_size * chunk_tokens * 8192",
+    "prefill_payload_bytes": "73 * batch_size * input_len * 8192"
+  },
+  "boundary_pairs": [
+    {
+      "batch_size": 1,
+      "from_input_len": 2048,
+      "to_input_len": 2049,
+      "payload_bytes_before": 1224736768,
+      "payload_bytes_after": 1225334784,
+      "payload_increase_percent": 0.048828125,
+      "calls_before": 73,
+      "calls_after": 146,
+      "calls_increase_percent": 100.0,
+      "new_tail_message_payload_bytes": 8192,
+      "new_tail_message_count": 73,
+      "prefill_latency_ms_before": 30.986082274466753,
+      "prefill_latency_ms_after": 49.16240352516373,
+      "prefill_latency_increase_percent": 58.65963011940585
+    },
+    {
+      "batch_size": 1,
+      "from_input_len": 4096,
+      "to_input_len": 4097,
+      "payload_bytes_before": 2449473536,
+      "payload_bytes_after": 2450071552,
+      "payload_increase_percent": 0.0244140625,
+      "calls_before": 146,
+      "calls_after": 219,
+      "calls_increase_percent": 50.0,
+      "new_tail_message_payload_bytes": 8192,
+      "new_tail_message_count": 73,
+      "prefill_latency_ms_before": 48.931300174444914,
+      "prefill_latency_ms_after": 72.19541647161047,
+      "prefill_latency_increase_percent": 47.54444744821144
+    },
+    {
+      "batch_size": 1,
+      "from_input_len": 8192,
+      "to_input_len": 8193,
+      "payload_bytes_before": 4898947072,
+      "payload_bytes_after": 4899545088,
+      "payload_increase_percent": 0.01220703125,
+      "calls_before": 292,
+      "calls_after": 365,
+      "calls_increase_percent": 25.0,
+      "new_tail_message_payload_bytes": 8192,
+      "new_tail_message_count": 73,
+      "prefill_latency_ms_before": 98.26190257444978,
+      "prefill_latency_ms_after": 121.01685302332044,
+      "prefill_latency_increase_percent": 23.157449482142866
+    },
+    {
+      "batch_size": 4,
+      "from_input_len": 2048,
+      "to_input_len": 2049,
+      "payload_bytes_before": 4898947072,
+      "payload_bytes_after": 4901339136,
+      "payload_increase_percent": 0.048828125,
+      "calls_before": 73,
+      "calls_after": 146,
+      "calls_increase_percent": 100.0,
+      "new_tail_message_payload_bytes": 32768,
+      "new_tail_message_count": 73,
+      "prefill_latency_ms_before": 56.29238532856107,
+      "prefill_latency_ms_after": 80.72619683419664,
+      "prefill_latency_increase_percent": 43.405180581748404
+    },
+    {
+      "batch_size": 4,
+      "from_input_len": 4096,
+      "to_input_len": 4097,
+      "payload_bytes_before": 9797894144,
+      "payload_bytes_after": 9800286208,
+      "payload_increase_percent": 0.0244140625,
+      "calls_before": 146,
+      "calls_after": 219,
+      "calls_increase_percent": 50.0,
+      "new_tail_message_payload_bytes": 32768,
+      "new_tail_message_count": 73,
+      "prefill_latency_ms_before": 119.47046965360641,
+      "prefill_latency_ms_after": 143.1490594210724,
+      "prefill_latency_increase_percent": 19.819617212621555
+    },
+    {
+      "batch_size": 4,
+      "from_input_len": 8192,
+      "to_input_len": 8193,
+      "payload_bytes_before": 19595788288,
+      "payload_bytes_after": 19598180352,
+      "payload_increase_percent": 0.01220703125,
+      "calls_before": 292,
+      "calls_after": 365,
+      "calls_increase_percent": 25.0,
+      "new_tail_message_payload_bytes": 32768,
+      "new_tail_message_count": 73,
+      "prefill_latency_ms_before": 258.0772798197965,
+      "prefill_latency_ms_after": 281.1965107296904,
+      "prefill_latency_increase_percent": 8.958258908353711
+    }
+  ],
+  "latency_by_workload": {
+    "B1_L2047": {
+      "chunks": 1,
+      "prefill_calls": 73,
+      "prefill_payload_bytes": 1224138752,
+      "prefill_latency_ms_mean": 25.073051763077576,
+      "prefill_latency_cv": 0.005843753981741094
+    },
+    "B1_L2048": {
+      "chunks": 1,
+      "prefill_calls": 73,
+      "prefill_payload_bytes": 1224736768,
+      "prefill_latency_ms_mean": 30.986082274466753,
+      "prefill_latency_cv": 0.003912818820396165
+    },
+    "B1_L2049": {
+      "chunks": 2,
+      "prefill_calls": 146,
+      "prefill_payload_bytes": 1225334784,
+      "prefill_latency_ms_mean": 49.16240352516373,
+      "prefill_latency_cv": 0.026508325525663387
+    },
+    "B1_L4095": {
+      "chunks": 2,
+      "prefill_calls": 146,
+      "prefill_payload_bytes": 2448875520,
+      "prefill_latency_ms_mean": 48.831462704886995,
+      "prefill_latency_cv": 0.005031549674717371
+    },
+    "B1_L4096": {
+      "chunks": 2,
+      "prefill_calls": 146,
+      "prefill_payload_bytes": 2449473536,
+      "prefill_latency_ms_mean": 48.931300174444914,
+      "prefill_latency_cv": 0.011249158316619918
+    },
+    "B1_L4097": {
+      "chunks": 3,
+      "prefill_calls": 219,
+      "prefill_payload_bytes": 2450071552,
+      "prefill_latency_ms_mean": 72.19541647161047,
+      "prefill_latency_cv": 0.00590219768444108
+    },
+    "B1_L8191": {
+      "chunks": 4,
+      "prefill_calls": 292,
+      "prefill_payload_bytes": 4898349056,
+      "prefill_latency_ms_mean": 99.59735752393802,
+      "prefill_latency_cv": 0.01756426360640868
+    },
+    "B1_L8192": {
+      "chunks": 4,
+      "prefill_calls": 292,
+      "prefill_payload_bytes": 4898947072,
+      "prefill_latency_ms_mean": 98.26190257444978,
+      "prefill_latency_cv": 0.006168402946272448
+    },
+    "B1_L8193": {
+      "chunks": 5,
+      "prefill_calls": 365,
+      "prefill_payload_bytes": 4899545088,
+      "prefill_latency_ms_mean": 121.01685302332044,
+      "prefill_latency_cv": 0.005015075950749708
+    },
+    "B4_L2047": {
+      "chunks": 1,
+      "prefill_calls": 73,
+      "prefill_payload_bytes": 4896555008,
+      "prefill_latency_ms_mean": 357.98270783076686,
+      "prefill_latency_cv": 0.04135128452050902
+    },
+    "B4_L2048": {
+      "chunks": 1,
+      "prefill_calls": 73,
+      "prefill_payload_bytes": 4898947072,
+      "prefill_latency_ms_mean": 56.29238532856107,
+      "prefill_latency_cv": 0.0036874142475521294
+    },
+    "B4_L2049": {
+      "chunks": 2,
+      "prefill_calls": 146,
+      "prefill_payload_bytes": 4901339136,
+      "prefill_latency_ms_mean": 80.72619683419664,
+      "prefill_latency_cv": 0.010335521962126207
+    },
+    "B4_L4095": {
+      "chunks": 2,
+      "prefill_calls": 146,
+      "prefill_payload_bytes": 9795502080,
+      "prefill_latency_ms_mean": 117.97226406633854,
+      "prefill_latency_cv": 0.0017818675272423434
+    },
+    "B4_L4096": {
+      "chunks": 2,
+      "prefill_calls": 146,
+      "prefill_payload_bytes": 9797894144,
+      "prefill_latency_ms_mean": 119.47046965360641,
+      "prefill_latency_cv": 0.007279493620378014
+    },
+    "B4_L4097": {
+      "chunks": 3,
+      "prefill_calls": 219,
+      "prefill_payload_bytes": 9800286208,
+      "prefill_latency_ms_mean": 143.1490594210724,
+      "prefill_latency_cv": 0.007452908618377177
+    },
+    "B4_L8191": {
+      "chunks": 4,
+      "prefill_calls": 292,
+      "prefill_payload_bytes": 19593396224,
+      "prefill_latency_ms_mean": 257.3800135093431,
+      "prefill_latency_cv": 0.007665169181722372
+    },
+    "B4_L8192": {
+      "chunks": 4,
+      "prefill_calls": 292,
+      "prefill_payload_bytes": 19595788288,
+      "prefill_latency_ms_mean": 258.0772798197965,
+      "prefill_latency_cv": 0.003645600836331866
+    },
+    "B4_L8193": {
+      "chunks": 5,
+      "prefill_calls": 365,
+      "prefill_payload_bytes": 19598180352,
+      "prefill_latency_ms_mean": 281.1965107296904,
+      "prefill_latency_cv": 0.0040312462513470695
+    }
+  },
+  "interpretation": "At each chunk boundary, one extra prompt token adds only 1/L payload but creates 73 additional small collective messages. This isolates a near-equal-payload/different-calls pattern."
+}
