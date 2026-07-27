@@ -159,7 +159,7 @@ T_comm = T_base + residual(workload, model, overlap, rank_skew, runtime_state)
 - `experiment-results/phase1/qwen3_8b_tp2_inference_comm/representative/decode_equal_payload/`
 - `experiment-results/phase1/qwen3_8b_tp2_inference_comm/representative/prefill_payload_curve/`
 
-每个重复目录包含 `result.jsonl`、`comm_ground_truth.jsonl`、`run.log` 和 GPU-only `*.trace.json.gz`。单个 trace 约 30 KiB–1.2 MiB。
+每个重复目录包含 `result.jsonl`、`comm_ground_truth.jsonl`、`run.log` 和 GPU-only `*.trace.json.gz`。单个 trace 约 30 KiB–1.7 MiB。
 
 ## 7. 当前边界与下一步
 
