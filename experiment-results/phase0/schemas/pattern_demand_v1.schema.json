@@ -1,0 +1,319 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sglang.local/schemas/pattern_demand_v1.schema.json",
+  "title": "PatternDemand v1",
+  "description": "Topology-independent, group-level collective demand for one inference workload and execution configuration.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "features",
+    "execution",
+    "group_level_message_histogram",
+    "derived",
+    "validation"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "pattern-demand-v1"
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "parallel_form",
+        "parallel_size",
+        "batch_size",
+        "input_len",
+        "output_len"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parallel_form": {
+          "enum": [
+            "TP",
+            "PP",
+            "PD"
+          ]
+        },
+        "parallel_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "batch_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "input_len": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "output_len": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "output_lens_per_request": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          ]
+        },
+        "prefill_chunk_size": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_name",
+        "source",
+        "generated_output_tokens",
+        "actual_decode_steps",
+        "prefill_latency_ms",
+        "median_decode_latency_ms"
+      ],
+      "properties": {
+        "run_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generated_output_tokens": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          ]
+        },
+        "actual_decode_steps": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "prefill_latency_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "median_decode_latency_ms": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "group_level_message_histogram": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/message_histogram_record"
+      }
+    },
+    "derived": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/$defs/derived_record"
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rank_count",
+        "rank_histogram_consistent",
+        "stats_conservation_passed",
+        "output_length_consistent",
+        "raw_events_truncated"
+      ],
+      "properties": {
+        "rank_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "rank_histogram_consistent": {
+          "type": "boolean"
+        },
+        "stats_conservation_passed": {
+          "type": "boolean"
+        },
+        "output_length_consistent": {
+          "type": "boolean"
+        },
+        "raw_events_truncated": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "nullable_nonnegative_integer": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "minimum": 0
+        }
+      ]
+    },
+    "nullable_positive_integer": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "minimum": 1
+        }
+      ]
+    },
+    "message_histogram_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "op",
+        "group_id",
+        "group_size",
+        "input_payload_bytes",
+        "output_payload_bytes",
+        "dtype",
+        "tensor_shape",
+        "count",
+        "first_decode_step",
+        "last_decode_step"
+      ],
+      "properties": {
+        "phase": {
+          "enum": [
+            "prefill",
+            "decode"
+          ]
+        },
+        "op": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "active_batch_size": {
+          "$ref": "#/$defs/nullable_positive_integer"
+        },
+        "prefill_chunk_index": {
+          "$ref": "#/$defs/nullable_nonnegative_integer"
+        },
+        "prefill_chunk_tokens": {
+          "$ref": "#/$defs/nullable_positive_integer"
+        },
+        "input_payload_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output_payload_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dtype": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
+        },
+        "tensor_shape": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "first_decode_step": {
+          "$ref": "#/$defs/nullable_nonnegative_integer"
+        },
+        "last_decode_step": {
+          "$ref": "#/$defs/nullable_nonnegative_integer"
+        }
+      }
+    },
+    "derived_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "payload_bytes",
+        "calls_per_token",
+        "payload_bytes_per_token"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "payload_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "calls_per_token": {
+          "type": "number",
+          "minimum": 0
+        },
+        "payload_bytes_per_token": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,110 @@
+[1;33m'--disable-cuda-graph' is deprecated and will be removed in a future release. Use '--cuda-graph-backend-{decode,prefill}=disabled' instead.[0m
+TensorRT-LLM MHA only supports page_size of 16, 32 or 64, changing page_size from None to 64.
+[2026-07-27 12:09:54 TP0] Init torch distributed begin.
+[2026-07-27 12:09:54 TP1] Init torch distributed begin.
+[2026-07-27 12:09:55 TP0] sglang is using nccl==2.28.9
+[2026-07-27 12:09:56 TP0] Init torch distributed ends. elapsed=2.00 s, mem usage=1.16 GB
+[2026-07-27 12:09:56 TP1] Init torch distributed ends. elapsed=2.00 s, mem usage=1.16 GB
+[2026-07-27 12:09:58 TP1] Load weight begin. avail mem=176.54 GB
+[2026-07-27 12:09:58 TP0] Load weight begin. avail mem=176.54 GB
+Multi-thread loading shards:   0% Completed | 0/5 [00:00<?, ?it/s]Multi-thread loading shards:  20% Completed | 1/5 [00:00<00:02,  1.80it/s]Multi-thread loading shards:  40% Completed | 2/5 [00:01<00:01,  1.63it/s]Multi-thread loading shards:  60% Completed | 3/5 [00:01<00:01,  1.59it/s]Multi-thread loading shards:  80% Completed | 4/5 [00:02<00:00,  1.68it/s]Multi-thread loading shards: 100% Completed | 5/5 [00:02<00:00,  2.28it/s]Multi-thread loading shards: 100% Completed | 5/5 [00:02<00:00,  1.95it/s]
+[2026-07-27 12:10:01 TP0] Load weight end. elapsed=2.71 s, type=Qwen3ForCausalLM, avail mem=168.90 GB, mem usage=7.65 GB.
+[2026-07-27 12:10:01 TP1] Load weight end. elapsed=2.71 s, type=Qwen3ForCausalLM, avail mem=168.90 GB, mem usage=7.65 GB.
+[2026-07-27 12:10:01 TP1] KV Cache is allocated. dtype: torch.bfloat16, #tokens: 2073920, K size: 71.20 GB, V size: 71.20 GB
+[2026-07-27 12:10:01 TP0] KV Cache is allocated. dtype: torch.bfloat16, #tokens: 2073920, K size: 71.20 GB, V size: 71.20 GB
+[2026-07-27 12:10:01 TP1] Memory pool end. avail mem=25.81 GB
+[2026-07-27 12:10:01 TP0] Memory pool end. avail mem=25.81 GB
+[2026-07-27 12:10:01 TP0] Disable prefill CUDA graph because cuda_graph_config resolved prefill.backend='disabled' (e.g. via --cuda-graph-backend-prefill=disabled or auto-disable rules).
+[2026-07-27 12:10:01 TP1] Disable prefill CUDA graph because cuda_graph_config resolved prefill.backend='disabled' (e.g. via --cuda-graph-backend-prefill=disabled or auto-disable rules).
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W727 12:10:02.117483948 ProcessGroupNCCL.cpp:5188] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+/usr/local/lib/python3.12/dist-packages/torch/profiler/profiler.py:224: UserWarning: Warning: Profiler clears events at the end of each cycle.Only events from the current cycle will be reported.To keep events across cycles, set acc_events=True.
+  _warn_once(
+max_total_num_tokens=2073920
+Warmup ...
+Prefill. latency: 2.62771 s, throughput:   1558.77 token/s
+Decode 0. Batch size: 8, latency: 0.09839 s, throughput:     81.31 token/s
+Decode 1. Batch size: 8, latency: 0.02295 s, throughput:    348.64 token/s
+Decode 2. Batch size: 8, latency: 0.02275 s, throughput:    351.64 token/s
+Decode 3. Batch size: 8, latency: 0.02263 s, throughput:    353.57 token/s
+Decode 4. Batch size: 8, latency: 0.02242 s, throughput:    356.88 token/s
+Decode.  median latency: 0.02253 s, median throughput:    355.14 token/s
+Total. latency:  3.410 s, throughput:   1276.13 token/s
+Benchmark ...
+Prefill. latency: 0.03038 s, throughput: 134807.51 token/s
+Decode 0. Batch size: 8, latency: 0.02975 s, throughput:    268.88 token/s
+Decode 1. Batch size: 8, latency: 0.02749 s, throughput:    291.03 token/s
+Decode 2. Batch size: 8, latency: 0.02741 s, throughput:    291.85 token/s
+Decode 3. Batch size: 6, latency: 0.02930 s, throughput:    204.76 token/s
+Decode 4. Batch size: 6, latency: 0.02757 s, throughput:    217.64 token/s
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+         nvjet_sm100_tst_64x8_64x16_2x1_v_bz_splitK_TNT         0.00%       0.000us         0.00%       0.000us       0.000us      24.990ms        18.50%      24.990ms      19.833us          1260  
+         nvjet_sm100_tst_64x8_64x16_4x1_v_bz_splitK_TNT         0.00%       0.000us         0.00%       0.000us       0.000us      22.408ms        16.58%      22.408ms       8.892us          2520  
+void (anonymous namespace)::all_reduce_one_shot_push...         0.00%       0.000us         0.00%       0.000us       0.000us      21.017ms        15.55%      21.017ms       8.226us          2555  
+kernel_cutlass_kernel_flashinfernormkernelsfused_add...         0.00%       0.000us         0.00%       0.000us       0.000us      16.159ms        11.96%      16.159ms       6.412us          2520  
+void cublasLt::splitKreduce_kernel<32, 16, int, floa...         0.00%       0.000us         0.00%       0.000us       0.000us      12.976ms         9.60%      12.976ms       3.415us          3800  
+               nvjet_sm100_tst_32x64_64x16_4x1_v_bz_TNN         0.00%       0.000us         0.00%       0.000us       0.000us       9.597ms         7.10%       9.597ms       7.617us          1260  
+fmhaSm100fKernel_QkvBfloat16OBfloat16H128PagedKvCaus...         0.00%       0.000us         0.00%       0.000us       0.000us       9.393ms         6.95%       9.393ms       8.154us          1152  
+void (anonymous namespace)::act_and_mul_kernel<__nv_...         0.00%       0.000us         0.00%       0.000us       0.000us       3.309ms         2.45%       3.309ms       2.626us          1260  
+void (anonymous namespace)::fused_rope_kernel<true, ...         0.00%       0.000us         0.00%       0.000us       0.000us       2.637ms         1.95%       2.637ms       2.093us          1260  
+void (anonymous namespace)::store_kvcache<1024l, 2, ...         0.00%       0.000us         0.00%       0.000us       0.000us       2.535ms         1.88%       2.535ms       2.012us          1260  
+void (anonymous namespace)::fused_qknorm_warp<128l, ...         0.00%       0.000us         0.00%       0.000us       0.000us       2.201ms         1.63%       2.201ms       1.747us          1260  
+         nvjet_sm100_tst_192x8_64x8_2x1_v_bz_splitK_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       1.985ms         1.47%       1.985ms      99.228us            20  
+                nvjet_sm100_tst_192x8_64x8_4x1_v_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       1.512ms         1.12%       1.512ms     100.815us            15  
+kernel_cutlass_kernel_flashinfernormkernelsrmsnormRM...         0.00%       0.000us         0.00%       0.000us       0.000us     985.785us         0.73%     985.785us      28.165us            35  
+fmhaSm100fKernel_QkvBfloat16OBfloat16H128PagedKvCaus...         0.00%       0.000us         0.00%       0.000us       0.000us     864.925us         0.64%     864.925us       8.009us           108  
+                               _all_gather_kernel_inner         0.00%       0.000us         0.00%       0.000us       0.000us     409.375us         0.30%     409.375us      11.696us            35  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us     299.741us         0.22%     299.741us       8.564us            35  
+void at::native::unrolled_elementwise_kernel<at::nat...         0.00%       0.000us         0.00%       0.000us       0.000us     179.780us         0.13%     179.780us       1.712us           105  
+void at::native::vectorized_elementwise_kernel<2, at...         0.00%       0.000us         0.00%       0.000us       0.000us     173.634us         0.13%     173.634us       1.654us           105  
+void at::native::unrolled_elementwise_kernel<at::nat...         0.00%       0.000us         0.00%       0.000us       0.000us     168.160us         0.12%     168.160us       4.805us            35  
+void at::native::index_elementwise_kernel<128, 4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     164.350us         0.12%     164.350us       3.287us            50  
+void at::native::(anonymous namespace)::indexSelectS...         0.00%       0.000us         0.00%       0.000us       0.000us     134.272us         0.10%     134.272us       3.836us            35  
+void at::native::elementwise_kernel<128, 4, at::nati...         0.00%       0.000us         0.00%       0.000us       0.000us     122.272us         0.09%     122.272us       3.493us            35  
+void at::native::index_elementwise_kernel<128, 4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     117.690us         0.09%     117.690us       3.363us            35  
+                         Memcpy DtoD (Device -> Device)         0.00%       0.000us         0.00%       0.000us       0.000us     102.274us         0.08%     102.274us       1.461us            70  
+                    create_trtllm_mha_kv_indices_triton         0.00%       0.000us         0.00%       0.000us       0.000us      76.738us         0.06%      76.738us       2.193us            35  
+void at_cuda_detail::cub::detail::scan::DeviceScanKe...         0.00%       0.000us         0.00%       0.000us       0.000us      67.006us         0.05%      67.006us       1.914us            35  
+void at::native::(anonymous namespace)::multi_tensor...         0.00%       0.000us         0.00%       0.000us       0.000us      65.857us         0.05%      65.857us       1.882us            35  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      64.453us         0.05%      64.453us       1.842us            35  
+                                    alloc_decode_kernel         0.00%       0.000us         0.00%       0.000us       0.000us      63.358us         0.05%      63.358us       1.810us            35  
+                                        Memset (Device)         0.00%       0.000us         0.00%       0.000us       0.000us      55.680us         0.04%      55.680us       1.591us            35  
+triton_poi_fused_add_bitwise_and_bitwise_not_bitwise...         0.00%       0.000us         0.00%       0.000us       0.000us      53.473us         0.04%      53.473us       1.528us            35  
+void (anonymous namespace)::clamp_position_kernel<lo...         0.00%       0.000us         0.00%       0.000us       0.000us      53.310us         0.04%      53.310us       1.523us            35  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      46.689us         0.03%      46.689us       1.334us            35  
+void (anonymous namespace)::elementwise_kernel_with_...         0.00%       0.000us         0.00%       0.000us       0.000us      44.224us         0.03%      44.224us       1.264us            35  
+void at_cuda_detail::cub::detail::scan::DeviceScanIn...         0.00%       0.000us         0.00%       0.000us       0.000us      44.220us         0.03%      44.220us       1.263us            35  
+void at::native::index_elementwise_kernel<128, 4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      30.176us         0.02%      30.176us       2.515us            12  
+                       Memcpy HtoD (Pageable -> Device)         0.00%       0.000us         0.00%       0.000us       0.000us       4.864us         0.00%       4.864us       1.621us             3  
+                         Memcpy HtoD (Pinned -> Device)         0.00%       0.000us         0.00%       0.000us       0.000us       4.800us         0.00%       4.800us       1.600us             3  
+                                Activity Buffer Request         5.22%       6.352ms         5.53%       6.737ms       1.684ms       0.000us         0.00%       0.000us       0.000us             4  
+                                       cudaLaunchKernel         3.22%       3.919ms         3.30%       4.017ms       6.114us       0.000us         0.00%       0.000us       0.000us           657  
+                                       cuLaunchKernelEx        28.30%      34.467ms        29.74%      36.221ms       5.624us       0.000us         0.00%       0.000us       0.000us          6440  
+                                        cudaMemcpyAsync         1.01%       1.230ms         1.01%       1.230ms      16.182us       0.000us         0.00%       0.000us       0.000us            76  
+                                    cudaLaunchKernelExC        60.23%      73.352ms        60.25%      73.371ms       5.246us       0.000us         0.00%       0.000us       0.000us         13985  
+                                    cudaPeekAtLastError         0.01%      16.806us         0.01%      16.806us       0.120us       0.000us         0.00%       0.000us       0.000us           140  
+cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFla...         0.07%      79.499us         0.07%      79.499us       2.271us       0.000us         0.00%       0.000us       0.000us            35  
+                                 cudaDeviceGetAttribute         0.03%      33.037us         0.03%      33.037us       0.944us       0.000us         0.00%       0.000us       0.000us            35  
+                                         cuLaunchKernel         0.17%     211.794us         0.17%     211.794us       6.051us       0.000us         0.00%       0.000us       0.000us            35  
+                    cudaThreadExchangeStreamCaptureMode         0.02%      24.009us         0.02%      24.009us       0.267us       0.000us         0.00%       0.000us       0.000us            90  
+                                         cudaEventQuery         0.27%     328.903us         0.27%     328.903us       2.366us       0.000us         0.00%       0.000us       0.000us           139  
+                                        cudaMemsetAsync         0.29%     349.920us         0.29%     349.920us       9.998us       0.000us         0.00%       0.000us       0.000us            35  
+                                  cudaDeviceSynchronize         0.63%     767.036us         0.63%     767.036us      10.958us       0.000us         0.00%       0.000us       0.000us            70  
+                                  cudaStreamIsCapturing         0.01%       7.358us         0.01%       7.358us       0.736us       0.000us         0.00%       0.000us       0.000us            10  
+                               cudaEventRecordWithFlags         0.01%       9.144us         0.01%       9.144us       3.048us       0.000us         0.00%       0.000us       0.000us             3  
+                                  Lazy Function Loading         0.15%     182.148us         0.15%     182.148us      45.537us       0.000us         0.00%       0.000us       0.000us             4  
+                                  cudaStreamSynchronize         0.02%      28.924us         0.02%      28.924us       9.641us       0.000us         0.00%       0.000us       0.000us             3  
+                                             cudaMalloc         0.22%     264.771us         0.22%     264.771us     264.771us       0.000us         0.00%       0.000us       0.000us             1  
+                                          cudaHostAlloc         0.04%      46.399us         0.04%      46.399us      46.399us       0.000us         0.00%       0.000us       0.000us             1  
+                                           Buffer Flush         0.09%     112.635us         0.09%     112.635us     112.635us       0.000us         0.00%       0.000us       0.000us             1  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 121.782ms
+Self CUDA time total: 135.115ms
+
+torch profiler chrome trace for decode saved to /sgl-workspace/sglang-src/experiment-results/phase1/qwen3_8b_tp2_inference_comm/representative/decode_equal_payload/mixed/r2/trace_batch8_input512_output36_decode.trace.json.gz
+Decode.  median latency: 0.02743 s, median throughput:     74.09 token/s
+Total. latency:  1.006 s, throughput:   4197.02 token/s
+kill_process_tree called: parent_pid=88194, include_parent=False, pid=88194
