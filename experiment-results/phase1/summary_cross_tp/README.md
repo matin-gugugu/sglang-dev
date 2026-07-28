@@ -106,4 +106,6 @@ Prefill 8 MiB：
 Git：
 
 - 主结果提交：`f4610b2`
-- 最终图与汇总脚本修正后的分支头：`11267d0`
+- CSV 行尾修正：`e3e9155`
+- 使用全部重复统计的最终图：`11267d0`
+- 本摘要同时保存在当前实验分支的 `experiment-results/phase1/summary_cross_tp/README.md`
