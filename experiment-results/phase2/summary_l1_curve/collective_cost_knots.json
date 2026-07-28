@@ -1,0 +1,787 @@
+{
+  "schema_version": "continuous-collective-cost-v1",
+  "interpolation": "linear-in-log2-payload",
+  "latency_scope": "max-completion-across-ranks",
+  "curves": [
+    {
+      "op": "all_reduce",
+      "group_size": 2,
+      "topology": "single-node-nvlink",
+      "backend": "nccl",
+      "payload_scope": "representative-rank-logical-input",
+      "ring_equivalent_factor": 1.0,
+      "throughput_regime_knots": {
+        "25pct_max_bus_bw_payload_bytes": 8388608,
+        "75pct_max_bus_bw_payload_bytes": 33554432,
+        "90pct_max_bus_bw_payload_bytes": 67108864,
+        "note": "Heuristic knots from the monotonic bandwidth envelope; use continuous interpolation for prediction."
+      },
+      "knots": [
+        {
+          "payload_bytes": 1024,
+          "median_latency_us": 42.49599948525429,
+          "p95_latency_us": 50.66560152918094,
+          "ring_equivalent_bus_bandwidth_GBps": 0.024096385834043468
+        },
+        {
+          "payload_bytes": 2048,
+          "median_latency_us": 43.5199998319149,
+          "p95_latency_us": 63.60480003058908,
+          "ring_equivalent_bus_bandwidth_GBps": 0.04705882371116468
+        },
+        {
+          "payload_bytes": 4096,
+          "median_latency_us": 43.5199998319149,
+          "p95_latency_us": 60.77760066837072,
+          "ring_equivalent_bus_bandwidth_GBps": 0.09411764742232936
+        },
+        {
+          "payload_bytes": 8192,
+          "median_latency_us": 43.5199998319149,
+          "p95_latency_us": 59.776000678539276,
+          "ring_equivalent_bus_bandwidth_GBps": 0.18823529484465873
+        },
+        {
+          "payload_bytes": 16384,
+          "median_latency_us": 43.42399910092354,
+          "p95_latency_us": 57.72959999740124,
+          "ring_equivalent_bus_bandwidth_GBps": 0.37730288179863997
+        },
+        {
+          "payload_bytes": 32768,
+          "median_latency_us": 44.24000158905983,
+          "p95_latency_us": 56.8000003695488,
+          "ring_equivalent_bus_bandwidth_GBps": 0.7406871343355297
+        },
+        {
+          "payload_bytes": 49152,
+          "median_latency_us": 44.415999203920364,
+          "p95_latency_us": 58.81600081920624,
+          "ring_equivalent_bus_bandwidth_GBps": 1.106628261909317
+        },
+        {
+          "payload_bytes": 65536,
+          "median_latency_us": 43.39199885725975,
+          "p95_latency_us": 57.028801739215815,
+          "ring_equivalent_bus_bandwidth_GBps": 1.5103245235506229
+        },
+        {
+          "payload_bytes": 131072,
+          "median_latency_us": 43.42399910092354,
+          "p95_latency_us": 52.67359875142574,
+          "ring_equivalent_bus_bandwidth_GBps": 3.0184230543891197
+        },
+        {
+          "payload_bytes": 262144,
+          "median_latency_us": 43.39199885725975,
+          "p95_latency_us": 56.7696001380682,
+          "ring_equivalent_bus_bandwidth_GBps": 6.041298094202491
+        },
+        {
+          "payload_bytes": 524288,
+          "median_latency_us": 45.3759990632534,
+          "p95_latency_us": 56.8000003695488,
+          "ring_equivalent_bus_bandwidth_GBps": 11.554302072096553
+        },
+        {
+          "payload_bytes": 1048576,
+          "median_latency_us": 45.40799930691719,
+          "p95_latency_us": 56.87360074371099,
+          "ring_equivalent_bus_bandwidth_GBps": 23.09231888664749
+        },
+        {
+          "payload_bytes": 2097152,
+          "median_latency_us": 45.504000037908554,
+          "p95_latency_us": 56.90240077674385,
+          "ring_equivalent_bus_bandwidth_GBps": 46.0872010867814
+        },
+        {
+          "payload_bytes": 4194304,
+          "median_latency_us": 46.560000628232956,
+          "p95_latency_us": 56.992001459002466,
+          "ring_equivalent_bus_bandwidth_GBps": 90.08384758175168
+        },
+        {
+          "payload_bytes": 8388608,
+          "median_latency_us": 47.68000170588493,
+          "p95_latency_us": 52.273599244654164,
+          "ring_equivalent_bus_bandwidth_GBps": 175.93556417521333
+        },
+        {
+          "payload_bytes": 16777216,
+          "median_latency_us": 58.88000130653381,
+          "p95_latency_us": 60.99359877407551,
+          "ring_equivalent_bus_bandwidth_GBps": 284.9391241120482
+        },
+        {
+          "payload_bytes": 33554432,
+          "median_latency_us": 87.36000210046768,
+          "p95_latency_us": 89.12960067391394,
+          "ring_equivalent_bus_bandwidth_GBps": 384.0937636586935
+        },
+        {
+          "payload_bytes": 67108864,
+          "median_latency_us": 155.2319973707199,
+          "p95_latency_us": 159.13599729537964,
+          "ring_equivalent_bus_bandwidth_GBps": 432.313344778608
+        },
+        {
+          "payload_bytes": 134217728,
+          "median_latency_us": 284.4800055027008,
+          "p95_latency_us": 287.268790602684,
+          "ring_equivalent_bus_bandwidth_GBps": 471.80021584584
+        }
+      ]
+    },
+    {
+      "op": "all_reduce",
+      "group_size": 4,
+      "topology": "single-node-nvlink",
+      "backend": "nccl",
+      "payload_scope": "representative-rank-logical-input",
+      "ring_equivalent_factor": 1.5,
+      "throughput_regime_knots": {
+        "25pct_max_bus_bw_payload_bytes": 8388608,
+        "75pct_max_bus_bw_payload_bytes": 67108864,
+        "90pct_max_bus_bw_payload_bytes": 67108864,
+        "note": "Heuristic knots from the monotonic bandwidth envelope; use continuous interpolation for prediction."
+      },
+      "knots": [
+        {
+          "payload_bytes": 1024,
+          "median_latency_us": 45.43999955058098,
+          "p95_latency_us": 75.26399940252304,
+          "ring_equivalent_bus_bandwidth_GBps": 0.033802817235731274
+        },
+        {
+          "payload_bytes": 2048,
+          "median_latency_us": 46.31999880075455,
+          "p95_latency_us": 77.24959962069988,
+          "ring_equivalent_bus_bandwidth_GBps": 0.06632124524040267
+        },
+        {
+          "payload_bytes": 4096,
+          "median_latency_us": 46.52800038456917,
+          "p95_latency_us": 75.16959868371487,
+          "ring_equivalent_bus_bandwidth_GBps": 0.132049517478031
+        },
+        {
+          "payload_bytes": 8192,
+          "median_latency_us": 46.46399989724159,
+          "p95_latency_us": 75.53280107676979,
+          "ring_equivalent_bus_bandwidth_GBps": 0.2644628105022335
+        },
+        {
+          "payload_bytes": 16384,
+          "median_latency_us": 45.3919991850853,
+          "p95_latency_us": 75.29759965837002,
+          "ring_equivalent_bus_bandwidth_GBps": 0.5414169994978999
+        },
+        {
+          "payload_bytes": 32768,
+          "median_latency_us": 46.431999653577805,
+          "p95_latency_us": 71.20159827172756,
+          "ring_equivalent_bus_bandwidth_GBps": 1.0585802973534568
+        },
+        {
+          "payload_bytes": 49152,
+          "median_latency_us": 46.4479997754097,
+          "p95_latency_us": 71.29599899053574,
+          "ring_equivalent_bus_bandwidth_GBps": 1.5873234661664108
+        },
+        {
+          "payload_bytes": 65536,
+          "median_latency_us": 45.56800052523613,
+          "p95_latency_us": 73.09439778327942,
+          "ring_equivalent_bus_bandwidth_GBps": 2.1573033459205218
+        },
+        {
+          "payload_bytes": 131072,
+          "median_latency_us": 45.88799923658371,
+          "p95_latency_us": 72.29119874536988,
+          "ring_equivalent_bus_bandwidth_GBps": 4.284518899731335
+        },
+        {
+          "payload_bytes": 262144,
+          "median_latency_us": 47.37599939107895,
+          "p95_latency_us": 73.28159920871258,
+          "ring_equivalent_bus_bandwidth_GBps": 8.299898789555538
+        },
+        {
+          "payload_bytes": 524288,
+          "median_latency_us": 47.61600121855736,
+          "p95_latency_us": 76.29919983446597,
+          "ring_equivalent_bus_bandwidth_GBps": 16.516128609588165
+        },
+        {
+          "payload_bytes": 1048576,
+          "median_latency_us": 47.69599996507168,
+          "p95_latency_us": 77.40960083901882,
+          "ring_equivalent_bus_bandwidth_GBps": 32.97685342904701
+        },
+        {
+          "payload_bytes": 2097152,
+          "median_latency_us": 47.58400097489357,
+          "p95_latency_us": 77.40960046648976,
+          "ring_equivalent_bus_bandwidth_GBps": 66.10894282848892
+        },
+        {
+          "payload_bytes": 4194304,
+          "median_latency_us": 47.61600121855736,
+          "p95_latency_us": 75.331199914217,
+          "ring_equivalent_bus_bandwidth_GBps": 132.12902887670532
+        },
+        {
+          "payload_bytes": 8388608,
+          "median_latency_us": 52.799999713897705,
+          "p95_latency_us": 75.20159892737865,
+          "ring_equivalent_bus_bandwidth_GBps": 238.31272856404956
+        },
+        {
+          "payload_bytes": 16777216,
+          "median_latency_us": 75.95199719071388,
+          "p95_latency_us": 77.47200131416321,
+          "ring_equivalent_bus_bandwidth_GBps": 331.3385418530752
+        },
+        {
+          "payload_bytes": 33554432,
+          "median_latency_us": 124.41600114107132,
+          "p95_latency_us": 126.209606975317,
+          "ring_equivalent_bus_bandwidth_GBps": 404.54320616630787
+        },
+        {
+          "payload_bytes": 67108864,
+          "median_latency_us": 190.0479942560196,
+          "p95_latency_us": 193.08799505233765,
+          "ring_equivalent_bus_bandwidth_GBps": 529.6730249328142
+        },
+        {
+          "payload_bytes": 134217728,
+          "median_latency_us": 357.7919900417328,
+          "p95_latency_us": 363.1695941090583,
+          "ring_equivalent_bus_bandwidth_GBps": 562.691724810601
+        }
+      ]
+    },
+    {
+      "op": "all_reduce",
+      "group_size": 8,
+      "topology": "single-node-nvlink",
+      "backend": "nccl",
+      "payload_scope": "representative-rank-logical-input",
+      "ring_equivalent_factor": 1.75,
+      "throughput_regime_knots": {
+        "25pct_max_bus_bw_payload_bytes": 8388608,
+        "75pct_max_bus_bw_payload_bytes": 134217728,
+        "90pct_max_bus_bw_payload_bytes": 134217728,
+        "note": "Heuristic knots from the monotonic bandwidth envelope; use continuous interpolation for prediction."
+      },
+      "knots": [
+        {
+          "payload_bytes": 1024,
+          "median_latency_us": 46.560000628232956,
+          "p95_latency_us": 62.91040144860739,
+          "ring_equivalent_bus_bandwidth_GBps": 0.03848797198927379
+        },
+        {
+          "payload_bytes": 2048,
+          "median_latency_us": 46.52800038456917,
+          "p95_latency_us": 64.89760242402554,
+          "ring_equivalent_bus_bandwidth_GBps": 0.0770288851955181
+        },
+        {
+          "payload_bytes": 4096,
+          "median_latency_us": 46.560000628232956,
+          "p95_latency_us": 60.68160012364387,
+          "ring_equivalent_bus_bandwidth_GBps": 0.15395188795709516
+        },
+        {
+          "payload_bytes": 8192,
+          "median_latency_us": 45.6480011343956,
+          "p95_latency_us": 58.7904006242752,
+          "ring_equivalent_bus_bandwidth_GBps": 0.31405537249686666
+        },
+        {
+          "payload_bytes": 16384,
+          "median_latency_us": 45.56800052523613,
+          "p95_latency_us": 56.7391999065876,
+          "ring_equivalent_bus_bandwidth_GBps": 0.6292134758934855
+        },
+        {
+          "payload_bytes": 32768,
+          "median_latency_us": 46.49600014090538,
+          "p95_latency_us": 62.05119919031855,
+          "ring_equivalent_bus_bandwidth_GBps": 1.2333103885542829
+        },
+        {
+          "payload_bytes": 49152,
+          "median_latency_us": 46.592000871896744,
+          "p95_latency_us": 60.80160103738308,
+          "ring_equivalent_bus_bandwidth_GBps": 1.8461538116059515
+        },
+        {
+          "payload_bytes": 65536,
+          "median_latency_us": 46.351999044418335,
+          "p95_latency_us": 58.75840038061141,
+          "ring_equivalent_bus_bandwidth_GBps": 2.4742837928111023
+        },
+        {
+          "payload_bytes": 131072,
+          "median_latency_us": 45.632001012563705,
+          "p95_latency_us": 53.92160080373287,
+          "ring_equivalent_bus_bandwidth_GBps": 5.026647854799238
+        },
+        {
+          "payload_bytes": 262144,
+          "median_latency_us": 45.72800174355507,
+          "p95_latency_us": 54.63199876248836,
+          "ring_equivalent_bus_bandwidth_GBps": 10.032189960381482
+        },
+        {
+          "payload_bytes": 524288,
+          "median_latency_us": 46.751998364925385,
+          "p95_latency_us": 56.832000613212585,
+          "ring_equivalent_bus_bandwidth_GBps": 19.624915128512164
+        },
+        {
+          "payload_bytes": 1048576,
+          "median_latency_us": 46.62400111556053,
+          "p95_latency_us": 54.72639948129653,
+          "ring_equivalent_bus_bandwidth_GBps": 39.35758313517145
+        },
+        {
+          "payload_bytes": 2097152,
+          "median_latency_us": 46.52800038456917,
+          "p95_latency_us": 55.71519955992699,
+          "ring_equivalent_bus_bandwidth_GBps": 78.87757844021053
+        },
+        {
+          "payload_bytes": 4194304,
+          "median_latency_us": 59.13599953055382,
+          "p95_latency_us": 61.11999973654747,
+          "ring_equivalent_bus_bandwidth_GBps": 124.12121310653797
+        },
+        {
+          "payload_bytes": 8388608,
+          "median_latency_us": 77.34400033950806,
+          "p95_latency_us": 79.3600007891655,
+          "ring_equivalent_bus_bandwidth_GBps": 189.80223334144358
+        },
+        {
+          "payload_bytes": 16777216,
+          "median_latency_us": 103.93600165843964,
+          "p95_latency_us": 105.98400235176086,
+          "ring_equivalent_bus_bandwidth_GBps": 282.48275411329473
+        },
+        {
+          "payload_bytes": 33554432,
+          "median_latency_us": 165.40800034999847,
+          "p95_latency_us": 167.52160117030144,
+          "ring_equivalent_bus_bandwidth_GBps": 355.00251424205396
+        },
+        {
+          "payload_bytes": 67108864,
+          "median_latency_us": 282.0799946784973,
+          "p95_latency_us": 284.38401222229004,
+          "ring_equivalent_bus_bandwidth_GBps": 416.3376142071105
+        },
+        {
+          "payload_bytes": 134217728,
+          "median_latency_us": 399.9359905719757,
+          "p95_latency_us": 403.8736119866371,
+          "ring_equivalent_bus_bandwidth_GBps": 587.2965412892214
+        }
+      ]
+    },
+    {
+      "op": "all_gather",
+      "group_size": 2,
+      "topology": "single-node-nvlink",
+      "backend": "nccl",
+      "payload_scope": "logical-gathered-output",
+      "ring_equivalent_factor": 0.5,
+      "throughput_regime_knots": {
+        "25pct_max_bus_bw_payload_bytes": 8388608,
+        "75pct_max_bus_bw_payload_bytes": 67108864,
+        "90pct_max_bus_bw_payload_bytes": 134217728,
+        "note": "Heuristic knots from the monotonic bandwidth envelope; use continuous interpolation for prediction."
+      },
+      "knots": [
+        {
+          "payload_bytes": 1024,
+          "median_latency_us": 45.21600157022476,
+          "p95_latency_us": 61.38880159705876,
+          "ring_equivalent_bus_bandwidth_GBps": 0.011323424942933426
+        },
+        {
+          "payload_bytes": 2048,
+          "median_latency_us": 42.4639992415905,
+          "p95_latency_us": 56.58399872481822,
+          "ring_equivalent_bus_bandwidth_GBps": 0.024114544515088068
+        },
+        {
+          "payload_bytes": 4096,
+          "median_latency_us": 42.38399863243103,
+          "p95_latency_us": 55.750399827957146,
+          "ring_equivalent_bus_bandwidth_GBps": 0.04832012235940685
+        },
+        {
+          "payload_bytes": 8192,
+          "median_latency_us": 42.33599826693535,
+          "p95_latency_us": 54.72319945693016,
+          "ring_equivalent_bus_bandwidth_GBps": 0.09674981499607153
+        },
+        {
+          "payload_bytes": 16384,
+          "median_latency_us": 41.471999138593674,
+          "p95_latency_us": 53.727999329566956,
+          "ring_equivalent_bus_bandwidth_GBps": 0.19753086830040362
+        },
+        {
+          "payload_bytes": 32768,
+          "median_latency_us": 41.53599962592125,
+          "p95_latency_us": 53.70079912245273,
+          "ring_equivalent_bus_bandwidth_GBps": 0.3944530081749925
+        },
+        {
+          "payload_bytes": 49152,
+          "median_latency_us": 42.367998510599136,
+          "p95_latency_us": 53.727999329566956,
+          "ring_equivalent_bus_bandwidth_GBps": 0.5800604433521178
+        },
+        {
+          "payload_bytes": 65536,
+          "median_latency_us": 41.50399938225746,
+          "p95_latency_us": 53.34880016744136,
+          "ring_equivalent_bus_bandwidth_GBps": 0.7895142754365014
+        },
+        {
+          "payload_bytes": 131072,
+          "median_latency_us": 42.367998510599136,
+          "p95_latency_us": 52.70399898290634,
+          "ring_equivalent_bus_bandwidth_GBps": 1.5468278489389806
+        },
+        {
+          "payload_bytes": 262144,
+          "median_latency_us": 42.447999119758606,
+          "p95_latency_us": 51.715198904275894,
+          "ring_equivalent_bus_bandwidth_GBps": 3.0878251676882664
+        },
+        {
+          "payload_bytes": 524288,
+          "median_latency_us": 43.55200007557869,
+          "p95_latency_us": 53.727999329566956,
+          "ring_equivalent_bus_bandwidth_GBps": 6.01910358984855
+        },
+        {
+          "payload_bytes": 1048576,
+          "median_latency_us": 41.471999138593674,
+          "p95_latency_us": 50.572801195085034,
+          "ring_equivalent_bus_bandwidth_GBps": 12.641975571225831
+        },
+        {
+          "payload_bytes": 2097152,
+          "median_latency_us": 43.375998735427856,
+          "p95_latency_us": 51.55840124934911,
+          "ring_equivalent_bus_bandwidth_GBps": 24.174106200892226
+        },
+        {
+          "payload_bytes": 4194304,
+          "median_latency_us": 43.50399971008301,
+          "p95_latency_us": 55.77920004725456,
+          "ring_equivalent_bus_bandwidth_GBps": 48.20595839407242
+        },
+        {
+          "payload_bytes": 8388608,
+          "median_latency_us": 43.64800080657005,
+          "p95_latency_us": 52.641598507761955,
+          "ring_equivalent_bus_bandwidth_GBps": 96.0938398665136
+        },
+        {
+          "payload_bytes": 16777216,
+          "median_latency_us": 43.5199998319149,
+          "p95_latency_us": 51.521601155400276,
+          "ring_equivalent_bus_bandwidth_GBps": 192.75294192093054
+        },
+        {
+          "payload_bytes": 33554432,
+          "median_latency_us": 60.896001756191254,
+          "p95_latency_us": 62.912002205848694,
+          "ring_equivalent_bus_bandwidth_GBps": 275.5060351444875
+        },
+        {
+          "payload_bytes": 67108864,
+          "median_latency_us": 103.80800068378448,
+          "p95_latency_us": 105.98400235176086,
+          "ring_equivalent_bus_bandwidth_GBps": 323.2355095847774
+        },
+        {
+          "payload_bytes": 134217728,
+          "median_latency_us": 179.51999604701996,
+          "p95_latency_us": 181.7599982023239,
+          "ring_equivalent_bus_bandwidth_GBps": 373.82389414950086
+        }
+      ]
+    },
+    {
+      "op": "all_gather",
+      "group_size": 4,
+      "topology": "single-node-nvlink",
+      "backend": "nccl",
+      "payload_scope": "logical-gathered-output",
+      "ring_equivalent_factor": 0.75,
+      "throughput_regime_knots": {
+        "25pct_max_bus_bw_payload_bytes": 16777216,
+        "75pct_max_bus_bw_payload_bytes": 67108864,
+        "90pct_max_bus_bw_payload_bytes": 134217728,
+        "note": "Heuristic knots from the monotonic bandwidth envelope; use continuous interpolation for prediction."
+      },
+      "knots": [
+        {
+          "payload_bytes": 1024,
+          "median_latency_us": 45.023998245596886,
+          "p95_latency_us": 68.1199967861175,
+          "ring_equivalent_bus_bandwidth_GBps": 0.017057569961039753
+        },
+        {
+          "payload_bytes": 2048,
+          "median_latency_us": 43.5199998319149,
+          "p95_latency_us": 56.683199480175965,
+          "ring_equivalent_bus_bandwidth_GBps": 0.03529411778337351
+        },
+        {
+          "payload_bytes": 4096,
+          "median_latency_us": 43.55200007557869,
+          "p95_latency_us": 55.8480005711317,
+          "ring_equivalent_bus_bandwidth_GBps": 0.0705363701935377
+        },
+        {
+          "payload_bytes": 8192,
+          "median_latency_us": 42.54399985074997,
+          "p95_latency_us": 55.617598816752434,
+          "ring_equivalent_bus_bandwidth_GBps": 0.14441519418846308
+        },
+        {
+          "payload_bytes": 16384,
+          "median_latency_us": 42.527999728918076,
+          "p95_latency_us": 53.75999957323074,
+          "ring_equivalent_bus_bandwidth_GBps": 0.28893905376049084
+        },
+        {
+          "payload_bytes": 32768,
+          "median_latency_us": 43.39199885725975,
+          "p95_latency_us": 54.91520091891289,
+          "ring_equivalent_bus_bandwidth_GBps": 0.5663716963314835
+        },
+        {
+          "payload_bytes": 49152,
+          "median_latency_us": 43.407998979091644,
+          "p95_latency_us": 54.66239899396896,
+          "ring_equivalent_bus_bandwidth_GBps": 0.8492443988896219
+        },
+        {
+          "payload_bytes": 65536,
+          "median_latency_us": 42.527999728918076,
+          "p95_latency_us": 54.68959920108318,
+          "ring_equivalent_bus_bandwidth_GBps": 1.1557562150419634
+        },
+        {
+          "payload_bytes": 131072,
+          "median_latency_us": 42.608000338077545,
+          "p95_latency_us": 52.799999713897705,
+          "ring_equivalent_bus_bandwidth_GBps": 2.307172343691251
+        },
+        {
+          "payload_bytes": 262144,
+          "median_latency_us": 43.616000562906265,
+          "p95_latency_us": 52.86560021340847,
+          "ring_equivalent_bus_bandwidth_GBps": 4.507703536834773
+        },
+        {
+          "payload_bytes": 524288,
+          "median_latency_us": 44.60800066590309,
+          "p95_latency_us": 55.016001313924754,
+          "ring_equivalent_bus_bandwidth_GBps": 8.814920958799249
+        },
+        {
+          "payload_bytes": 1048576,
+          "median_latency_us": 44.44799944758415,
+          "p95_latency_us": 53.82560007274151,
+          "ring_equivalent_bus_bandwidth_GBps": 17.69330475553595
+        },
+        {
+          "payload_bytes": 2097152,
+          "median_latency_us": 43.64800080657005,
+          "p95_latency_us": 51.78559944033622,
+          "ring_equivalent_bus_bandwidth_GBps": 36.035189949942605
+        },
+        {
+          "payload_bytes": 4194304,
+          "median_latency_us": 44.176001101732254,
+          "p95_latency_us": 53.727999329566956,
+          "ring_equivalent_bus_bandwidth_GBps": 71.20898047688269
+        },
+        {
+          "payload_bytes": 8388608,
+          "median_latency_us": 57.96799995005131,
+          "p95_latency_us": 60.99199876189232,
+          "ring_equivalent_bus_bandwidth_GBps": 108.53325982302468
+        },
+        {
+          "payload_bytes": 16777216,
+          "median_latency_us": 64.92800265550613,
+          "p95_latency_us": 67.1359971165657,
+          "ring_equivalent_bus_bandwidth_GBps": 193.79792208859706
+        },
+        {
+          "payload_bytes": 33554432,
+          "median_latency_us": 77.13599875569344,
+          "p95_latency_us": 77.504001557827,
+          "ring_equivalent_bus_bandwidth_GBps": 326.25264994241746
+        },
+        {
+          "payload_bytes": 67108864,
+          "median_latency_us": 116.22399836778641,
+          "p95_latency_us": 118.17759834229946,
+          "ring_equivalent_bus_bandwidth_GBps": 433.05727480418824
+        },
+        {
+          "payload_bytes": 134217728,
+          "median_latency_us": 207.32800662517548,
+          "p95_latency_us": 210.4319930076599,
+          "ring_equivalent_bus_bandwidth_GBps": 485.5267633088633
+        }
+      ]
+    },
+    {
+      "op": "all_gather",
+      "group_size": 8,
+      "topology": "single-node-nvlink",
+      "backend": "nccl",
+      "payload_scope": "logical-gathered-output",
+      "ring_equivalent_factor": 0.875,
+      "throughput_regime_knots": {
+        "25pct_max_bus_bw_payload_bytes": 8388608,
+        "75pct_max_bus_bw_payload_bytes": 134217728,
+        "90pct_max_bus_bw_payload_bytes": 134217728,
+        "note": "Heuristic knots from the monotonic bandwidth envelope; use continuous interpolation for prediction."
+      },
+      "knots": [
+        {
+          "payload_bytes": 1024,
+          "median_latency_us": 48.656001687049866,
+          "p95_latency_us": 78.43680083751676,
+          "ring_equivalent_bus_bandwidth_GBps": 0.01841499442890879
+        },
+        {
+          "payload_bytes": 2048,
+          "median_latency_us": 46.73600010573864,
+          "p95_latency_us": 77.33919955790034,
+          "ring_equivalent_bus_bandwidth_GBps": 0.03834303312105571
+        },
+        {
+          "payload_bytes": 4096,
+          "median_latency_us": 42.62400045990944,
+          "p95_latency_us": 69.12159733474255,
+          "ring_equivalent_bus_bandwidth_GBps": 0.08408408317682378
+        },
+        {
+          "payload_bytes": 8192,
+          "median_latency_us": 44.30399835109711,
+          "p95_latency_us": 60.03839876502749,
+          "ring_equivalent_bus_bandwidth_GBps": 0.1617912664043447
+        },
+        {
+          "payload_bytes": 16384,
+          "median_latency_us": 44.544000178575516,
+          "p95_latency_us": 75.10559819638729,
+          "ring_equivalent_bus_bandwidth_GBps": 0.32183907916952714
+        },
+        {
+          "payload_bytes": 32768,
+          "median_latency_us": 43.487999588251114,
+          "p95_latency_us": 67.0112032443285,
+          "ring_equivalent_bus_bandwidth_GBps": 0.6593083211798535
+        },
+        {
+          "payload_bytes": 49152,
+          "median_latency_us": 44.5920005440712,
+          "p95_latency_us": 69.15199756622314,
+          "ring_equivalent_bus_bandwidth_GBps": 0.9644779214938854
+        },
+        {
+          "payload_bytes": 65536,
+          "median_latency_us": 43.984001502394676,
+          "p95_latency_us": 55.80800026655197,
+          "ring_equivalent_bus_bandwidth_GBps": 1.3037467724913103
+        },
+        {
+          "payload_bytes": 131072,
+          "median_latency_us": 43.616000562906265,
+          "p95_latency_us": 56.61279894411563,
+          "ring_equivalent_bus_bandwidth_GBps": 2.6294937298202843
+        },
+        {
+          "payload_bytes": 262144,
+          "median_latency_us": 44.415999203920364,
+          "p95_latency_us": 54.657598957419395,
+          "ring_equivalent_bus_bandwidth_GBps": 5.164265222243479
+        },
+        {
+          "payload_bytes": 524288,
+          "median_latency_us": 44.576000422239304,
+          "p95_latency_us": 58.695999905467026,
+          "ring_equivalent_bus_bandwidth_GBps": 10.291457188947915
+        },
+        {
+          "payload_bytes": 1048576,
+          "median_latency_us": 44.67200115323067,
+          "p95_latency_us": 52.18399856239555,
+          "ring_equivalent_bus_bandwidth_GBps": 20.538681418207435
+        },
+        {
+          "payload_bytes": 2097152,
+          "median_latency_us": 44.79999840259552,
+          "p95_latency_us": 51.748799160122864,
+          "ring_equivalent_bus_bandwidth_GBps": 40.96000146048415
+        },
+        {
+          "payload_bytes": 4194304,
+          "median_latency_us": 45.471999794244766,
+          "p95_latency_us": 53.69919911026955,
+          "ring_equivalent_bus_bandwidth_GBps": 80.7093599711113
+        },
+        {
+          "payload_bytes": 8388608,
+          "median_latency_us": 50.71999877691269,
+          "p95_latency_us": 52.76799947023392,
+          "ring_equivalent_bus_bandwidth_GBps": 144.71672273267325
+        },
+        {
+          "payload_bytes": 16777216,
+          "median_latency_us": 54.84800040721893,
+          "p95_latency_us": 56.92960135638714,
+          "ring_equivalent_bus_bandwidth_GBps": 267.6499396697761
+        },
+        {
+          "payload_bytes": 33554432,
+          "median_latency_us": 83.52000266313553,
+          "p95_latency_us": 85.56800335645676,
+          "ring_equivalent_bus_bandwidth_GBps": 351.5340884077716
+        },
+        {
+          "payload_bytes": 67108864,
+          "median_latency_us": 144.86399292945862,
+          "p95_latency_us": 146.75359949469566,
+          "ring_equivalent_bus_bandwidth_GBps": 405.3474905154228
+        },
+        {
+          "payload_bytes": 134217728,
+          "median_latency_us": 215.37599712610245,
+          "p95_latency_us": 217.43999421596527,
+          "ring_equivalent_bus_bandwidth_GBps": 545.2813385292823
+        }
+      ]
+    }
+  ]
+}
