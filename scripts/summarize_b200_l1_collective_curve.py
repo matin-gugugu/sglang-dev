@@ -78,7 +78,7 @@ def validate_records(records):
         (op, group_size, repeat)
         for op in OPS
         for group_size in GROUP_SIZES
-        for repeat in range(3)
+        for repeat in range(5)
     }
     if set(grouped) != expected_keys:
         missing = sorted(expected_keys - set(grouped))
