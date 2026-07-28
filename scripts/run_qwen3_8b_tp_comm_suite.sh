@@ -156,7 +156,7 @@ run_tp2_stability() {
 run_cross_tp() {
   local tp="$1"
   local repeat
-  for repeat in {0..2}; do
+  for repeat in {0..9}; do
     run_decode_case "$tp" uniform "$repeat" 16 15 16 16 16 16 16 16 16 16
     run_decode_case "$tp" mixed "$repeat" 36 35 4 4 8 8 16 16 36 36
     run_decode_case "$tp" longtail "$repeat" 52 51 4 4 4 4 4 4 52 52
