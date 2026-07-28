@@ -17,6 +17,9 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--repeat-id", type=int, required=True)
+    parser.add_argument(
+        "--op", choices=("all_reduce", "all_gather"), default="all_reduce"
+    )
     parser.add_argument("--warmup", type=int, default=30)
     parser.add_argument("--iterations", type=int, default=100)
     parser.add_argument("--min-bytes", type=int, default=8 * 1024)
@@ -64,11 +67,25 @@ def main():
     dtype = torch.bfloat16
     element_size = torch.empty((), dtype=dtype).element_size()
     sizes = build_sizes(args.min_bytes, args.max_bytes, args.extra_bytes)
-    if any(size % element_size for size in sizes):
-        raise ValueError("all payload sizes must be divisible by dtype element size")
+    divisor = element_size if args.op == "all_reduce" else element_size * world_size
+    if any(size % divisor for size in sizes):
+        raise ValueError(
+            f"all {args.op} payload sizes must be divisible by {divisor} bytes"
+        )
 
     max_numel = max(sizes) // element_size
-    storage = torch.zeros(max_numel, dtype=dtype, device="cuda")
+    if args.op == "all_reduce":
+        input_storage = torch.zeros(max_numel, dtype=dtype, device="cuda")
+        output_storage = None
+        payload_scope = "representative-rank-logical-input"
+        ring_factor = 2 * (world_size - 1) / world_size
+    else:
+        input_storage = torch.zeros(
+            max_numel // world_size, dtype=dtype, device="cuda"
+        )
+        output_storage = torch.empty(max_numel, dtype=dtype, device="cuda")
+        payload_scope = "logical-gathered-output"
+        ring_factor = (world_size - 1) / world_size
     device_name = torch.cuda.get_device_name(local_rank)
     device_uuid = torch.cuda.get_device_properties(local_rank).uuid
     commit = git_commit()
@@ -77,10 +94,23 @@ def main():
         args.output.parent.mkdir(parents=True, exist_ok=True)
 
     for payload_bytes in sizes:
-        tensor = storage[: payload_bytes // element_size]
+        payload_numel = payload_bytes // element_size
+        if args.op == "all_reduce":
+            input_tensor = input_storage[:payload_numel]
+            output_tensor = None
+        else:
+            input_tensor = input_storage[: payload_numel // world_size]
+            output_tensor = output_storage[:payload_numel]
+
+        def run_collective():
+            if args.op == "all_reduce":
+                dist.all_reduce(input_tensor)
+            else:
+                dist.all_gather_into_tensor(output_tensor, input_tensor)
+
         dist.barrier()
         for _ in range(args.warmup):
-            dist.all_reduce(tensor)
+            run_collective()
         torch.cuda.synchronize()
         dist.barrier()
 
@@ -88,7 +118,7 @@ def main():
         ends = [torch.cuda.Event(enable_timing=True) for _ in range(args.iterations)]
         for start, end in zip(starts, ends):
             start.record()
-            dist.all_reduce(tensor)
+            run_collective()
             end.record()
         torch.cuda.synchronize()
 
@@ -107,19 +137,23 @@ def main():
             median_us = float(np.median(completion_samples_us))
             seconds = median_us / 1_000_000.0
             algorithmic_gbps = payload_bytes / seconds / 1e9
-            ring_factor = 2 * (world_size - 1) / world_size
             record = {
-                "schema_version": "collective-cost-v1",
+                "schema_version": "collective-cost-v2",
                 "timestamp_utc": datetime.now(timezone.utc).isoformat(),
                 "repeat_id": args.repeat_id,
                 "hostname": socket.gethostname(),
                 "topology": "single-node-nvlink",
-                "op": "all_reduce",
+                "op": args.op,
                 "backend": "nccl",
                 "group_size": world_size,
                 "rank_scope": "max-completion-across-ranks",
-                "payload_scope": "representative-rank-logical-input",
+                "payload_scope": payload_scope,
                 "payload_bytes": payload_bytes,
+                "input_payload_bytes_per_rank": (
+                    payload_bytes
+                    if args.op == "all_reduce"
+                    else payload_bytes // world_size
+                ),
                 "dtype": str(dtype).removeprefix("torch."),
                 "warmup_iterations": args.warmup,
                 "timed_iterations": args.iterations,
@@ -132,6 +166,8 @@ def main():
                     "max": float(max(completion_samples_us)),
                 },
                 "algorithmic_bandwidth_GBps": algorithmic_gbps,
+                "ring_equivalent_factor": ring_factor,
+                "ring_equivalent_bytes": payload_bytes * ring_factor,
                 "ring_equivalent_bus_bandwidth_GBps": (algorithmic_gbps * ring_factor),
                 "samples_us": completion_samples_us,
                 "rank_samples_us": gathered_samples,
@@ -148,7 +184,7 @@ def main():
             with args.output.open("a") as output:
                 output.write(json.dumps(record, ensure_ascii=False) + "\n")
             print(
-                f"repeat={args.repeat_id} payload={payload_bytes} "
+                f"repeat={args.repeat_id} op={args.op} payload={payload_bytes} "
                 f"median={median_us:.3f} us p95={record['latency_us']['p95']:.3f} us "
                 f"alg_bw={algorithmic_gbps:.2f} GB/s",
                 flush=True,
