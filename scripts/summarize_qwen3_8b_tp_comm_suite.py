@@ -249,7 +249,7 @@ def plot_results(path, summary, decode_rows, prefill_rows):
                 ],
                 [
                     (
-                        row["max_kernel_time_total_us"]
+                        row["p95_kernel_time_total_us"]
                         - row["median_kernel_time_total_us"]
                     )
                     / 1000
@@ -278,7 +278,7 @@ def plot_results(path, summary, decode_rows, prefill_rows):
         xticks=tps,
         xlabel="TP / group size",
         ylabel="Measured communication kernel time (ms)",
-        title="C. Equal logical payload: measured cost across TP",
+        title="C. Equal payload: median with min-to-p95 range",
     )
 
     stability = {
@@ -341,7 +341,7 @@ def main():
         output.write("\n")
     plot_results(
         args.output_dir / "qwen3_8b_cross_tp_results.png",
-        common_summary,
+        summary,
         decode_rows,
         prefill_rows,
     )
