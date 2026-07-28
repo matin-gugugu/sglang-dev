@@ -80,9 +80,7 @@ def main():
         payload_scope = "representative-rank-logical-input"
         ring_factor = 2 * (world_size - 1) / world_size
     else:
-        input_storage = torch.zeros(
-            max_numel // world_size, dtype=dtype, device="cuda"
-        )
+        input_storage = torch.zeros(max_numel // world_size, dtype=dtype, device="cuda")
         output_storage = torch.empty(max_numel, dtype=dtype, device="cuda")
         payload_scope = "logical-gathered-output"
         ring_factor = (world_size - 1) / world_size

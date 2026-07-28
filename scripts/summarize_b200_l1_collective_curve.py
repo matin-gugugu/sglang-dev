@@ -9,7 +9,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 OPS = ("all_reduce", "all_gather")
 GROUP_SIZES = (2, 4, 8)
 
@@ -105,9 +104,7 @@ def flatten_records(records):
                 "input_payload_bytes_per_rank": int(
                     record["input_payload_bytes_per_rank"]
                 ),
-                "ring_equivalent_factor": float(
-                    record["ring_equivalent_factor"]
-                ),
+                "ring_equivalent_factor": float(record["ring_equivalent_factor"]),
                 "median_latency_us": float(latency["median"]),
                 "p95_latency_us": float(latency["p95"]),
                 "p99_latency_us": float(latency["p99"]),
@@ -144,14 +141,8 @@ def aggregate_records(records):
 
     rows = []
     for (op, group_size, payload_bytes), group in sorted(grouped.items()):
-        samples = [
-            float(sample)
-            for record in group
-            for sample in record["samples_us"]
-        ]
-        repeat_medians = [
-            float(record["latency_us"]["median"]) for record in group
-        ]
+        samples = [float(sample) for record in group for sample in record["samples_us"]]
+        repeat_medians = [float(record["latency_us"]["median"]) for record in group]
         median_us = float(statistics.median(samples))
         seconds = median_us / 1_000_000.0
         algorithmic_bandwidth = payload_bytes / seconds / 1e9
@@ -220,9 +211,7 @@ def build_cost_model(summary):
                     "topology": "single-node-nvlink",
                     "backend": "nccl",
                     "payload_scope": rows[0]["payload_scope"],
-                    "ring_equivalent_factor": rows[0][
-                        "ring_equivalent_factor"
-                    ],
+                    "ring_equivalent_factor": rows[0]["ring_equivalent_factor"],
                     "throughput_regime_knots": {
                         "25pct_max_bus_bw_payload_bytes": (
                             first_payload_at_fraction(rows, 0.25)
@@ -263,9 +252,7 @@ def write_csv(path, rows):
     if not rows:
         return
     with path.open("w", newline="") as output:
-        writer = csv.DictWriter(
-            output, fieldnames=list(rows[0]), lineterminator="\n"
-        )
+        writer = csv.DictWriter(output, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -299,9 +286,7 @@ def plot_curves(path, summary):
             payloads = [row["payload_bytes"] for row in rows]
             medians = [row["median_latency_us"] for row in rows]
             p95s = [row["p95_latency_us"] for row in rows]
-            bandwidth = [
-                row["ring_equivalent_bus_bandwidth_GBps"] for row in rows
-            ]
+            bandwidth = [row["ring_equivalent_bus_bandwidth_GBps"] for row in rows]
             latency_axis.plot(
                 payloads,
                 medians,
