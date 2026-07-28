@@ -21,6 +21,11 @@ def parse_args():
     parser.add_argument("--repeat-id", type=int, required=True)
     parser.add_argument("--profile-start-step", type=int)
     parser.add_argument("--profile-end-step", type=int)
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Replace the output instead of appending one JSONL row.",
+    )
     return parser.parse_args()
 
 
@@ -155,6 +160,7 @@ def main():
     expected_by_payload = Counter()
     expected_calls = 0
     expected_payload_bytes = 0
+    group_sizes = set()
     for histogram in rank_zero["event_histograms"]:
         if histogram["phase"] != phase or histogram["op"] != "all_reduce":
             continue
@@ -165,9 +171,17 @@ def main():
             args.profile_end_step,
         )
         payload_bytes = int(histogram["input_payload_bytes"])
+        group_sizes.add(int(histogram["group_size"]))
         expected_by_payload[payload_bytes] += count
         expected_calls += count
         expected_payload_bytes += count * payload_bytes
+    if len(group_sizes) != 1:
+        raise ValueError(
+            f"expected one AllReduce group size in {phase}, got {sorted(group_sizes)}"
+        )
+    group_size = next(iter(group_sizes))
+    ring_alpha = 2 * (group_size - 1) / group_size
+    ring_beta = 2 * (group_size - 1)
 
     durations = [duration for _, _, duration in matched]
     measured_kernel_count = len(durations)
@@ -197,8 +211,19 @@ def main():
             "rank_scope": "representative-rank-0",
             "count_scope": "group-level-collective-calls",
             "payload_scope": "representative-rank-logical-input",
+            "group_size": group_size,
             "all_reduce_calls": expected_calls,
             "input_payload_bytes": expected_payload_bytes,
+            "ring_equivalent": {
+                "alpha_bytes": ring_alpha,
+                "beta_rounds": ring_beta,
+                "bytes": expected_payload_bytes * ring_alpha,
+                "rounds": expected_calls * ring_beta,
+                "note": (
+                    "Normalized ring-style modeling demand, not measured wire traffic "
+                    "or implementation kernel steps."
+                ),
+            },
             "calls_by_input_payload_bytes": {
                 str(key): value for key, value in sorted(expected_by_payload.items())
             },
@@ -240,7 +265,8 @@ def main():
     }
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    with args.output.open("a") as output:
+    mode = "w" if args.overwrite else "a"
+    with args.output.open(mode) as output:
         output.write(json.dumps(record, ensure_ascii=False) + "\n")
     print(
         f"{record['run_name']} {phase}: expected_calls={expected_calls} "
