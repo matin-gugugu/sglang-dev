@@ -50,10 +50,7 @@ def parse_args():
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=repo_root
-        / "experiment-results"
-        / "phase3"
-        / "pattern_cost_ablation",
+        default=repo_root / "experiment-results" / "phase3" / "pattern_cost_ablation",
     )
     return parser.parse_args()
 
@@ -122,9 +119,7 @@ def load_ground_truth(phase1_dir):
         pattern = values[0]["pattern_demand"]
         calls_by_size = {
             int(payload): int(count)
-            for payload, count in pattern[
-                "calls_by_input_payload_bytes"
-            ].items()
+            for payload, count in pattern["calls_by_input_payload_bytes"].items()
         }
         for record in values[1:]:
             candidate = {
@@ -141,13 +136,9 @@ def load_ground_truth(phase1_dir):
         backend_signatures = set()
         for record in values:
             ground_truth = record["gpu_ground_truth"]
-            measured_total = float(
-                ground_truth["collective_kernel_time_us"]["total"]
-            )
+            measured_total = float(ground_truth["collective_kernel_time_us"]["total"])
             median_per_call = float(
-                ground_truth["collective_kernel_time_us"][
-                    "median_per_invocation"
-                ]
+                ground_truth["collective_kernel_time_us"]["median_per_invocation"]
             )
             calls = int(pattern["all_reduce_calls"])
             measured_totals.append(measured_total)
@@ -172,15 +163,9 @@ def load_ground_truth(phase1_dir):
                 "repeat_count": len(values),
                 "calls": int(pattern["all_reduce_calls"]),
                 "logical_payload_bytes": int(pattern["input_payload_bytes"]),
-                "ring_equivalent_bytes": float(
-                    pattern["ring_equivalent"]["bytes"]
-                ),
-                "ring_equivalent_rounds": int(
-                    pattern["ring_equivalent"]["rounds"]
-                ),
-                "calls_by_payload_json": json.dumps(
-                    calls_by_size, sort_keys=True
-                ),
+                "ring_equivalent_bytes": float(pattern["ring_equivalent"]["bytes"]),
+                "ring_equivalent_rounds": int(pattern["ring_equivalent"]["rounds"]),
+                "calls_by_payload_json": json.dumps(calls_by_size, sort_keys=True),
                 "backend_signature": next(iter(backend_signatures)),
                 "measured_total_us_median": measured_median,
                 "measured_total_us_p25": percentile(measured_totals, 25),
@@ -203,11 +188,7 @@ def load_ground_truth(phase1_dir):
 class BackendAwareCostCurve:
     def __init__(self, custom_path, nccl_path):
         custom_rows = read_csv(custom_path)
-        nccl_rows = [
-            row
-            for row in read_csv(nccl_path)
-            if row["op"] == "all_reduce"
-        ]
+        nccl_rows = [row for row in read_csv(nccl_path) if row["op"] == "all_reduce"]
         self.custom = defaultdict(list)
         self.nccl = defaultdict(list)
         for row in custom_rows:
@@ -260,10 +241,7 @@ class BackendAwareCostCurve:
 
     def production_points(self, group_size):
         custom_max = self.custom_max[group_size]
-        points = [
-            (payload, cost)
-            for payload, cost, _ in self.custom[group_size]
-        ]
+        points = [(payload, cost) for payload, cost, _ in self.custom[group_size]]
         points.extend(
             (payload, cost)
             for payload, cost, _ in self.nccl[group_size]
@@ -302,16 +280,12 @@ def fit_bucket_models(curve):
             grouped[bucket_name(payload)].append((payload, cost))
         for name, _, _ in BIN_DEFINITIONS:
             if not grouped[name]:
-                raise ValueError(
-                    f"no cost points for TP={group_size}, bucket={name}"
-                )
+                raise ValueError(f"no cost points for TP={group_size}, bucket={name}")
             intercept, slope = nonnegative_affine_fit(grouped[name])
             models[(group_size, name)] = {
                 "startup_us_per_call": intercept,
                 "transfer_us_per_byte": slope,
-                "effective_bandwidth_GBps": (
-                    1e-3 / slope if slope > 0 else None
-                ),
+                "effective_bandwidth_GBps": (1e-3 / slope if slope > 0 else None),
                 "fit_points": len(grouped[name]),
             }
     return models
@@ -327,8 +301,7 @@ def raw_predictions(row, curve, bucket_models):
     for payload, count in calls_by_size.items():
         model = bucket_models[(row["group_size"], bucket_name(payload))]
         three_bins += count * (
-            model["startup_us_per_call"]
-            + model["transfer_us_per_byte"] * payload
+            model["startup_us_per_call"] + model["transfer_us_per_byte"] * payload
         )
     return {
         "total_bytes_only": float(row["logical_payload_bytes"]),
@@ -383,9 +356,7 @@ def apply_calibration(rows, curve, bucket_models):
         output["calibration_anchor"] = anchors[anchor_key]["shape"]
         target = row["structural_target_us_median"]
         for model in MODELS:
-            predicted = (
-                row["_raw_predictions"][model] * scales[(anchor_key, model)]
-            )
+            predicted = row["_raw_predictions"][model] * scales[(anchor_key, model)]
             output[f"{model}_predicted_us"] = predicted
             output[f"{model}_ape"] = abs(predicted - target) / target
         prediction_rows.append(output)
@@ -394,12 +365,8 @@ def apply_calibration(rows, curve, bucket_models):
 
 def metric_row(scope, model, rows):
     errors = [float(row[f"{model}_ape"]) for row in rows]
-    targets = np.asarray(
-        [float(row["structural_target_us_median"]) for row in rows]
-    )
-    predictions = np.asarray(
-        [float(row[f"{model}_predicted_us"]) for row in rows]
-    )
+    targets = np.asarray([float(row["structural_target_us_median"]) for row in rows])
+    predictions = np.asarray([float(row[f"{model}_predicted_us"]) for row in rows])
     residual = targets - predictions
     denominator = float(np.sum((targets - np.mean(targets)) ** 2))
     r2 = 1.0 - float(np.sum(residual**2)) / denominator if denominator else None
@@ -434,9 +401,7 @@ def evaluate_metrics(prediction_rows):
         for model in MODELS:
             metrics.append(metric_row(scope, model, rows))
     for group_size in (2, 4, 8):
-        subset = [
-            row for row in decode_holdout if row["group_size"] == group_size
-        ]
+        subset = [row for row in decode_holdout if row["group_size"] == group_size]
         for model in MODELS:
             metrics.append(metric_row(f"decode_tp{group_size}", model, subset))
     return metrics
@@ -460,9 +425,7 @@ def plot_results(path, prediction_rows, metrics):
     x = np.arange(len(shapes))
     for group_size, marker in ((2, "o"), (4, "s"), (8, "^")):
         values = {
-            row["shape"]: row
-            for row in decode
-            if row["group_size"] == group_size
+            row["shape"]: row for row in decode if row["group_size"] == group_size
         }
         target_anchor = values["uniform"]["structural_target_us_median"]
         axes[0, 0].plot(
@@ -487,11 +450,7 @@ def plot_results(path, prediction_rows, metrics):
                 color=colors[model],
                 marker=marker,
                 alpha=0.8,
-                label=(
-                    f"{labels[model]} TP={group_size}"
-                    if group_size == 2
-                    else None
-                ),
+                label=(f"{labels[model]} TP={group_size}" if group_size == 2 else None),
             )
     axes[0, 0].set_xticks(x, shapes)
     axes[0, 0].set_ylabel("Time relative to uniform")
@@ -500,9 +459,7 @@ def plot_results(path, prediction_rows, metrics):
     axes[0, 0].legend(fontsize=8, ncol=2)
 
     decode_metrics = [
-        row
-        for row in metrics
-        if row["scope"] == "decode_equal_payload_holdout"
+        row for row in metrics if row["scope"] == "decode_equal_payload_holdout"
     ]
     axes[0, 1].bar(
         [labels[row["model"]] for row in decode_metrics],
@@ -519,8 +476,7 @@ def plot_results(path, prediction_rows, metrics):
         key=lambda row: row["input_len"],
     )
     payload_mib = [
-        min(json.loads(row["calls_by_payload_json"])) / (1024**2)
-        for row in prefill
+        min(json.loads(row["calls_by_payload_json"])) / (1024**2) for row in prefill
     ]
     axes[1, 0].plot(
         payload_mib,
@@ -556,9 +512,7 @@ def plot_results(path, prediction_rows, metrics):
     wait = np.asarray(
         [max(0.0, row["wait_residual_us_median"]) for row in residual_rows]
     )
-    axes[1, 1].bar(
-        positions, structural, color="#4C78A8", label="Structural component"
-    )
+    axes[1, 1].bar(positions, structural, color="#4C78A8", label="Structural component")
     axes[1, 1].bar(
         positions,
         wait,
@@ -569,19 +523,14 @@ def plot_results(path, prediction_rows, metrics):
     )
     axes[1, 1].set_xticks(
         positions,
-        [
-            f"TP{row['group_size']}\n{row['shape']}"
-            for row in residual_rows
-        ],
+        [f"TP{row['group_size']}\n{row['shape']}" for row in residual_rows],
     )
     axes[1, 1].set_ylabel("Median profiler kernel total (μs)")
     axes[1, 1].set_title("Why the neural residual is still needed")
     axes[1, 1].grid(True, axis="y", alpha=0.25)
     axes[1, 1].legend(fontsize=8)
 
-    figure.suptitle(
-        "Qwen3-8B PatternDemand → backend-aware L1 cost ablation"
-    )
+    figure.suptitle("Qwen3-8B PatternDemand → backend-aware L1 cost ablation")
     figure.tight_layout()
     figure.savefig(path, dpi=180, bbox_inches="tight")
     plt.close(figure)
@@ -599,9 +548,7 @@ def main():
     curve = BackendAwareCostCurve(args.custom_curve, args.nccl_curve)
     bucket_models = fit_bucket_models(curve)
     workloads = load_ground_truth(args.phase1_dir)
-    prediction_rows, scales = apply_calibration(
-        workloads, curve, bucket_models
-    )
+    prediction_rows, scales = apply_calibration(workloads, curve, bucket_models)
     metrics = evaluate_metrics(prediction_rows)
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -627,9 +574,7 @@ def main():
             {
                 "name": name,
                 "lower_exclusive_bytes": lower,
-                "upper_inclusive_bytes": (
-                    upper if math.isfinite(upper) else None
-                ),
+                "upper_inclusive_bytes": (upper if math.isfinite(upper) else None),
             }
             for name, lower, upper in BIN_DEFINITIONS
         ],
