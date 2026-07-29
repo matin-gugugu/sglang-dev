@@ -127,6 +127,65 @@ def phase_latency_us(result, phase, start_step, end_step):
     return sum(float(record["latency"]) for record in records) * 1_000_000
 
 
+def aggregate_pattern_demand(rank_zero, phase, start_step, end_step):
+    calls_by_payload = Counter()
+    calls = 0
+    payload_bytes = 0
+    group_sizes = set()
+    for histogram in rank_zero["event_histograms"]:
+        if histogram["phase"] != phase or histogram["op"] != "all_reduce":
+            continue
+        count = profiled_count(
+            histogram,
+            phase,
+            start_step,
+            end_step,
+        )
+        input_payload_bytes = int(histogram["input_payload_bytes"])
+        group_sizes.add(int(histogram["group_size"]))
+        calls_by_payload[input_payload_bytes] += count
+        calls += count
+        payload_bytes += count * input_payload_bytes
+    if len(group_sizes) != 1:
+        raise ValueError(
+            f"expected one AllReduce group size in {phase}, got {sorted(group_sizes)}"
+        )
+    return {
+        "group_size": next(iter(group_sizes)),
+        "calls": calls,
+        "payload_bytes": payload_bytes,
+        "calls_by_payload": calls_by_payload,
+    }
+
+
+def serialize_pattern_demand(pattern):
+    group_size = pattern["group_size"]
+    ring_alpha = 2 * (group_size - 1) / group_size
+    ring_beta = 2 * (group_size - 1)
+    return {
+        "rank_scope": "representative-rank-0",
+        "count_scope": "group-level-collective-calls",
+        "payload_scope": "representative-rank-logical-input",
+        "group_size": group_size,
+        "all_reduce_calls": pattern["calls"],
+        "input_payload_bytes": pattern["payload_bytes"],
+        "ring_equivalent": {
+            "alpha_bytes": ring_alpha,
+            "beta_rounds": ring_beta,
+            "bytes": pattern["payload_bytes"] * ring_alpha,
+            "rounds": pattern["calls"] * ring_beta,
+            "note": (
+                "Normalized ring-style modeling demand, not measured wire traffic "
+                "or implementation kernel steps."
+            ),
+        },
+        "calls_by_input_payload_bytes": {
+            str(key): value
+            for key, value in sorted(pattern["calls_by_payload"].items())
+        },
+    }
+
+
 def main():
     args = parse_args()
     phase = args.phase or infer_phase(args.trace)
@@ -157,31 +216,22 @@ def main():
     rank_zero = next(
         profile for profile in result["comm_profile"] if profile["tp_rank"] == 0
     )
-    expected_by_payload = Counter()
-    expected_calls = 0
-    expected_payload_bytes = 0
-    group_sizes = set()
-    for histogram in rank_zero["event_histograms"]:
-        if histogram["phase"] != phase or histogram["op"] != "all_reduce":
-            continue
-        count = profiled_count(
-            histogram,
-            phase,
-            args.profile_start_step,
-            args.profile_end_step,
-        )
-        payload_bytes = int(histogram["input_payload_bytes"])
-        group_sizes.add(int(histogram["group_size"]))
-        expected_by_payload[payload_bytes] += count
-        expected_calls += count
-        expected_payload_bytes += count * payload_bytes
-    if len(group_sizes) != 1:
-        raise ValueError(
-            f"expected one AllReduce group size in {phase}, got {sorted(group_sizes)}"
-        )
-    group_size = next(iter(group_sizes))
-    ring_alpha = 2 * (group_size - 1) / group_size
-    ring_beta = 2 * (group_size - 1)
+    profiled_pattern = aggregate_pattern_demand(
+        rank_zero,
+        phase,
+        args.profile_start_step,
+        args.profile_end_step,
+    )
+    full_phase_pattern = aggregate_pattern_demand(
+        rank_zero,
+        phase,
+        None,
+        None,
+    )
+    expected_calls = profiled_pattern["calls"]
+    group_size = profiled_pattern["group_size"]
+    if group_size != full_phase_pattern["group_size"]:
+        raise ValueError("profiled and full-phase group sizes differ")
 
     durations = [duration for _, _, duration in matched]
     measured_kernel_count = len(durations)
@@ -190,6 +240,20 @@ def main():
         phase,
         args.profile_start_step,
         args.profile_end_step,
+    )
+    full_phase_latency = phase_latency_us(result, phase, None, None)
+    full_phase_scale = (
+        full_phase_pattern["calls"] / expected_calls if expected_calls else None
+    )
+    full_phase_kernel_time = (
+        float(sum(durations)) * full_phase_scale
+        if full_phase_scale is not None
+        else None
+    )
+    full_phase_structural_time = (
+        float(statistics.median(durations)) * full_phase_pattern["calls"]
+        if durations
+        else None
     )
     record = {
         "schema_version": "inference-comm-ground-truth-v1",
@@ -207,27 +271,8 @@ def main():
             "start_decode_step": args.profile_start_step,
             "end_decode_step": args.profile_end_step,
         },
-        "pattern_demand": {
-            "rank_scope": "representative-rank-0",
-            "count_scope": "group-level-collective-calls",
-            "payload_scope": "representative-rank-logical-input",
-            "group_size": group_size,
-            "all_reduce_calls": expected_calls,
-            "input_payload_bytes": expected_payload_bytes,
-            "ring_equivalent": {
-                "alpha_bytes": ring_alpha,
-                "beta_rounds": ring_beta,
-                "bytes": expected_payload_bytes * ring_alpha,
-                "rounds": expected_calls * ring_beta,
-                "note": (
-                    "Normalized ring-style modeling demand, not measured wire traffic "
-                    "or implementation kernel steps."
-                ),
-            },
-            "calls_by_input_payload_bytes": {
-                str(key): value for key, value in sorted(expected_by_payload.items())
-            },
-        },
+        "pattern_demand": serialize_pattern_demand(profiled_pattern),
+        "full_phase_pattern_demand": serialize_pattern_demand(full_phase_pattern),
         "gpu_ground_truth": {
             "trace_file": str(args.trace),
             "collective_kernel_invocations": measured_kernel_count,
@@ -242,6 +287,19 @@ def main():
                 "max_per_invocation": max(durations) if durations else None,
             },
             "phase_wall_time_us": latency_us,
+            "full_phase_wall_time_us": full_phase_latency,
+            "full_phase_estimate": {
+                "method": (
+                    "profiled-window mean kernel cost multiplied by full-phase calls"
+                ),
+                "profiled_to_full_call_scale": full_phase_scale,
+                "collective_kernel_time_us": full_phase_kernel_time,
+                "structural_median_kernel_time_us": full_phase_structural_time,
+                "note": (
+                    "For uniform Decode workloads the payload is constant across steps; "
+                    "Prefill is fully profiled and has scale 1."
+                ),
+            },
             "collective_kernel_fraction_of_phase_wall_time": (
                 float(sum(durations)) / latency_us if latency_us else None
             ),
