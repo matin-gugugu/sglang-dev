@@ -232,6 +232,10 @@ def load_dataset(input_dir):
                 "target_comm_us": float(statistics.median(measured)),
                 "target_comm_us_p25": percentile(measured, 25),
                 "target_comm_us_p75": percentile(measured, 75),
+                "repeat_iqr_fraction": (
+                    (percentile(measured, 75) - percentile(measured, 25))
+                    / float(statistics.median(measured))
+                ),
                 "structural_kernel_us": float(statistics.median(structural)),
                 "phase_wall_us": float(statistics.median(wall)),
                 "comm_fraction_of_wall": (
@@ -586,6 +590,9 @@ def evaluate_metrics(rows):
     test = [row for row in rows if row["split"] == "test"]
     scopes = {
         "test_all": test,
+        "test_stable_iqr_le_20pct": [
+            row for row in test if row["repeat_iqr_fraction"] <= 0.20
+        ],
         "test_prefill": [row for row in test if row["phase"] == "prefill"],
         "test_decode": [row for row in test if row["phase"] == "decode"],
         "test_decode_equal_payload": [
@@ -607,7 +614,12 @@ def plot_results(path, rows, metrics):
     test = [row for row in rows if row["split"] == "test"]
     figure, axes = plt.subplots(2, 2, figsize=(15, 11))
 
-    scope_names = ("test_all", "test_prefill", "test_decode")
+    scope_names = (
+        "test_all",
+        "test_stable_iqr_le_20pct",
+        "test_prefill",
+        "test_decode",
+    )
     x = np.arange(len(scope_names))
     width = 0.19
     for index, model_name in enumerate(MODEL_NAMES):
@@ -626,7 +638,7 @@ def plot_results(path, rows, metrics):
             label=MODEL_LABELS[model_name],
             color=MODEL_COLORS[model_name],
         )
-    axes[0, 0].set_xticks(x, ("All", "Prefill", "Decode"))
+    axes[0, 0].set_xticks(x, ("All", "Stable", "Prefill", "Decode"))
     axes[0, 0].set_ylabel("MAPE (%)")
     axes[0, 0].set_title("Workload-held-out prediction error")
     axes[0, 0].grid(True, axis="y", alpha=0.25)
@@ -956,6 +968,27 @@ def main():
                 for split in ("train", "validation", "test")
             },
             "split_unit": "complete workload; repeats are aggregated before split",
+            "repeat_reliability": {
+                "median_iqr_fraction": float(
+                    np.median([row["repeat_iqr_fraction"] for row in rows])
+                ),
+                "p95_iqr_fraction": percentile(
+                    [row["repeat_iqr_fraction"] for row in rows], 95
+                ),
+                "workloads_above_20pct_iqr": sum(
+                    row["repeat_iqr_fraction"] > 0.20 for row in rows
+                ),
+                "test_workloads_above_20pct_iqr": sum(
+                    row["split"] == "test"
+                    and row["repeat_iqr_fraction"] > 0.20
+                    for row in rows
+                ),
+                "note": (
+                    "Primary metrics retain every held-out workload. The stable "
+                    "scope is reported separately to expose irreducible profiler "
+                    "state/outlier noise rather than silently filtering it."
+                ),
+            },
             "target": (
                 "median across three repeats of the representative-rank GPU "
                 "collective-kernel envelope, scaled from an 8-step Decode window "
