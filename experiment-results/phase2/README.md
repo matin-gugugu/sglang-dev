@@ -97,17 +97,15 @@ T_base = Σ_phase,op,tp,bin count_bin × C_L1(op, payload_bin, tp)
 最终神经网络只拟合 `T_measured - T_base`，用于吸收 backend/algorithm 切换、
 rank skew、通信计算重叠和运行时状态，而不绕过 PatternDemand 变成纯黑盒。
 
-## 6. 当前边界与下一步
+## 6. Backend 对齐补充与后续状态
 
-本轮只覆盖单机 L1、NCCL、无计算重叠的 collective call-envelope；不能直接代表
-SGLang 自定义 AllReduce，也不能外推 L2/L3。
+本目录最初的 `b200_l1_collective_curve` 是 NCCL call-envelope，不能直接代表
+Qwen3-8B 小消息实际使用的 SGLang CustomAllReduce kernel。Phase 3 开始前已补测：
 
-下一步应进入 Phase 3：
+- `b200_l1_custom_kernel_curve/`：TP=2/4/8、8 KiB–16 MiB 的原始 kernel 曲线；
+- `summary_l1_custom_kernel_curve/`：intrinsic、completion 与 rank-skew 汇总；
+- payload 超过 CustomAllReduce 上限后再切换到 NCCL curve。
 
-1. 将 Qwen3-8B 现有 TP=2/4/8 推理 histogram 与本轮连续曲线离线卷积，生成
-   `T_base`；
-2. 与 profiler 的真实通信时间对齐，形成 workload 级预测数据表；
-3. 在相同 train/test split 下比较 `total bytes only`、三个硬桶和连续 histogram；
-4. 报告 MAPE、P95 APE、R²，并单独展示“等总 payload、不同消息形态”对照；
-5. 完成 L1 消融后，再测 L2 同机架跨节点真实曲线，最后处理 L3。
-
+backend-aware 卷积及 `total bytes / 三硬桶 / continuous histogram` 消融已经完成，
+详见 `../phase3/README.md`。当前仍只覆盖单机 L1，下一轮需要扩大真实 workload
+标签集并训练 residual，然后再测 L2 同机架跨节点与 L3。
