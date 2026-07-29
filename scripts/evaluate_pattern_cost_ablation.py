@@ -476,7 +476,12 @@ def plot_results(path, prediction_rows, metrics):
         key=lambda row: row["input_len"],
     )
     payload_mib = [
-        min(json.loads(row["calls_by_payload_json"])) / (1024**2) for row in prefill
+        min(
+            int(payload)
+            for payload in json.loads(row["calls_by_payload_json"])
+        )
+        / (1024**2)
+        for row in prefill
     ]
     axes[1, 0].plot(
         payload_mib,
