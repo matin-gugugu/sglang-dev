@@ -133,6 +133,15 @@ def stable_hash(value, seed):
     return hashlib.sha256(payload).hexdigest()
 
 
+def is_controlled_equal_payload(row):
+    return (
+        row["phase"] == "decode"
+        and row["input_len"] == 2048
+        and (row["batch_size"], row["output_len"])
+        in {(1, 512), (4, 128), (16, 32)}
+    )
+
+
 def load_dataset(input_dir):
     grouped = defaultdict(list)
     paths = sorted(input_dir.glob("tp*/r*/**/comm_ground_truth.jsonl"))
@@ -229,6 +238,14 @@ def load_dataset(input_dir):
                     float(statistics.median(measured))
                     / float(statistics.median(wall))
                 ),
+                "controlled_equal_payload": is_controlled_equal_payload(
+                    {
+                        "phase": phase,
+                        "input_len": input_len,
+                        "batch_size": batch_size,
+                        "output_len": output_len,
+                    }
+                ),
                 "_calls_by_payload": calls_by_payload,
             }
         )
@@ -248,10 +265,31 @@ def assign_splits(rows, seed):
         validation_count = max(3, round(count * 0.15))
         if test_count + validation_count >= count:
             raise ValueError(f"stratum {stratum} is too small for grouped split")
-        for index, row in enumerate(values):
-            if index < test_count:
+        forced_test = [
+            row for row in values if row["controlled_equal_payload"]
+        ]
+        remaining = [
+            row for row in values if not row["controlled_equal_payload"]
+        ]
+        selected_test = forced_test + remaining[
+            : max(0, test_count - len(forced_test))
+        ]
+        selected_test_ids = {
+            row["workload_id"] for row in selected_test
+        }
+        remaining = [
+            row
+            for row in remaining
+            if row["workload_id"] not in selected_test_ids
+        ]
+        selected_validation = remaining[:validation_count]
+        selected_validation_ids = {
+            row["workload_id"] for row in selected_validation
+        }
+        for row in values:
+            if row["workload_id"] in selected_test_ids:
                 row["split"] = "test"
-            elif index < test_count + validation_count:
+            elif row["workload_id"] in selected_validation_ids:
                 row["split"] = "validation"
             else:
                 row["split"] = "train"
@@ -550,6 +588,9 @@ def evaluate_metrics(rows):
         "test_all": test,
         "test_prefill": [row for row in test if row["phase"] == "prefill"],
         "test_decode": [row for row in test if row["phase"] == "decode"],
+        "test_decode_equal_payload": [
+            row for row in test if row["controlled_equal_payload"]
+        ],
     }
     for tp in (2, 4, 8):
         scopes[f"test_tp{tp}"] = [
@@ -690,6 +731,100 @@ def plot_results(path, rows, metrics):
     plt.close(figure)
 
 
+def plot_equal_payload_results(path, rows):
+    controlled = [
+        row
+        for row in rows
+        if row["split"] == "test" and row["controlled_equal_payload"]
+    ]
+    order = ((1, 512), (4, 128), (16, 32))
+    labels = tuple(f"B={batch}\nM={output}" for batch, output in order)
+    figure, axes = plt.subplots(1, 2, figsize=(14, 5.5))
+
+    tp2 = {
+        (row["batch_size"], row["output_len"]): row
+        for row in controlled
+        if row["group_size"] == 2
+    }
+    payload_mib = [
+        tp2[key]["logical_payload_bytes"] / (1024**2) for key in order
+    ]
+    calls = [tp2[key]["calls"] for key in order]
+    x = np.arange(len(order))
+    axes[0].bar(
+        x - 0.18,
+        payload_mib,
+        0.36,
+        color="#4C78A8",
+        label="Total logical payload (MiB)",
+    )
+    calls_axis = axes[0].twinx()
+    calls_axis.bar(
+        x + 0.18,
+        calls,
+        0.36,
+        color="#E45756",
+        alpha=0.8,
+        label="Collective calls",
+    )
+    axes[0].set_xticks(x, labels)
+    axes[0].set_ylabel("Total logical payload (MiB)")
+    calls_axis.set_ylabel("Group-level collective calls")
+    axes[0].set_title("Near-equal bytes, different message shapes")
+    axes[0].grid(True, axis="y", alpha=0.25)
+    handles1, labels1 = axes[0].get_legend_handles_labels()
+    handles2, labels2 = calls_axis.get_legend_handles_labels()
+    axes[0].legend(handles1 + handles2, labels1 + labels2, fontsize=8)
+
+    markers = {2: "o", 4: "s", 8: "^"}
+    for tp in (2, 4, 8):
+        values = {
+            (row["batch_size"], row["output_len"]): row
+            for row in controlled
+            if row["group_size"] == tp
+        }
+        measured_anchor = values[order[0]]["target_comm_us"]
+        axes[1].plot(
+            x,
+            [
+                values[key]["target_comm_us"] / measured_anchor
+                for key in order
+            ],
+            color="black",
+            marker=markers[tp],
+            linestyle="--",
+            alpha=0.55,
+            label=f"Measured TP={tp}",
+        )
+        for model_name in MODEL_NAMES:
+            axes[1].plot(
+                x,
+                [
+                    values[key][f"{model_name}_predicted_us"]
+                    / measured_anchor
+                    for key in order
+                ],
+                color=MODEL_COLORS[model_name],
+                marker=markers[tp],
+                alpha=0.8,
+                label=(
+                    MODEL_LABELS[model_name]
+                    if tp == 2
+                    else None
+                ),
+            )
+    axes[1].set_xticks(x, labels)
+    axes[1].set_ylabel("Communication time relative to B=1, M=512")
+    axes[1].set_title("Held-out shape discrimination across TP")
+    axes[1].grid(True, alpha=0.25)
+    axes[1].legend(fontsize=8, ncol=2)
+
+    figure.suptitle("Controlled Decode holdout: bytes alone cannot identify cost")
+    figure.tight_layout()
+    figure.savefig(path, dpi=180, bbox_inches="tight")
+    plt.close(figure)
+
+
 def public_row(row):
     return {
         key: value for key, value in row.items() if not key.startswith("_")
@@ -789,6 +924,10 @@ def main():
         args.output_dir / "qwen3_8b_expanded_prediction_eval.png",
         rows,
         metrics,
+    )
+    plot_equal_payload_results(
+        args.output_dir / "qwen3_8b_equal_payload_holdout.png",
+        rows,
     )
     torch.save(
         {
