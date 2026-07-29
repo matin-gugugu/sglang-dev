@@ -1,0 +1,97 @@
+W0729 02:57:08.432000 264304 torch/distributed/run.py:851]
+W0729 02:57:08.432000 264304 torch/distributed/run.py:851] *****************************************
+W0729 02:57:08.432000 264304 torch/distributed/run.py:851] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed.
+W0729 02:57:08.432000 264304 torch/distributed/run.py:851] *****************************************
+repeat=0 tp=4 payload=8192 algorithm=ONE_SHOT_PUSH kernel_median=4.223 us p95=6.368 us
+repeat=0 tp=4 payload=16384 algorithm=ONE_SHOT_PUSH kernel_median=4.224 us p95=6.335 us
+repeat=0 tp=4 payload=32768 algorithm=ONE_SHOT_PUSH kernel_median=4.225 us p95=6.210 us
+repeat=0 tp=4 payload=49152 algorithm=ONE_SHOT_PUSH kernel_median=4.320 us p95=6.211 us
+repeat=0 tp=4 payload=65536 algorithm=ONE_SHOT_PUSH kernel_median=4.368 us p95=6.400 us
+repeat=0 tp=4 payload=131072 algorithm=ONE_SHOT_PUSH kernel_median=6.368 us p95=7.231 us
+repeat=0 tp=4 payload=262144 algorithm=ONE_SHOT_PUSH kernel_median=6.432 us p95=8.063 us
+repeat=0 tp=4 payload=524288 algorithm=ONE_SHOT_PUSH kernel_median=7.872 us p95=8.994 us
+repeat=0 tp=4 payload=1048576 algorithm=ONE_SHOT_PUSH kernel_median=11.200 us p95=12.064 us
+repeat=0 tp=4 payload=2097152 algorithm=ONE_SHOT_PUSH kernel_median=17.712 us p95=18.112 us
+[rank3]: Traceback (most recent call last):
+[rank3]:   File "/sgl-workspace/sglang-src/scripts/benchmark_sglang_custom_allreduce_kernel_curve.py", line 286, in <module>
+[rank3]:     main()
+[rank3]:   File "/sgl-workspace/sglang-src/scripts/benchmark_sglang_custom_allreduce_kernel_curve.py", line 166, in main
+[rank3]:     raise RuntimeError(
+[rank3]: RuntimeError: rank 3 payload 4194304: expected 100 custom kernels, found 0; matched_names={}
+[rank2]: Traceback (most recent call last):
+[rank2]:   File "/sgl-workspace/sglang-src/scripts/benchmark_sglang_custom_allreduce_kernel_curve.py", line 286, in <module>
+[rank2]:     main()
+[rank2]:   File "/sgl-workspace/sglang-src/scripts/benchmark_sglang_custom_allreduce_kernel_curve.py", line 166, in main
+[rank2]:     raise RuntimeError(
+[rank2]: RuntimeError: rank 2 payload 4194304: expected 100 custom kernels, found 0; matched_names={}
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "/sgl-workspace/sglang-src/scripts/benchmark_sglang_custom_allreduce_kernel_curve.py", line 286, in <module>
+[rank1]:     main()
+[rank1]:   File "/sgl-workspace/sglang-src/scripts/benchmark_sglang_custom_allreduce_kernel_curve.py", line 166, in main
+[rank1]:     raise RuntimeError(
+[rank1]: RuntimeError: rank 1 payload 4194304: expected 100 custom kernels, found 0; matched_names={}
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/sgl-workspace/sglang-src/scripts/benchmark_sglang_custom_allreduce_kernel_curve.py", line 286, in <module>
+[rank0]:     main()
+[rank0]:   File "/sgl-workspace/sglang-src/scripts/benchmark_sglang_custom_allreduce_kernel_curve.py", line 166, in main
+[rank0]:     raise RuntimeError(
+[rank0]: RuntimeError: rank 0 payload 4194304: expected 100 custom kernels, found 0; matched_names={}
+[rank0]:[W729 02:57:23.781891369 ProcessGroupNCCL.cpp:1575] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+/usr/lib/python3.12/multiprocessing/resource_tracker.py:254: UserWarning: resource_tracker: There appear to be 1 leaked shared_memory objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+W0729 02:57:23.979000 264304 torch/distributed/elastic/multiprocessing/api.py:1012] Sending process 264372 closing signal SIGTERM
+W0729 02:57:23.980000 264304 torch/distributed/elastic/multiprocessing/api.py:1012] Sending process 264373 closing signal SIGTERM
+W0729 02:57:23.980000 264304 torch/distributed/elastic/multiprocessing/api.py:1012] Sending process 264374 closing signal SIGTERM
+E0729 02:57:24.594000 264304 torch/distributed/elastic/multiprocessing/api.py:986] failed (exitcode: 1) local_rank: 3 (pid: 264375) of binary: /usr/bin/python3
+Traceback (most recent call last):
+  File "/usr/local/bin/torchrun", line 6, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 362, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/run.py", line 990, in main
+    run(args)
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/run.py", line 981, in run
+    elastic_launch(
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/launcher/api.py", line 170, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/launcher/api.py", line 317, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError:
+============================================================
+/sgl-workspace/sglang-src/scripts/benchmark_sglang_custom_allreduce_kernel_curve.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-07-29_02:57:24
+  host      : klingai-wlf2-ge151-node55.idchb2az2.hb2.kwaidc.com
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 264372)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[2]:
+  time      : 2026-07-29_02:57:24
+  host      : klingai-wlf2-ge151-node55.idchb2az2.hb2.kwaidc.com
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 264373)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[3]:
+  time      : 2026-07-29_02:57:24
+  host      : klingai-wlf2-ge151-node55.idchb2az2.hb2.kwaidc.com
+  rank      : 2 (local_rank: 2)
+  exitcode  : 1 (pid: 264374)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-07-29_02:57:23
+  host      : klingai-wlf2-ge151-node55.idchb2az2.hb2.kwaidc.com
+  rank      : 3 (local_rank: 3)
+  exitcode  : 1 (pid: 264375)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

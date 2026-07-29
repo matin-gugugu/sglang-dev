@@ -1,0 +1,245 @@
+{
+  "schema_version": "pattern-cost-ablation-v1",
+  "workload_count": 14,
+  "ground_truth_definition": "median across repeats of calls \u00d7 median collective kernel duration; profiler total minus this term is rank-skew/runtime residual",
+  "calibration": "one anchor per TP for decode (uniform) and TP2 L=128 for prefill; mixed/longtail and longer Prefill workloads are held out",
+  "bins": [
+    {
+      "name": "small",
+      "lower_exclusive_bytes": 0,
+      "upper_inclusive_bytes": 65536
+    },
+    {
+      "name": "medium",
+      "lower_exclusive_bytes": 65536,
+      "upper_inclusive_bytes": 4194304
+    },
+    {
+      "name": "large",
+      "lower_exclusive_bytes": 4194304,
+      "upper_inclusive_bytes": null
+    }
+  ],
+  "bucket_models": {
+    "tp2_large": {
+      "startup_us_per_call": 9.399999137580593,
+      "transfer_us_per_byte": 2.08002524716618e-06,
+      "effective_bandwidth_GBps": 480.7633952339747,
+      "fit_points": 5
+    },
+    "tp2_medium": {
+      "startup_us_per_call": 5.686288557213733,
+      "transfer_us_per_byte": 2.2314487828714873e-06,
+      "effective_bandwidth_GBps": 448.13934681179353,
+      "fit_points": 6
+    },
+    "tp2_small": {
+      "startup_us_per_call": 4.147902439024074,
+      "transfer_us_per_byte": 1.0956554878104625e-06,
+      "effective_bandwidth_GBps": 912.6956521692612,
+      "fit_points": 5
+    },
+    "tp4_large": {
+      "startup_us_per_call": 14.994293356120924,
+      "transfer_us_per_byte": 2.5872396602100716e-06,
+      "effective_bandwidth_GBps": 386.51231866119616,
+      "fit_points": 5
+    },
+    "tp4_medium": {
+      "startup_us_per_call": 6.941109452736344,
+      "transfer_us_per_byte": 3.207051508292828e-06,
+      "effective_bandwidth_GBps": 311.8128902557971,
+      "fit_points": 6
+    },
+    "tp4_small": {
+      "startup_us_per_call": 4.2394939024387135,
+      "transfer_us_per_byte": 2.9066132336250416e-06,
+      "effective_bandwidth_GBps": 344.04302176551704,
+      "fit_points": 5
+    },
+    "tp8_large": {
+      "startup_us_per_call": 34.42266806773362,
+      "transfer_us_per_byte": 2.934296843551066e-06,
+      "effective_bandwidth_GBps": 340.79714947646767,
+      "fit_points": 5
+    },
+    "tp8_medium": {
+      "startup_us_per_call": 8.950691542288672,
+      "transfer_us_per_byte": 3.133967656485858e-06,
+      "effective_bandwidth_GBps": 319.08433960078185,
+      "fit_points": 6
+    },
+    "tp8_small": {
+      "startup_us_per_call": 4.864274390243252,
+      "transfer_us_per_byte": 4.456310737444393e-06,
+      "effective_bandwidth_GBps": 224.40086854748387,
+      "fit_points": 5
+    }
+  },
+  "calibration_scales": {
+    "decode_tp2_continuous_histogram": 1.0606060606060206,
+    "decode_tp2_three_hard_bins": 1.0616850087857084,
+    "decode_tp2_total_bytes_only": 6.8359375e-05,
+    "decode_tp4_continuous_histogram": 1.065104166666407,
+    "decode_tp4_three_hard_bins": 1.0617425332097041,
+    "decode_tp4_total_bytes_only": 7.176971435546875e-05,
+    "decode_tp8_continuous_histogram": 0.97512054001904,
+    "decode_tp8_three_hard_bins": 0.9805436611689027,
+    "decode_tp8_total_bytes_only": 7.71484375e-05,
+    "prefill_tp2_continuous_histogram": 1.012658227848002,
+    "prefill_tp2_three_hard_bins": 0.9568743464844122,
+    "prefill_tp2_total_bytes_only": 7.32421875e-06
+  },
+  "metrics": [
+    {
+      "scope": "decode_equal_payload_holdout",
+      "model": "total_bytes_only",
+      "samples": 6,
+      "mape": 0.6326833181155571,
+      "median_ape": 0.6323079944349019,
+      "p95_ape": 0.7032891118646665,
+      "mae_us": 9448.1345,
+      "r2": -11.56658094981755
+    },
+    {
+      "scope": "decode_equal_payload_holdout",
+      "model": "three_hard_bins",
+      "samples": 6,
+      "mape": 0.008607873166632172,
+      "median_ape": 0.007919500175036042,
+      "p95_ape": 0.015617611489079312,
+      "mae_us": 131.1394613244926,
+      "r2": 0.9968567970780705
+    },
+    {
+      "scope": "decode_equal_payload_holdout",
+      "model": "continuous_histogram",
+      "samples": 6,
+      "mape": 0.00861176087123993,
+      "median_ape": 0.007111808478898701,
+      "p95_ape": 0.015304236784258926,
+      "mae_us": 132.01309564767357,
+      "r2": 0.9968240052891619
+    },
+    {
+      "scope": "prefill_payload_holdout",
+      "model": "total_bytes_only",
+      "samples": 4,
+      "mape": 1.693552054946881,
+      "median_ape": 1.7191477728475766,
+      "p95_ape": 2.196599471884663,
+      "mae_us": 5434.119999999999,
+      "r2": -9.921229981277227
+    },
+    {
+      "scope": "prefill_payload_holdout",
+      "model": "three_hard_bins",
+      "samples": 4,
+      "mape": 0.09431413556996224,
+      "median_ape": 0.10959896110918879,
+      "p95_ape": 0.1290579275901658,
+      "mae_us": 340.1758247344006,
+      "r2": 0.9504508033640511
+    },
+    {
+      "scope": "prefill_payload_holdout",
+      "model": "continuous_histogram",
+      "samples": 4,
+      "mape": 0.014929416851962089,
+      "median_ape": 0.012625631369992014,
+      "p95_ape": 0.027974290677537435,
+      "mae_us": 41.80408945139391,
+      "r2": 0.9992727327654589
+    },
+    {
+      "scope": "decode_tp2",
+      "model": "total_bytes_only",
+      "samples": 2,
+      "mape": 0.6360558611933982,
+      "median_ape": 0.6360558611933982,
+      "p95_ape": 0.6969953449005502,
+      "mae_us": 9056.672000000002,
+      "r2": -12.155757498317893
+    },
+    {
+      "scope": "decode_tp2",
+      "model": "three_hard_bins",
+      "samples": 2,
+      "mape": 0.003751655651614421,
+      "median_ape": 0.003751655651614421,
+      "p95_ape": 0.004788635675860521,
+      "mae_us": 55.37462831855828,
+      "r2": 0.9994466729544176
+    },
+    {
+      "scope": "decode_tp2",
+      "model": "continuous_histogram",
+      "samples": 2,
+      "mape": 0.005655368753199855,
+      "median_ape": 0.005655368753199855,
+      "p95_ape": 0.007017273881498293,
+      "mae_us": 82.89260606162406,
+      "r2": 0.9987915629503389
+    },
+    {
+      "scope": "decode_tp4",
+      "model": "total_bytes_only",
+      "samples": 2,
+      "mape": 0.6337103375833091,
+      "median_ape": 0.6337103375833091,
+      "p95_ape": 0.6950425601274992,
+      "mae_us": 9414.627499999999,
+      "r2": -12.071038285843967
+    },
+    {
+      "scope": "decode_tp4",
+      "model": "three_hard_bins",
+      "samples": 2,
+      "mape": 0.014152463673246051,
+      "median_ape": 0.014152463673246051,
+      "p95_ape": 0.01678972974174592,
+      "mae_us": 214.07046519314645,
+      "r2": 0.9928648559067239
+    },
+    {
+      "scope": "decode_tp4",
+      "model": "continuous_histogram",
+      "samples": 2,
+      "mape": 0.005066630370103677,
+      "median_ape": 0.005066630370103677,
+      "p95_ape": 0.006856181292849721,
+      "mae_us": 79.1833281291456,
+      "r2": 0.9988979066505157
+    },
+    {
+      "scope": "decode_tp8",
+      "model": "total_bytes_only",
+      "samples": 2,
+      "mape": 0.6282837555699642,
+      "median_ape": 0.6282837555699642,
+      "p95_ape": 0.6894719741729134,
+      "mae_us": 9873.104,
+      "r2": -12.271766809461589
+    },
+    {
+      "scope": "decode_tp8",
+      "model": "three_hard_bins",
+      "samples": 2,
+      "mape": 0.007919500175036042,
+      "median_ape": 0.007919500175036042,
+      "p95_ape": 0.008538478624002418,
+      "mae_us": 123.9732904617731,
+      "r2": 0.997928694494497
+    },
+    {
+      "scope": "decode_tp8",
+      "model": "continuous_histogram",
+      "samples": 2,
+      "mape": 0.015113283490416258,
+      "median_ape": 0.015113283490416258,
+      "p95_ape": 0.01545699941933306,
+      "mae_us": 233.963352752251,
+      "r2": 0.9928129059575515
+    }
+  ]
+}

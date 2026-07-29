@@ -1,0 +1,349 @@
+{
+  "schema_version": "collective-kernel-cost-knots-v1",
+  "interpolation": "linear-in-log2-payload-within-one-backend",
+  "note": "Use intrinsic median for the structural base term. Completion and rank-skew fields quantify launch/synchronization uncertainty.",
+  "curves": [
+    {
+      "op": "all_reduce",
+      "backend": "sglang_custom_all_reduce_v2",
+      "group_size": 2,
+      "topology": "single-node-nvlink",
+      "payload_scope": "representative-rank-logical-input",
+      "latency_scope": "skew-free-intrinsic-lower-envelope-across-ranks",
+      "knots": [
+        {
+          "payload_bytes": 8192,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 4.1599999999998545,
+          "intrinsic_p95_latency_us": 4.8310500000001415,
+          "completion_median_latency_us": 7.951499999999669,
+          "rank_skew_median_us": 3.7760000000025684
+        },
+        {
+          "payload_bytes": 16384,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 4.1599999999998545,
+          "intrinsic_p95_latency_us": 5.055050000000255,
+          "completion_median_latency_us": 7.519999999999072,
+          "rank_skew_median_us": 3.3435000000008586
+        },
+        {
+          "payload_bytes": 32768,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 4.191999999999524,
+          "intrinsic_p95_latency_us": 5.057550000000491,
+          "completion_median_latency_us": 7.711999999999534,
+          "rank_skew_median_us": 3.6000000000001364
+        },
+        {
+          "payload_bytes": 49152,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 4.192000000000007,
+          "intrinsic_p95_latency_us": 5.153600000000004,
+          "completion_median_latency_us": 7.856000000000222,
+          "rank_skew_median_us": 3.680000000000291
+        },
+        {
+          "payload_bytes": 65536,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 4.22400000000016,
+          "intrinsic_p95_latency_us": 5.216000000000349,
+          "completion_median_latency_us": 7.568499999999858,
+          "rank_skew_median_us": 3.3914999999997235
+        },
+        {
+          "payload_bytes": 131072,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 6.239999999999782,
+          "intrinsic_p95_latency_us": 7.199999999999863,
+          "completion_median_latency_us": 9.727999999999156,
+          "rank_skew_median_us": 3.5199999999997544
+        },
+        {
+          "payload_bytes": 262144,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 6.335999999999331,
+          "intrinsic_p95_latency_us": 7.391999999999825,
+          "completion_median_latency_us": 9.839999999999918,
+          "rank_skew_median_us": 3.616000000000895
+        },
+        {
+          "payload_bytes": 524288,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 6.783999999999651,
+          "intrinsic_p95_latency_us": 7.90405000000037,
+          "completion_median_latency_us": 10.672000000000025,
+          "rank_skew_median_us": 3.9834999999998217
+        },
+        {
+          "payload_bytes": 1048576,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 7.584000000000742,
+          "intrinsic_p95_latency_us": 9.056000000000063,
+          "completion_median_latency_us": 11.77599999999984,
+          "rank_skew_median_us": 4.3034999999999854
+        },
+        {
+          "payload_bytes": 2097152,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 10.528000000000247,
+          "intrinsic_p95_latency_us": 11.615999999999985,
+          "completion_median_latency_us": 14.304000000000087,
+          "rank_skew_median_us": 3.984000000001288
+        },
+        {
+          "payload_bytes": 4194304,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 15.072000000000116,
+          "intrinsic_p95_latency_us": 15.392050000001564,
+          "completion_median_latency_us": 17.76000000000022,
+          "rank_skew_median_us": 2.7200000000002547
+        },
+        {
+          "payload_bytes": 8388608,
+          "algorithm": "ONE_SHOT_PULL",
+          "intrinsic_median_latency_us": 23.296000000000276,
+          "intrinsic_p95_latency_us": 23.58399999999988,
+          "completion_median_latency_us": 25.248000000000047,
+          "rank_skew_median_us": 1.9039999999993142
+        },
+        {
+          "payload_bytes": 16777216,
+          "algorithm": "ONE_SHOT_PULL",
+          "intrinsic_median_latency_us": 37.53600000000006,
+          "intrinsic_p95_latency_us": 37.85599999999977,
+          "completion_median_latency_us": 39.391999999999825,
+          "rank_skew_median_us": 1.8724999999994907
+        }
+      ]
+    },
+    {
+      "op": "all_reduce",
+      "backend": "sglang_custom_all_reduce_v2",
+      "group_size": 4,
+      "topology": "single-node-nvlink",
+      "payload_scope": "representative-rank-logical-input",
+      "latency_scope": "skew-free-intrinsic-lower-envelope-across-ranks",
+      "knots": [
+        {
+          "payload_bytes": 8192,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 4.224500000000262,
+          "intrinsic_p95_latency_us": 6.367999999999483,
+          "completion_median_latency_us": 21.66400000000067,
+          "rank_skew_median_us": 16.63999999999851
+        },
+        {
+          "payload_bytes": 16384,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 4.319999999999709,
+          "intrinsic_p95_latency_us": 6.400000000000591,
+          "completion_median_latency_us": 23.75999999999999,
+          "rank_skew_median_us": 18.64049999999861
+        },
+        {
+          "payload_bytes": 32768,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 4.351999999999862,
+          "intrinsic_p95_latency_us": 6.399999999999636,
+          "completion_median_latency_us": 22.735999999998967,
+          "rank_skew_median_us": 17.77549999999883
+        },
+        {
+          "payload_bytes": 49152,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 4.38499999999965,
+          "intrinsic_p95_latency_us": 6.368050000000357,
+          "completion_median_latency_us": 22.063999999999396,
+          "rank_skew_median_us": 17.103500000000167
+        },
+        {
+          "payload_bytes": 65536,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 4.416000000001077,
+          "intrinsic_p95_latency_us": 6.369600000001991,
+          "completion_median_latency_us": 23.120000000000346,
+          "rank_skew_median_us": 18.1279999999997
+        },
+        {
+          "payload_bytes": 131072,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 6.400000000000091,
+          "intrinsic_p95_latency_us": 7.456000000000131,
+          "completion_median_latency_us": 24.048000000000684,
+          "rank_skew_median_us": 17.599500000000035
+        },
+        {
+          "payload_bytes": 262144,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 6.4650000000001455,
+          "intrinsic_p95_latency_us": 7.9359999999997175,
+          "completion_median_latency_us": 22.784500000000662,
+          "rank_skew_median_us": 16.160499999999047
+        },
+        {
+          "payload_bytes": 524288,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 8.0,
+          "intrinsic_p95_latency_us": 9.313599999999859,
+          "completion_median_latency_us": 22.175999999999476,
+          "rank_skew_median_us": 14.27199999999948
+        },
+        {
+          "payload_bytes": 1048576,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 11.231999999999971,
+          "intrinsic_p95_latency_us": 12.0,
+          "completion_median_latency_us": 25.695999999999913,
+          "rank_skew_median_us": 14.385000000001128
+        },
+        {
+          "payload_bytes": 2097152,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 17.695999999999913,
+          "intrinsic_p95_latency_us": 18.207000000000335,
+          "completion_median_latency_us": 31.264000000000124,
+          "rank_skew_median_us": 13.695499999998901
+        },
+        {
+          "payload_bytes": 4194304,
+          "algorithm": "TWO_SHOT_PULL",
+          "intrinsic_median_latency_us": 18.33600000000024,
+          "intrinsic_p95_latency_us": 18.879999999999246,
+          "completion_median_latency_us": 33.55199999999968,
+          "rank_skew_median_us": 15.11999999999989
+        },
+        {
+          "payload_bytes": 8388608,
+          "algorithm": "TWO_SHOT_PULL",
+          "intrinsic_median_latency_us": 28.096000000000004,
+          "intrinsic_p95_latency_us": 28.54560000000165,
+          "completion_median_latency_us": 40.815500000000156,
+          "rank_skew_median_us": 12.912000000000035
+        },
+        {
+          "payload_bytes": 16777216,
+          "algorithm": "TWO_SHOT_PULL",
+          "intrinsic_median_latency_us": 47.423000000000684,
+          "intrinsic_p95_latency_us": 48.22399999999843,
+          "completion_median_latency_us": 59.40750000000048,
+          "rank_skew_median_us": 12.11199999999917
+        }
+      ]
+    },
+    {
+      "op": "all_reduce",
+      "backend": "sglang_custom_all_reduce_v2",
+      "group_size": 8,
+      "topology": "single-node-nvlink",
+      "payload_scope": "representative-rank-logical-input",
+      "latency_scope": "skew-free-intrinsic-lower-envelope-across-ranks",
+      "knots": [
+        {
+          "payload_bytes": 8192,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 4.92699999999968,
+          "intrinsic_p95_latency_us": 6.721550000001114,
+          "completion_median_latency_us": 30.048000000000684,
+          "rank_skew_median_us": 24.991500000000997
+        },
+        {
+          "payload_bytes": 16384,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 4.927999999999884,
+          "intrinsic_p95_latency_us": 6.1120000000009895,
+          "completion_median_latency_us": 29.280000000001564,
+          "rank_skew_median_us": 24.208500000001095
+        },
+        {
+          "payload_bytes": 32768,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 4.991999999999848,
+          "intrinsic_p95_latency_us": 6.335999999999331,
+          "completion_median_latency_us": 30.463999999999942,
+          "rank_skew_median_us": 25.31250000000091
+        },
+        {
+          "payload_bytes": 49152,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 5.055999999999585,
+          "intrinsic_p95_latency_us": 6.943999999999528,
+          "completion_median_latency_us": 30.831499999999323,
+          "rank_skew_median_us": 25.21600000000217
+        },
+        {
+          "payload_bytes": 65536,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 5.18500000000131,
+          "intrinsic_p95_latency_us": 7.10399999999936,
+          "completion_median_latency_us": 30.01599999999962,
+          "rank_skew_median_us": 24.576500000001033
+        },
+        {
+          "payload_bytes": 131072,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 7.391999999999825,
+          "intrinsic_p95_latency_us": 8.609600000000135,
+          "completion_median_latency_us": 31.023999999999887,
+          "rank_skew_median_us": 23.808000000000447
+        },
+        {
+          "payload_bytes": 262144,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 8.736000000000786,
+          "intrinsic_p95_latency_us": 9.601600000002053,
+          "completion_median_latency_us": 32.319000000001324,
+          "rank_skew_median_us": 23.71150000000216
+        },
+        {
+          "payload_bytes": 524288,
+          "algorithm": "ONE_SHOT_PUSH",
+          "intrinsic_median_latency_us": 12.224500000000262,
+          "intrinsic_p95_latency_us": 12.799999999999295,
+          "completion_median_latency_us": 35.48800000000074,
+          "rank_skew_median_us": 23.167500000001382
+        },
+        {
+          "payload_bytes": 1048576,
+          "algorithm": "TWO_SHOT_PULL",
+          "intrinsic_median_latency_us": 13.791999999999462,
+          "intrinsic_p95_latency_us": 14.431999999998926,
+          "completion_median_latency_us": 36.20800000000054,
+          "rank_skew_median_us": 22.09649999999965
+        },
+        {
+          "payload_bytes": 2097152,
+          "algorithm": "TWO_SHOT_PULL",
+          "intrinsic_median_latency_us": 16.095499999999447,
+          "intrinsic_p95_latency_us": 17.441600000002197,
+          "completion_median_latency_us": 37.76000000000022,
+          "rank_skew_median_us": 21.69549999999981
+        },
+        {
+          "payload_bytes": 4194304,
+          "algorithm": "TWO_SHOT_PULL",
+          "intrinsic_median_latency_us": 21.342999999999847,
+          "intrinsic_p95_latency_us": 22.785600000003157,
+          "completion_median_latency_us": 42.70349999999962,
+          "rank_skew_median_us": 21.24750000000131
+        },
+        {
+          "payload_bytes": 8388608,
+          "algorithm": "TWO_SHOT_PULL",
+          "intrinsic_median_latency_us": 32.03200000000061,
+          "intrinsic_p95_latency_us": 33.31355000000167,
+          "completion_median_latency_us": 55.615499999999884,
+          "rank_skew_median_us": 23.1850000000004
+        },
+        {
+          "payload_bytes": 16777216,
+          "algorithm": "TWO_SHOT_PULL",
+          "intrinsic_median_latency_us": 55.711999999999534,
+          "intrinsic_p95_latency_us": 57.15424999999986,
+          "completion_median_latency_us": 78.03149999999914,
+          "rank_skew_median_us": 22.2554999999993
+        }
+      ]
+    }
+  ]
+}
