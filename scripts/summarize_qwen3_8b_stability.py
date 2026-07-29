@@ -117,6 +117,92 @@ def write_csv(path, rows):
         writer.writerows(rows)
 
 
+def numeric_cell(row, name):
+    return float(row[name].strip().split()[0])
+
+
+def summarize_telemetry(stability_dir):
+    rows = []
+    for path_string in glob.glob(
+        str(stability_dir / "tp*" / "r*" / "**" / "telemetry.csv"),
+        recursive=True,
+    ):
+        path = Path(path_string)
+        tp_part = next(part for part in path.parts if part.startswith("tp"))
+        tp = int(tp_part[2:])
+        with path.open() as source:
+            for record in csv.DictReader(source):
+                record = {
+                    key.strip(): value.strip()
+                    for key, value in record.items()
+                }
+                gpu_index = int(record["index"])
+                if gpu_index >= tp:
+                    continue
+                rows.append(
+                    {
+                        "pstate": record["pstate"],
+                        "temperature_c": numeric_cell(
+                            record, "temperature.gpu"
+                        ),
+                        "power_w": numeric_cell(record, "power.draw [W]"),
+                        "sm_clock_mhz": numeric_cell(
+                            record, "clocks.current.sm [MHz]"
+                        ),
+                        "memory_clock_mhz": numeric_cell(
+                            record, "clocks.current.memory [MHz]"
+                        ),
+                        "utilization_percent": numeric_cell(
+                            record, "utilization.gpu [%]"
+                        ),
+                        "memory_used_mib": numeric_cell(
+                            record, "memory.used [MiB]"
+                        ),
+                    }
+                )
+    if not rows:
+        return {"sample_count": 0}
+
+    active = [row for row in rows if row["utilization_percent"] >= 20]
+    measured = active or rows
+
+    def distribution(name):
+        values = np.asarray(
+            [row[name] for row in measured], dtype=np.float64
+        )
+        return {
+            "min": float(np.min(values)),
+            "median": float(np.median(values)),
+            "p95": float(np.percentile(values, 95)),
+            "max": float(np.max(values)),
+        }
+
+    return {
+        "sample_count": len(rows),
+        "active_sample_count": len(active),
+        "active_definition": "GPU utilization >= 20%",
+        "active_or_all_sample_pstate_counts": {
+            state: sum(row["pstate"] == state for row in measured)
+            for state in sorted({row["pstate"] for row in measured})
+        },
+        "active_or_all_sample_distributions": {
+            name: distribution(name)
+            for name in (
+                "temperature_c",
+                "power_w",
+                "sm_clock_mhz",
+                "memory_clock_mhz",
+                "utilization_percent",
+                "memory_used_mib",
+            )
+        },
+        "note": (
+            "Telemetry is sampled once per second for the selected TP ranks. "
+            "It is a run-health diagnostic, not a per-collective feature."
+        ),
+    }
+
+
 def main():
     args = parse_args()
     baseline = load_records(args.baseline_dir)
@@ -276,6 +362,7 @@ def main():
             "combined_p95": float(np.percentile(after, 95)),
             "combined_max": float(np.max(after)),
         },
+        "gpu_telemetry": summarize_telemetry(args.stability_dir),
         "interpretation": (
             "PatternDemand is deterministic when the pattern signature is "
             "unchanged; the IQR comparison quantifies noise in the measured "
