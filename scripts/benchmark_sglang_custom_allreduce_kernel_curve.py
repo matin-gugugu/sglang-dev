@@ -153,10 +153,12 @@ def main():
             record_shapes=False,
             profile_memory=False,
             with_stack=False,
+            acc_events=True,
         ) as profiler:
             for _ in range(args.iterations):
+                dist.barrier(group=cpu_group)
                 output_tensor = tensor_model_parallel_all_reduce(tensor)
-            torch.cuda.synchronize()
+                torch.cuda.synchronize()
         del output_tensor
 
         local_samples_us, local_kernel_names = kernel_durations_us(profiler)
