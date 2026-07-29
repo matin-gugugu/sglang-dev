@@ -671,7 +671,7 @@ def plot_results(path, rows, metrics):
     ]
     axes[1, 0].boxplot(
         ape_values,
-        labels=[MODEL_LABELS[name] for name in MODEL_NAMES],
+        tick_labels=[MODEL_LABELS[name] for name in MODEL_NAMES],
         showfliers=True,
     )
     axes[1, 0].set_ylabel("Absolute percentage error (%)")
