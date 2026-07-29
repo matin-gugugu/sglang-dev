@@ -12,6 +12,10 @@ cd "$REPO_ROOT"
 
 if [[ -n "$STABILITY_PID" ]]; then
   while kill -0 "$STABILITY_PID" 2>/dev/null; do
+    process_state="$(ps -o stat= -p "$STABILITY_PID" 2>/dev/null || true)"
+    if [[ "$process_state" == Z* ]]; then
+      break
+    fi
     sleep 30
   done
 fi
