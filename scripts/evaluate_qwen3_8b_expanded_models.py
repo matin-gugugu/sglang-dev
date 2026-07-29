@@ -55,6 +55,11 @@ def parse_args():
         default=repo_root / "experiment-results" / "phase4" / "qwen3_8b_expanded",
     )
     parser.add_argument(
+        "--stability-dir",
+        type=Path,
+        default=repo_root / "experiment-results" / "phase5" / "qwen3_8b_stability",
+    )
+    parser.add_argument(
         "--custom-curve",
         type=Path,
         default=repo_root
@@ -142,9 +147,13 @@ def is_controlled_equal_payload(row):
     )
 
 
-def load_dataset(input_dir):
+def load_dataset(input_dir, stability_dir):
     grouped = defaultdict(list)
     paths = sorted(input_dir.glob("tp*/r*/**/comm_ground_truth.jsonl"))
+    if stability_dir.exists():
+        paths.extend(
+            sorted(stability_dir.glob("tp*/r*/**/comm_ground_truth.jsonl"))
+        )
     if not paths:
         raise ValueError(f"no ground-truth files found below {input_dir}")
     for path in paths:
@@ -155,8 +164,8 @@ def load_dataset(input_dir):
     rows = []
     for key, repeats in sorted(grouped.items()):
         phase, tp, batch_size, input_len, output_len = key
-        if len(repeats) != 3:
-            raise ValueError(f"{key}: expected 3 repeats, got {len(repeats)}")
+        if len(repeats) < 3:
+            raise ValueError(f"{key}: expected at least 3 repeats, got {len(repeats)}")
         patterns = [
             record["full_phase_pattern_demand"] for record in repeats
         ]
@@ -846,7 +855,9 @@ def public_row(row):
 def main():
     args = parse_args()
     torch.set_num_threads(1)
-    rows = assign_splits(load_dataset(args.input_dir), args.seed)
+    rows = assign_splits(
+        load_dataset(args.input_dir, args.stability_dir), args.seed
+    )
     curve = BackendAwareCostCurve(args.custom_curve, args.nccl_curve)
     for row in rows:
         row["continuous_raw_us"] = continuous_cost(row, curve)
@@ -954,7 +965,10 @@ def main():
         "schema_version": "qwen3-8b-expanded-prediction-v1",
         "dataset": {
             "unique_workloads": len(rows),
-            "repeat_count_per_workload": 3,
+            "repeat_count_distribution": {
+                str(count): sum(row["repeat_count"] == count for row in rows)
+                for count in sorted({row["repeat_count"] for row in rows})
+            },
             "phase_counts": {
                 phase: sum(row["phase"] == phase for row in rows)
                 for phase in ("prefill", "decode")

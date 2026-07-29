@@ -210,6 +210,7 @@ class BenchArgs:
     profile_prefix: str = "profile"
     profile_start_step: Optional[int] = None
     profile_steps: Optional[int] = None
+    profile_all_ranks: bool = False
     comm_profile: bool = False
     comm_profile_mode: str = "full-trace"
     output_lens_per_request: Tuple[int] = ()
@@ -282,6 +283,14 @@ class BenchArgs:
             type=int,
             default=None,
             help="Number of decode steps to profile starting from profile-start-step. If not specified, profiles only one step.",
+        )
+        parser.add_argument(
+            "--profile-all-ranks",
+            action="store_true",
+            help=(
+                "Enable the requested profiler on every TP rank and add a rank "
+                "component to each trace prefix. By default only rank 0 is profiled."
+            ),
         )
         parser.add_argument(
             "--comm-profile",
@@ -1111,6 +1120,14 @@ def latency_test(
         else:
             full_input_ids = None
             reqs = prepare_synthetic_inputs_for_latency_test(bs, il, bs_aligned_inputs)
+        profile_this_rank = bench_args.profile and (
+            tp_rank == 0 or bench_args.profile_all_ranks
+        )
+        profile_prefix = (
+            f"{bench_args.profile_prefix}_rank{tp_rank}"
+            if bench_args.profile_all_ranks
+            else bench_args.profile_prefix
+        )
         ret = latency_test_run_once(
             bench_args.run_name,
             model_runner,
@@ -1120,10 +1137,10 @@ def latency_test(
             il,
             ol,
             bench_args.log_decode_step,
-            bench_args.profile if tp_rank == 0 else None,
-            bench_args.profile_record_shapes if tp_rank == 0 else None,
+            profile_this_rank,
+            bench_args.profile_record_shapes if profile_this_rank else False,
             bench_args.profile_activities,
-            bench_args.profile_prefix,
+            profile_prefix,
             bench_args.profile_stage,
             tp_rank,
             bench_args.profile_start_step,
