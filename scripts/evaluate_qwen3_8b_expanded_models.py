@@ -470,8 +470,8 @@ def train_residual_mlp(train_rows, validation_rows, seed, max_epochs, patience):
             validation_loss = loss_function(
                 validation_prediction, validation_target
             )
-        train_value = float(train_loss)
-        validation_value = float(validation_loss)
+        train_value = float(train_loss.detach())
+        validation_value = float(validation_loss.detach())
         if epoch % 25 == 0:
             history.append(
                 {
@@ -630,7 +630,7 @@ def plot_results(path, rows, metrics):
     ]
     axes[1, 0].boxplot(
         ape_values,
-        tick_labels=[MODEL_LABELS[name] for name in MODEL_NAMES],
+        labels=[MODEL_LABELS[name] for name in MODEL_NAMES],
         showfliers=True,
     )
     axes[1, 0].set_ylabel("Absolute percentage error (%)")
