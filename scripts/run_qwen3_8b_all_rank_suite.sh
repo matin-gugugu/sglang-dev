@@ -193,6 +193,9 @@ run_group() {
 run_tp_repeat() {
   local tp="$1"
   local repeat="$2"
+
+  # Common mechanism grid: Prefill scale plus the equal-total-payload Decode
+  # contrast B1xM512, B4xM128, and B16xM32.
   run_group "$tp" "$repeat" prefill b1_l128_2048_8192 3 \
     --batch-size 1 --input-len 128 2048 8192 --output-len 8
   run_group "$tp" "$repeat" decode b1_l2048_m512 1 \
@@ -201,6 +204,32 @@ run_tp_repeat() {
     --batch-size 4 --input-len 2048 --output-len 128
   run_group "$tp" "$repeat" decode b16_l2048_m32 1 \
     --batch-size 16 --input-len 2048 --output-len 32
+
+  # Representative workloads whose original three-repeat rank-0 target had
+  # IQR / median above 20%. These determine whether the all-rank critical
+  # label removes role-dependent representative-rank variance.
+  case "$tp" in
+    2)
+      run_group "$tp" "$repeat" prefill highvar_b8_l128 1 \
+        --batch-size 8 --input-len 128 --output-len 8
+      run_group "$tp" "$repeat" decode highvar_b1_l128_m32_128 2 \
+        --batch-size 1 --input-len 128 --output-len 32 128
+      ;;
+    4)
+      run_group "$tp" "$repeat" decode highvar_b1_l128_m32_128_512 3 \
+        --batch-size 1 --input-len 128 --output-len 32 128 512
+      ;;
+    8)
+      run_group "$tp" "$repeat" decode highvar_b1_l128_m32_512 2 \
+        --batch-size 1 --input-len 128 --output-len 32 512
+      run_group "$tp" "$repeat" decode highvar_b2_l8192_m32 1 \
+        --batch-size 2 --input-len 8192 --output-len 32
+      run_group "$tp" "$repeat" decode highvar_b8_l8192_m32 1 \
+        --batch-size 8 --input-len 8192 --output-len 32
+      run_group "$tp" "$repeat" decode highvar_b16_l128_m128 1 \
+        --batch-size 16 --input-len 128 --output-len 128
+      ;;
+  esac
 }
 
 for tp in 2 4 8; do

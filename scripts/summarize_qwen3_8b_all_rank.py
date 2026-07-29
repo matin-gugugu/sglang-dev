@@ -52,6 +52,16 @@ def workload_key(record):
     )
 
 
+def iqr_fraction(values):
+    values = np.asarray(values, dtype=np.float64)
+    median = float(np.median(values))
+    if median == 0:
+        return 0.0
+    return float(
+        (np.percentile(values, 75) - np.percentile(values, 25)) / median
+    )
+
+
 def main():
     args = parse_args()
     grouped = defaultdict(list)
@@ -98,6 +108,8 @@ def main():
                     critical_value / rank0_value
                     for critical_value, rank0_value in zip(critical, rank0)
                 ),
+                "rank0_repeat_iqr_fraction": iqr_fraction(rank0),
+                "critical_repeat_iqr_fraction": iqr_fraction(critical),
                 "max_rank_over_rank0_median": statistics.median(
                     max_value / rank0_value
                     for max_value, rank0_value in zip(max_rank, rank0)
@@ -177,7 +189,50 @@ def main():
     )
     plt.close(figure)
 
+    figure, axis = plt.subplots(figsize=(7, 6))
+    for phase in ("prefill", "decode"):
+        for tp in (2, 4, 8):
+            selected = [
+                row
+                for row in rows
+                if row["phase"] == phase and row["group_size"] == tp
+            ]
+            axis.scatter(
+                [
+                    100 * row["rank0_repeat_iqr_fraction"]
+                    for row in selected
+                ],
+                [
+                    100 * row["critical_repeat_iqr_fraction"]
+                    for row in selected
+                ],
+                marker=markers[phase],
+                color=colors[tp],
+                s=58,
+                alpha=0.8,
+                label=f"{phase} TP={tp}",
+            )
+    max_iqr = 100 * max(
+        max(row["rank0_repeat_iqr_fraction"] for row in rows),
+        max(row["critical_repeat_iqr_fraction"] for row in rows),
+    )
+    axis.plot([0, max_iqr], [0, max_iqr], "--", color="black", linewidth=1)
+    axis.set_xlabel("Representative rank-0 IQR / median (%)")
+    axis.set_ylabel("All-rank critical IQR / median (%)")
+    axis.set_title("Repeat stability of the communication-time label")
+    axis.grid(True, alpha=0.25)
+    axis.legend(fontsize=8)
+    figure.tight_layout()
+    figure.savefig(
+        args.output_dir / "qwen3_8b_all_rank_stability.png",
+        dpi=180,
+        bbox_inches="tight",
+    )
+    plt.close(figure)
+
     ratios = [row["critical_over_rank0_median"] for row in rows]
+    rank0_iqr = [row["rank0_repeat_iqr_fraction"] for row in rows]
+    critical_iqr = [row["critical_repeat_iqr_fraction"] for row in rows]
     summary = {
         "schema_version": "all-rank-critical-summary-v1",
         "workload_count": len(rows),
@@ -186,6 +241,15 @@ def main():
             "median": float(np.median(ratios)),
             "p95": float(np.percentile(ratios, 95)),
             "max": max(ratios),
+        },
+        "repeat_iqr_fraction": {
+            "rank0_median": float(np.median(rank0_iqr)),
+            "all_rank_critical_median": float(np.median(critical_iqr)),
+            "critical_more_stable_workloads": sum(
+                critical < rank0
+                for critical, rank0 in zip(critical_iqr, rank0_iqr)
+            ),
+            "workload_count": len(rows),
         },
         "definition": (
             "Per workload, sum the maximum kernel duration across aligned ranks "
