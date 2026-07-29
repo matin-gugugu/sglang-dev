@@ -1004,9 +1004,10 @@ def main():
                 ),
             },
             "target": (
-                "median across three repeats of the representative-rank GPU "
-                "collective-kernel envelope, scaled from an 8-step Decode window "
-                "to full-phase calls; Prefill is fully profiled"
+                "median across the available repeats (3 for the base grid and "
+                "10 for rerun workloads) of the representative-rank GPU "
+                "collective-kernel envelope, scaled from an 8-step Decode "
+                "window to full-phase calls; Prefill is fully profiled"
             ),
         },
         "models": {
