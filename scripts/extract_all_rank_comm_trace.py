@@ -58,6 +58,15 @@ def matched_kernels(path):
     return matched
 
 
+def demand_signature(pattern):
+    return (
+        pattern["group_size"],
+        pattern["calls"],
+        pattern["payload_bytes"],
+        tuple(sorted(pattern["calls_by_payload"].items())),
+    )
+
+
 def main():
     args = parse_args()
     phase = args.phase or infer_phase(args.trace[0])
@@ -85,6 +94,36 @@ def main():
         raise ValueError(
             f"expected {group_size} rank traces, got {len(args.trace)}"
         )
+    comm_profiles = sorted(
+        result["comm_profile"], key=lambda profile: profile["tp_rank"]
+    )
+    if [profile["tp_rank"] for profile in comm_profiles] != list(
+        range(group_size)
+    ):
+        raise ValueError("comm profiles do not contain exactly one entry per rank")
+    profiled_patterns_by_rank = [
+        aggregate_pattern_demand(
+            profile,
+            phase,
+            args.profile_start_step,
+            args.profile_end_step,
+        )
+        for profile in comm_profiles
+    ]
+    full_patterns_by_rank = [
+        aggregate_pattern_demand(profile, phase, None, None)
+        for profile in comm_profiles
+    ]
+    identical_profiled_demand = all(
+        demand_signature(pattern) == demand_signature(profiled_pattern)
+        for pattern in profiled_patterns_by_rank
+    )
+    identical_full_demand = all(
+        demand_signature(pattern) == demand_signature(full_pattern)
+        for pattern in full_patterns_by_rank
+    )
+    if not identical_profiled_demand or not identical_full_demand:
+        raise ValueError("logical PatternDemand differs across ranks")
 
     events_by_rank = [matched_kernels(path) for path in args.trace]
     expected_calls = profiled_pattern["calls"]
@@ -139,6 +178,17 @@ def main():
             "rank_count": group_size,
             "trace_files": [str(path) for path in args.trace],
             "kernel_invocations_per_rank": counts,
+            "logical_pattern_demand_per_rank": {
+                str(rank): {
+                    "profiled_calls": pattern["calls"],
+                    "profiled_payload_bytes": pattern["payload_bytes"],
+                    "full_phase_calls": full_patterns_by_rank[rank]["calls"],
+                    "full_phase_payload_bytes": full_patterns_by_rank[rank][
+                        "payload_bytes"
+                    ],
+                }
+                for rank, pattern in enumerate(profiled_patterns_by_rank)
+            },
             "backend_sequence_signature": "+".join(
                 sorted(set(backend_sequences[0]))
             ),
@@ -194,9 +244,17 @@ def main():
                 sequence == backend_sequences[0]
                 for sequence in backend_sequences[1:]
             ),
+            "identical_profiled_pattern_demand_on_every_rank": (
+                identical_profiled_demand
+            ),
+            "identical_full_phase_pattern_demand_on_every_rank": (
+                identical_full_demand
+            ),
             "note": (
                 "Ordinal alignment is valid only after exact call counts and "
-                "identical backend sequences are verified on every rank."
+                "identical backend sequences are verified on every rank. "
+                "PatternDemand remains group-level and uses one representative "
+                "rank; per-rank copies are checked for equality, not summed."
             ),
         },
     }

@@ -110,6 +110,14 @@ assert all(row["all_rank_ground_truth"]["rank_count"] == tp for row in rows)
 assert all(row["alignment"]["exact_count_on_every_rank"] for row in rows)
 assert all(row["alignment"]["identical_backend_sequence"] for row in rows)
 assert all(
+    row["alignment"]["identical_profiled_pattern_demand_on_every_rank"]
+    for row in rows
+)
+assert all(
+    row["alignment"]["identical_full_phase_pattern_demand_on_every_rank"]
+    for row in rows
+)
+assert all(
     row["all_rank_ground_truth"]["full_phase_estimate"][
         "per_collective_critical_kernel_time_us"
     ]
