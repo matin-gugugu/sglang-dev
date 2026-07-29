@@ -81,6 +81,7 @@ def is_custom_allreduce_kernel(name):
             "all_reduce_one_shot_kernel",
             "all_reduce_two_shot_push_kernel",
             "all_reduce_two_shot_pull_kernel",
+            "all_reduce_two_shot_kernel",
         )
     )
 
