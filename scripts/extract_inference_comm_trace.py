@@ -86,6 +86,7 @@ def classify_collective_kernel(name):
         "all_reduce_one_shot_kernel",
         "all_reduce_two_shot_push_kernel",
         "all_reduce_two_shot_pull_kernel",
+        "all_reduce_two_shot_kernel",
     )
     for algorithm in custom_algorithms:
         if algorithm in lowered:
