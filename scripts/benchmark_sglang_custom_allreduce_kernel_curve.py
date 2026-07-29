@@ -210,10 +210,7 @@ def main():
                     payload_bytes / (median_us / 1_000_000.0) / 1e9
                 ),
                 "ring_equivalent_bus_bandwidth_GBps": (
-                    payload_bytes
-                    * ring_factor
-                    / (median_us / 1_000_000.0)
-                    / 1e9
+                    payload_bytes * ring_factor / (median_us / 1_000_000.0) / 1e9
                 ),
                 "samples_us": completion_samples_us,
                 "rank_samples_us": gathered_samples,
