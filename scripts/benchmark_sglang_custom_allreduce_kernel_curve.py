@@ -201,9 +201,7 @@ def main():
                 "backend": "sglang_custom_all_reduce_v2",
                 "algorithm": algorithm,
                 "group_size": world_size,
-                "latency_scope": (
-                    "skew-free-intrinsic-lower-envelope-across-ranks"
-                ),
+                "latency_scope": ("skew-free-intrinsic-lower-envelope-across-ranks"),
                 "payload_scope": "representative-rank-logical-input",
                 "payload_bytes": payload_bytes,
                 "dtype": str(dtype).removeprefix("torch."),
