@@ -275,7 +275,7 @@ def plot_summary(path, rows):
         axis.grid(True, which="both", alpha=0.25)
         axis.legend()
     axes[0].set_yscale("log")
-    axes[2].set_yscale("symlog", linthresh=0.1)
+    axes[2].set_yscale("log")
 
     figure.suptitle("B200 single-node NVLink SGLang CustomAllReduceV2 (5 repeats)")
     figure.tight_layout()
