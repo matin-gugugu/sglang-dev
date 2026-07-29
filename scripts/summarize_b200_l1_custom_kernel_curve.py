@@ -67,18 +67,13 @@ def validate_records(records):
             raise ValueError(f"schema mismatch in {record['_source']}")
         if record["backend"] != "sglang_custom_all_reduce_v2":
             raise ValueError(f"backend mismatch in {record['_source']}")
-        if (
-            record["latency_scope"]
-            != "skew-free-intrinsic-lower-envelope-across-ranks"
-        ):
+        if record["latency_scope"] != "skew-free-intrinsic-lower-envelope-across-ranks":
             raise ValueError(f"latency scope mismatch in {record['_source']}")
         if len(record["samples_us"]) != 100:
             raise ValueError(f"sample count mismatch in {record['_source']}")
 
     expected_keys = {
-        (group_size, repeat)
-        for group_size in GROUP_SIZES
-        for repeat in range(REPEATS)
+        (group_size, repeat) for group_size in GROUP_SIZES for repeat in range(REPEATS)
     }
     if set(grouped) != expected_keys:
         missing = sorted(expected_keys - set(grouped))
@@ -103,9 +98,7 @@ def flatten_records(records):
                 "repeat_id": int(record["repeat_id"]),
                 "payload_scope": record["payload_scope"],
                 "payload_bytes": int(record["payload_bytes"]),
-                "intrinsic_median_latency_us": float(
-                    record["latency_us"]["median"]
-                ),
+                "intrinsic_median_latency_us": float(record["latency_us"]["median"]),
                 "intrinsic_p95_latency_us": float(record["latency_us"]["p95"]),
                 "completion_median_latency_us": float(
                     record["completion_latency_us"]["median"]
@@ -115,9 +108,7 @@ def flatten_records(records):
                 ),
                 "rank_skew_median_us": float(record["rank_skew_us"]["median"]),
                 "rank_skew_p95_us": float(record["rank_skew_us"]["p95"]),
-                "ring_equivalent_factor": float(
-                    record["ring_equivalent_factor"]
-                ),
+                "ring_equivalent_factor": float(record["ring_equivalent_factor"]),
                 "ring_equivalent_bus_bandwidth_GBps": float(
                     record["ring_equivalent_bus_bandwidth_GBps"]
                 ),
@@ -161,9 +152,7 @@ def aggregate_records(records):
             for record in values
             for sample in record["rank_skew_samples_us"]
         ]
-        repeat_medians = [
-            float(record["latency_us"]["median"]) for record in values
-        ]
+        repeat_medians = [float(record["latency_us"]["median"]) for record in values]
         median_us = float(np.median(intrinsic_samples))
         ring_factor = float(values[0]["ring_equivalent_factor"])
         rows.append(
@@ -180,13 +169,9 @@ def aggregate_records(records):
                 "intrinsic_median_latency_us": median_us,
                 "intrinsic_p95_latency_us": percentile(intrinsic_samples, 95),
                 "intrinsic_p99_latency_us": percentile(intrinsic_samples, 99),
-                "intrinsic_latency_cv": coefficient_of_variation(
-                    intrinsic_samples
-                ),
+                "intrinsic_latency_cv": coefficient_of_variation(intrinsic_samples),
                 "repeat_median_cv": coefficient_of_variation(repeat_medians),
-                "completion_median_latency_us": float(
-                    np.median(completion_samples)
-                ),
+                "completion_median_latency_us": float(np.median(completion_samples)),
                 "completion_p95_latency_us": percentile(completion_samples, 95),
                 "rank_skew_median_us": float(np.median(skew_samples)),
                 "rank_skew_p95_us": percentile(skew_samples, 95),
@@ -196,10 +181,7 @@ def aggregate_records(records):
                     payload_bytes / (median_us / 1_000_000.0) / 1e9
                 ),
                 "ring_equivalent_bus_bandwidth_GBps": (
-                    payload_bytes
-                    * ring_factor
-                    / (median_us / 1_000_000.0)
-                    / 1e9
+                    payload_bytes * ring_factor / (median_us / 1_000_000.0) / 1e9
                 ),
             }
         )
@@ -225,9 +207,7 @@ def write_knots(path, rows):
                 "group_size": group_size,
                 "topology": "single-node-nvlink",
                 "payload_scope": "representative-rank-logical-input",
-                "latency_scope": (
-                    "skew-free-intrinsic-lower-envelope-across-ranks"
-                ),
+                "latency_scope": ("skew-free-intrinsic-lower-envelope-across-ranks"),
                 "knots": [
                     {
                         "payload_bytes": row["payload_bytes"],
@@ -235,9 +215,7 @@ def write_knots(path, rows):
                         "intrinsic_median_latency_us": row[
                             "intrinsic_median_latency_us"
                         ],
-                        "intrinsic_p95_latency_us": row[
-                            "intrinsic_p95_latency_us"
-                        ],
+                        "intrinsic_p95_latency_us": row["intrinsic_p95_latency_us"],
                         "completion_median_latency_us": row[
                             "completion_median_latency_us"
                         ],
@@ -266,9 +244,7 @@ def plot_summary(path, rows):
     for group_size in GROUP_SIZES:
         values = [row for row in rows if row["group_size"] == group_size]
         payloads = np.asarray([row["payload_bytes"] for row in values])
-        medians = np.asarray(
-            [row["intrinsic_median_latency_us"] for row in values]
-        )
+        medians = np.asarray([row["intrinsic_median_latency_us"] for row in values])
         p95 = np.asarray([row["intrinsic_p95_latency_us"] for row in values])
         bandwidth = np.asarray(
             [row["ring_equivalent_bus_bandwidth_GBps"] for row in values]
@@ -281,12 +257,8 @@ def plot_summary(path, rows):
         axes[0].plot(payloads, medians, marker="o", color=color, label=label)
         axes[0].fill_between(payloads, medians, p95, color=color, alpha=0.14)
         axes[1].plot(payloads, bandwidth, marker="o", color=color, label=label)
-        axes[2].plot(
-            payloads, skew_median, marker="o", color=color, label=label
-        )
-        axes[2].fill_between(
-            payloads, skew_median, skew_p95, color=color, alpha=0.14
-        )
+        axes[2].plot(payloads, skew_median, marker="o", color=color, label=label)
+        axes[2].fill_between(payloads, skew_median, skew_p95, color=color, alpha=0.14)
 
     axes[0].set_title("CustomAllReduce intrinsic kernel cost")
     axes[0].set_ylabel("GPU kernel latency (μs)")
@@ -303,9 +275,7 @@ def plot_summary(path, rows):
     axes[0].set_yscale("log")
     axes[2].set_yscale("symlog", linthresh=0.1)
 
-    figure.suptitle(
-        "B200 single-node NVLink SGLang CustomAllReduceV2 (5 repeats)"
-    )
+    figure.suptitle("B200 single-node NVLink SGLang CustomAllReduceV2 (5 repeats)")
     figure.tight_layout()
     figure.savefig(path, dpi=180, bbox_inches="tight")
     plt.close(figure)
@@ -321,9 +291,7 @@ def main():
     write_csv(args.output_dir / "custom_kernel_curve_repeat_records.csv", repeat_rows)
     write_csv(args.output_dir / "custom_kernel_curve_summary.csv", summary_rows)
     write_knots(args.output_dir / "custom_kernel_cost_knots.json", summary_rows)
-    plot_summary(
-        args.output_dir / "b200_l1_custom_kernel_curve.png", summary_rows
-    )
+    plot_summary(args.output_dir / "b200_l1_custom_kernel_curve.png", summary_rows)
     print(
         f"Wrote {len(summary_rows)} aggregate points from {len(records)} records "
         f"and {sum(len(record['samples_us']) for record in records)} samples"
