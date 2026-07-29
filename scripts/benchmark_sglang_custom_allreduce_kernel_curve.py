@@ -175,11 +175,21 @@ def main():
         dist.all_gather_object(gathered_names, local_kernel_names, group=cpu_group)
 
         if rank == 0:
+            intrinsic_samples_us = [
+                min(rank_samples[index] for rank_samples in gathered_samples)
+                for index in range(args.iterations)
+            ]
             completion_samples_us = [
                 max(rank_samples[index] for rank_samples in gathered_samples)
                 for index in range(args.iterations)
             ]
-            median_us = float(np.median(completion_samples_us))
+            rank_skew_samples_us = [
+                completion - intrinsic
+                for intrinsic, completion in zip(
+                    intrinsic_samples_us, completion_samples_us
+                )
+            ]
+            median_us = float(np.median(intrinsic_samples_us))
             ring_factor = 2 * (world_size - 1) / world_size
             record = {
                 "schema_version": "collective-kernel-cost-v1",
@@ -191,20 +201,39 @@ def main():
                 "backend": "sglang_custom_all_reduce_v2",
                 "algorithm": algorithm,
                 "group_size": world_size,
-                "latency_scope": "max-gpu-kernel-duration-across-ranks",
+                "latency_scope": (
+                    "skew-free-intrinsic-lower-envelope-across-ranks"
+                ),
                 "payload_scope": "representative-rank-logical-input",
                 "payload_bytes": payload_bytes,
                 "dtype": str(dtype).removeprefix("torch."),
                 "warmup_iterations": args.warmup,
                 "timed_iterations": args.iterations,
                 "latency_us": {
-                    "min": float(min(completion_samples_us)),
+                    "min": float(min(intrinsic_samples_us)),
                     "median": median_us,
+                    "mean": float(np.mean(intrinsic_samples_us)),
+                    "p95": percentile(intrinsic_samples_us, 95),
+                    "p99": percentile(intrinsic_samples_us, 99),
+                    "max": float(max(intrinsic_samples_us)),
+                    "cv": coefficient_of_variation(intrinsic_samples_us),
+                },
+                "completion_latency_us": {
+                    "min": float(min(completion_samples_us)),
+                    "median": float(np.median(completion_samples_us)),
                     "mean": float(np.mean(completion_samples_us)),
                     "p95": percentile(completion_samples_us, 95),
                     "p99": percentile(completion_samples_us, 99),
                     "max": float(max(completion_samples_us)),
                     "cv": coefficient_of_variation(completion_samples_us),
+                },
+                "rank_skew_us": {
+                    "min": float(min(rank_skew_samples_us)),
+                    "median": float(np.median(rank_skew_samples_us)),
+                    "mean": float(np.mean(rank_skew_samples_us)),
+                    "p95": percentile(rank_skew_samples_us, 95),
+                    "p99": percentile(rank_skew_samples_us, 99),
+                    "max": float(max(rank_skew_samples_us)),
                 },
                 "ring_equivalent_factor": ring_factor,
                 "ring_equivalent_bytes": payload_bytes * ring_factor,
@@ -214,7 +243,9 @@ def main():
                 "ring_equivalent_bus_bandwidth_GBps": (
                     payload_bytes * ring_factor / (median_us / 1_000_000.0) / 1e9
                 ),
-                "samples_us": completion_samples_us,
+                "samples_us": intrinsic_samples_us,
+                "completion_samples_us": completion_samples_us,
+                "rank_skew_samples_us": rank_skew_samples_us,
                 "rank_samples_us": gathered_samples,
                 "rank_kernel_name_counts": gathered_names,
                 "backend_limits": {
