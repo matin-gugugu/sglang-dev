@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Summarize rank0 versus all-rank critical communication labels."""
+"""Summarize representative-rank, intrinsic, and synchronization-inclusive labels."""
 
 import argparse
 import csv
@@ -88,8 +88,15 @@ def main():
         demand = records[0]["full_phase_pattern_demand"]
         rank0 = [item["rank0_kernel_time_us"] for item in full]
         max_rank = [item["max_rank_total_kernel_time_us"] for item in full]
-        critical = [
-            item["per_collective_critical_kernel_time_us"] for item in full
+        intrinsic = [
+            item["skew_free_intrinsic_kernel_time_us"] for item in full
+        ]
+        post_rendezvous = [
+            item["post_rendezvous_completion_kernel_time_us"] for item in full
+        ]
+        sync_inclusive = [
+            item["synchronization_inclusive_max_duration_sum_us"]
+            for item in full
         ]
         rows.append(
             {
@@ -117,13 +124,25 @@ def main():
                 ),
                 "rank0_us_median": statistics.median(rank0),
                 "max_rank_total_us_median": statistics.median(max_rank),
-                "critical_us_median": statistics.median(critical),
-                "critical_over_rank0_median": statistics.median(
-                    critical_value / rank0_value
-                    for critical_value, rank0_value in zip(critical, rank0)
+                "intrinsic_us_median": statistics.median(intrinsic),
+                "post_rendezvous_us_median": statistics.median(
+                    post_rendezvous
+                ),
+                "sync_inclusive_us_median": statistics.median(sync_inclusive),
+                "sync_inclusive_over_intrinsic_median": statistics.median(
+                    sync_value / intrinsic_value
+                    for sync_value, intrinsic_value in zip(
+                        sync_inclusive, intrinsic
+                    )
                 ),
                 "rank0_repeat_iqr_fraction": iqr_fraction(rank0),
-                "critical_repeat_iqr_fraction": iqr_fraction(critical),
+                "intrinsic_repeat_iqr_fraction": iqr_fraction(intrinsic),
+                "post_rendezvous_repeat_iqr_fraction": iqr_fraction(
+                    post_rendezvous
+                ),
+                "sync_inclusive_repeat_iqr_fraction": iqr_fraction(
+                    sync_inclusive
+                ),
                 "max_rank_over_rank0_median": statistics.median(
                     max_value / rank0_value
                     for max_value, rank0_value in zip(max_rank, rank0)
@@ -154,7 +173,7 @@ def main():
             ]
             axes[0].scatter(
                 [row["rank0_us_median"] for row in selected],
-                [row["critical_us_median"] for row in selected],
+                [row["intrinsic_us_median"] for row in selected],
                 marker=markers[phase],
                 color=colors[tp],
                 s=55,
@@ -163,24 +182,27 @@ def main():
             )
     bounds = [
         min(row["rank0_us_median"] for row in rows),
-        max(row["critical_us_median"] for row in rows),
+        max(row["rank0_us_median"] for row in rows),
     ]
     axes[0].plot(bounds, bounds, color="black", linestyle="--", linewidth=1)
     axes[0].set_xscale("log")
     axes[0].set_yscale("log")
     axes[0].set_xlabel("Rank 0 kernel envelope (μs)")
-    axes[0].set_ylabel("Per-collective all-rank critical cost (μs)")
-    axes[0].set_title("Representative rank versus all-rank label")
+    axes[0].set_ylabel("All-rank skew-free intrinsic cost (μs)")
+    axes[0].set_title("Representative rank versus intrinsic label")
     axes[0].grid(True, which="both", alpha=0.25)
     axes[0].legend(fontsize=8)
 
     positions = np.arange(len(rows))
     axes[1].bar(
         positions,
-        [100 * (row["critical_over_rank0_median"] - 1) for row in rows],
+        [
+            row["sync_inclusive_over_intrinsic_median"]
+            for row in rows
+        ],
         color=[colors[row["group_size"]] for row in rows],
     )
-    axes[1].axhline(0, color="black", linewidth=1)
+    axes[1].axhline(1, color="black", linewidth=1)
     axes[1].set_xticks(
         positions,
         [
@@ -192,8 +214,8 @@ def main():
         ha="right",
         fontsize=7,
     )
-    axes[1].set_ylabel("Critical cost above rank 0 (%)")
-    axes[1].set_title("Bias from using only representative rank")
+    axes[1].set_ylabel("Synchronization-inclusive / intrinsic")
+    axes[1].set_title("Inflation from cross-rank entry skew")
     axes[1].grid(True, axis="y", alpha=0.25)
     figure.tight_layout()
     figure.savefig(
@@ -225,7 +247,7 @@ def main():
         selected = equal_payload_rows[tp]
         positions = np.arange(len(selected))
         seconds = [
-            row["critical_us_median"] / 1_000_000 for row in selected
+            row["intrinsic_us_median"] / 1_000_000 for row in selected
         ]
         bars = axis.bar(positions, seconds, color=shape_colors)
         axis.set_xticks(
@@ -256,7 +278,7 @@ def main():
         )
         axis.set_xlabel("Batch size / output length")
         axis.grid(True, axis="y", alpha=0.25)
-    axes[0].set_ylabel("All-rank critical communication time (s)")
+    axes[0].set_ylabel("Skew-free intrinsic communication time (s)")
     figure.suptitle(
         "Near-equal total payload, different message shapes and call counts",
         fontsize=13,
@@ -283,7 +305,7 @@ def main():
                     for row in selected
                 ],
                 [
-                    100 * row["critical_repeat_iqr_fraction"]
+                    100 * row["intrinsic_repeat_iqr_fraction"]
                     for row in selected
                 ],
                 marker=markers[phase],
@@ -294,11 +316,11 @@ def main():
             )
     max_iqr = 100 * max(
         max(row["rank0_repeat_iqr_fraction"] for row in rows),
-        max(row["critical_repeat_iqr_fraction"] for row in rows),
+        max(row["intrinsic_repeat_iqr_fraction"] for row in rows),
     )
     axis.plot([0, max_iqr], [0, max_iqr], "--", color="black", linewidth=1)
     axis.set_xlabel("Representative rank-0 IQR / median (%)")
-    axis.set_ylabel("All-rank critical IQR / median (%)")
+    axis.set_ylabel("All-rank intrinsic IQR / median (%)")
     axis.set_title("Repeat stability of the communication-time label")
     axis.grid(True, alpha=0.25)
     axis.legend(fontsize=8)
@@ -310,9 +332,11 @@ def main():
     )
     plt.close(figure)
 
-    ratios = [row["critical_over_rank0_median"] for row in rows]
+    ratios = [
+        row["sync_inclusive_over_intrinsic_median"] for row in rows
+    ]
     rank0_iqr = [row["rank0_repeat_iqr_fraction"] for row in rows]
-    critical_iqr = [row["critical_repeat_iqr_fraction"] for row in rows]
+    intrinsic_iqr = [row["intrinsic_repeat_iqr_fraction"] for row in rows]
     equal_payload_summary = {}
     for tp, selected in equal_payload_rows.items():
         small_message = selected[0]
@@ -324,40 +348,41 @@ def main():
                 small_message["logical_payload_bytes"]
                 / large_message["logical_payload_bytes"]
             ),
-            "critical_time_ratio_small_over_large_message": (
-                small_message["critical_us_median"]
-                / large_message["critical_us_median"]
+            "intrinsic_time_ratio_small_over_large_message": (
+                small_message["intrinsic_us_median"]
+                / large_message["intrinsic_us_median"]
             ),
         }
     summary = {
-        "schema_version": "all-rank-critical-summary-v1",
+        "schema_version": "all-rank-intrinsic-summary-v2",
         "workload_count": len(rows),
         "repeat_count": 3,
-        "critical_over_rank0": {
+        "synchronization_inclusive_over_intrinsic": {
             "median": float(np.median(ratios)),
             "p95": float(np.percentile(ratios, 95)),
             "max": max(ratios),
         },
         "repeat_iqr_fraction": {
             "rank0_median": float(np.median(rank0_iqr)),
-            "all_rank_critical_median": float(np.median(critical_iqr)),
-            "critical_more_stable_workloads": sum(
-                critical < rank0
-                for critical, rank0 in zip(critical_iqr, rank0_iqr)
+            "all_rank_intrinsic_median": float(np.median(intrinsic_iqr)),
+            "intrinsic_more_stable_workloads": sum(
+                intrinsic < rank0
+                for intrinsic, rank0 in zip(intrinsic_iqr, rank0_iqr)
             ),
             "workload_count": len(rows),
         },
         "near_equal_payload": equal_payload_summary,
         "definition": (
-            "Per workload, sum the maximum kernel duration across aligned ranks "
-            "for every group-level collective; report median across three repeats."
+            "Per workload, sum the minimum kernel duration across aligned ranks "
+            "for every group-level collective to remove pre-entry synchronization "
+            "wait; report the median across three repeats."
         ),
     }
     (args.output_dir / "summary.json").write_text(
         json.dumps(summary, indent=2) + "\n"
     )
     print(
-        f"summarized {len(rows)} workloads; critical/rank0 "
+        f"summarized {len(rows)} workloads; sync-inclusive/intrinsic "
         f"median={np.median(ratios):.4f} p95={np.percentile(ratios, 95):.4f}"
     )
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Diagnose the gap between representative-rank and all-rank targets."""
+"""Diagnose the gap between representative-rank and intrinsic all-rank targets."""
 
 import argparse
 import csv
@@ -100,7 +100,7 @@ def main():
         if workload_id not in predictions:
             raise ValueError(f"missing prediction for {workload_id}")
         prediction = predictions[workload_id]
-        critical_us = float(rank_row["critical_us_median"])
+        intrinsic_us = float(rank_row["intrinsic_us_median"])
         representative_us = float(prediction["target_comm_us"])
         row = {
             "workload_id": workload_id,
@@ -110,23 +110,23 @@ def main():
             "input_len": int(rank_row["input_len"]),
             "output_len": int(rank_row["output_len"]),
             "representative_rank_target_us": representative_us,
-            "all_rank_critical_target_us": critical_us,
-            "critical_over_representative_target": (
-                critical_us / representative_us
+            "all_rank_intrinsic_target_us": intrinsic_us,
+            "intrinsic_over_representative_target": (
+                intrinsic_us / representative_us
             ),
         }
         for model in MODELS:
             predicted_us = float(prediction[f"{model}_predicted_us"])
             row[f"{model}_predicted_us"] = predicted_us
-            row[f"{model}_all_rank_ape"] = (
-                abs(predicted_us - critical_us) / critical_us
+            row[f"{model}_all_rank_intrinsic_ape"] = (
+                abs(predicted_us - intrinsic_us) / intrinsic_us
             )
         rows.append(row)
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     write_csv(args.output_dir / "all_rank_target_gap.csv", rows)
 
-    actual = [row["all_rank_critical_target_us"] for row in rows]
+    actual = [row["all_rank_intrinsic_target_us"] for row in rows]
     model_metrics = {
         model: metrics(
             actual,
@@ -135,18 +135,18 @@ def main():
         for model in MODELS
     }
     target_ratios = np.asarray(
-        [row["critical_over_representative_target"] for row in rows],
+        [row["intrinsic_over_representative_target"] for row in rows],
         dtype=np.float64,
     )
     summary = {
-        "schema_version": "all-rank-target-gap-v1",
+        "schema_version": "all-rank-intrinsic-target-gap-v2",
         "workload_count": len(rows),
-        "critical_over_representative_rank_target": {
+        "intrinsic_over_representative_rank_target": {
             "median": float(np.median(target_ratios)),
             "p95": float(np.percentile(target_ratios, 95)),
             "max": float(np.max(target_ratios)),
         },
-        "existing_model_error_against_all_rank_critical": model_metrics,
+        "existing_model_error_against_all_rank_intrinsic": model_metrics,
         "interpretation": (
             "Diagnostic only: the four existing models were trained on the "
             "representative-rank target and are not retrained here. Large error "
@@ -174,7 +174,7 @@ def main():
                     for row in selected
                 ],
                 [
-                    row["all_rank_critical_target_us"]
+                    row["all_rank_intrinsic_target_us"]
                     for row in selected
                 ],
                 marker=markers[phase],
@@ -185,17 +185,17 @@ def main():
             )
     lower = min(
         min(row["representative_rank_target_us"] for row in rows),
-        min(row["all_rank_critical_target_us"] for row in rows),
+        min(row["all_rank_intrinsic_target_us"] for row in rows),
     )
     upper = max(
         max(row["representative_rank_target_us"] for row in rows),
-        max(row["all_rank_critical_target_us"] for row in rows),
+        max(row["all_rank_intrinsic_target_us"] for row in rows),
     )
     axes[0].plot([lower, upper], [lower, upper], "--", color="black")
     axes[0].set_xscale("log")
     axes[0].set_yscale("log")
     axes[0].set_xlabel("Representative-rank target (μs)")
-    axes[0].set_ylabel("All-rank critical target (μs)")
+    axes[0].set_ylabel("All-rank skew-free intrinsic target (μs)")
     axes[0].set_title("Ground-truth definition gap")
     axes[0].grid(True, which="both", alpha=0.25)
     axes[0].legend(fontsize=8)
@@ -211,7 +211,7 @@ def main():
         rotation=18,
         ha="right",
     )
-    axes[1].set_ylabel("MAPE against all-rank critical target (%)")
+    axes[1].set_ylabel("MAPE against all-rank intrinsic target (%)")
     axes[1].set_title("Existing proxy-trained models without retraining")
     axes[1].grid(True, axis="y", alpha=0.25)
     figure.tight_layout()

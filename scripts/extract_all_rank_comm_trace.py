@@ -145,19 +145,39 @@ def main():
         ],
         dtype=np.float64,
     )
+    timestamps = np.asarray(
+        [
+            [event["timestamp_us"] for event in events]
+            for events in events_by_rank
+        ],
+        dtype=np.float64,
+    )
+    end_timestamps = timestamps + durations
     per_rank_totals = np.sum(durations, axis=1)
     per_collective_max = np.max(durations, axis=0)
     per_collective_min = np.min(durations, axis=0)
     per_collective_skew = per_collective_max - per_collective_min
+    per_collective_entry_skew = np.max(timestamps, axis=0) - np.min(
+        timestamps, axis=0
+    )
+    per_collective_post_rendezvous = np.max(end_timestamps, axis=0) - np.max(
+        timestamps, axis=0
+    )
+    if np.any(per_collective_post_rendezvous < 0):
+        raise ValueError("negative post-rendezvous completion interval")
     full_scale = (
         full_pattern["calls"] / expected_calls if expected_calls else None
     )
 
     rank_zero_window = float(per_rank_totals[0])
     max_rank_window = float(np.max(per_rank_totals))
-    critical_window = float(np.sum(per_collective_max))
+    synchronization_inclusive_window = float(np.sum(per_collective_max))
+    intrinsic_window = float(np.sum(per_collective_min))
+    post_rendezvous_window = float(
+        np.sum(per_collective_post_rendezvous)
+    )
     record = {
-        "schema_version": "all-rank-comm-critical-v1",
+        "schema_version": "all-rank-comm-labels-v2",
         "run_name": result["run_name"],
         "repeat_id": args.repeat_id,
         "phase": phase,
@@ -199,9 +219,24 @@ def main():
                 },
                 "rank0_kernel_time_us": rank_zero_window,
                 "max_rank_total_kernel_time_us": max_rank_window,
-                "per_collective_critical_kernel_time_us": critical_window,
+                "skew_free_intrinsic_kernel_time_us": intrinsic_window,
+                "post_rendezvous_completion_kernel_time_us": (
+                    post_rendezvous_window
+                ),
+                "synchronization_inclusive_max_duration_sum_us": (
+                    synchronization_inclusive_window
+                ),
+                "per_collective_critical_kernel_time_us": (
+                    synchronization_inclusive_window
+                ),
+                "deprecated_critical_field_note": (
+                    "per_collective_critical_kernel_time_us is retained only "
+                    "for backward compatibility. Summing per-call maximum "
+                    "durations can double count cross-rank waiting intervals "
+                    "and is not the recommended structural target."
+                ),
                 "critical_over_rank0": (
-                    critical_window / rank_zero_window
+                    synchronization_inclusive_window / rank_zero_window
                     if rank_zero_window
                     else None
                 ),
@@ -216,21 +251,45 @@ def main():
                     "p99": percentile(per_collective_skew, 99),
                     "max": float(np.max(per_collective_skew)),
                 },
+                "per_collective_entry_skew_us": {
+                    "median": float(statistics.median(per_collective_entry_skew)),
+                    "p95": percentile(per_collective_entry_skew, 95),
+                    "p99": percentile(per_collective_entry_skew, 99),
+                    "max": float(np.max(per_collective_entry_skew)),
+                },
             },
             "full_phase_estimate": {
                 "profiled_to_full_call_scale": full_scale,
                 "rank0_kernel_time_us": rank_zero_window * full_scale,
                 "max_rank_total_kernel_time_us": max_rank_window * full_scale,
+                "skew_free_intrinsic_kernel_time_us": (
+                    intrinsic_window * full_scale
+                ),
+                "post_rendezvous_completion_kernel_time_us": (
+                    post_rendezvous_window * full_scale
+                ),
+                "synchronization_inclusive_max_duration_sum_us": (
+                    synchronization_inclusive_window * full_scale
+                ),
                 "per_collective_critical_kernel_time_us": (
-                    critical_window * full_scale
+                    synchronization_inclusive_window * full_scale
                 ),
                 "phase_wall_time_us": phase_latency_us(
                     result, phase, None, None
                 ),
                 "definition": (
-                    "sum over aligned group-level collectives of the slowest "
-                    "rank kernel duration, then scale a uniform Decode window "
-                    "by full-phase calls; Prefill scale is 1"
+                    "The recommended structural target sums the minimum kernel "
+                    "duration across ranks for each aligned group-level "
+                    "collective, removing pre-entry synchronization wait. The "
+                    "post-rendezvous diagnostic sums max(end)-max(start) and "
+                    "requires comparable trace clocks. The deprecated maximum-"
+                    "duration sum is synchronization-inclusive and may double "
+                    "count overlapping wait intervals across ranks. Decode "
+                    "uses a uniform profiled-window call scale; Prefill scale "
+                    "is 1."
+                ),
+                "recommended_structural_target": (
+                    "skew_free_intrinsic_kernel_time_us"
                 ),
             },
         },
@@ -265,8 +324,8 @@ def main():
         output.write(json.dumps(record, ensure_ascii=False) + "\n")
     print(
         f"{record['run_name']} {phase}: calls={expected_calls} ranks={group_size} "
-        f"rank0_us={rank_zero_window:.3f} critical_us={critical_window:.3f} "
-        f"ratio={critical_window / rank_zero_window:.4f}",
+        f"rank0_us={rank_zero_window:.3f} intrinsic_us={intrinsic_window:.3f} "
+        f"sync_inclusive_us={synchronization_inclusive_window:.3f}",
         flush=True,
     )
 

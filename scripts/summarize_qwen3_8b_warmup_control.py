@@ -153,11 +153,19 @@ def main():
             baseline_records, "rank0_kernel_time_us"
         )
         warmed_rank0 = metric_values(warmed_records, "rank0_kernel_time_us")
-        baseline_critical = metric_values(
-            baseline_records, "per_collective_critical_kernel_time_us"
+        baseline_intrinsic = metric_values(
+            baseline_records, "skew_free_intrinsic_kernel_time_us"
         )
-        warmed_critical = metric_values(
-            warmed_records, "per_collective_critical_kernel_time_us"
+        warmed_intrinsic = metric_values(
+            warmed_records, "skew_free_intrinsic_kernel_time_us"
+        )
+        baseline_sync_inclusive = metric_values(
+            baseline_records,
+            "synchronization_inclusive_max_duration_sum_us",
+        )
+        warmed_sync_inclusive = metric_values(
+            warmed_records,
+            "synchronization_inclusive_max_duration_sum_us",
         )
         demand = warmed_records[0]["full_phase_pattern_demand"]
         rows.append(
@@ -178,22 +186,32 @@ def main():
                 "warmed_rank0_median_us": float(np.median(warmed_rank0)),
                 "baseline_rank0_iqr_fraction": iqr_fraction(baseline_rank0),
                 "warmed_rank0_iqr_fraction": iqr_fraction(warmed_rank0),
-                "baseline_critical_median_us": float(
-                    np.median(baseline_critical)
+                "baseline_intrinsic_median_us": float(
+                    np.median(baseline_intrinsic)
                 ),
-                "warmed_critical_median_us": float(np.median(warmed_critical)),
-                "warmed_over_baseline_critical_median": float(
-                    np.median(warmed_critical) / np.median(baseline_critical)
+                "warmed_intrinsic_median_us": float(
+                    np.median(warmed_intrinsic)
                 ),
-                "baseline_critical_iqr_fraction": iqr_fraction(
-                    baseline_critical
+                "warmed_over_baseline_intrinsic_median": float(
+                    np.median(warmed_intrinsic) / np.median(baseline_intrinsic)
                 ),
-                "warmed_critical_iqr_fraction": iqr_fraction(warmed_critical),
-                "baseline_critical_p95_over_median": tail_fraction(
-                    baseline_critical
+                "baseline_intrinsic_iqr_fraction": iqr_fraction(
+                    baseline_intrinsic
                 ),
-                "warmed_critical_p95_over_median": tail_fraction(
-                    warmed_critical
+                "warmed_intrinsic_iqr_fraction": iqr_fraction(
+                    warmed_intrinsic
+                ),
+                "baseline_intrinsic_p95_over_median": tail_fraction(
+                    baseline_intrinsic
+                ),
+                "warmed_intrinsic_p95_over_median": tail_fraction(
+                    warmed_intrinsic
+                ),
+                "baseline_sync_inclusive_iqr_fraction": iqr_fraction(
+                    baseline_sync_inclusive
+                ),
+                "warmed_sync_inclusive_iqr_fraction": iqr_fraction(
+                    warmed_sync_inclusive
                 ),
             }
         )
@@ -205,19 +223,19 @@ def main():
     figure, axes = plt.subplots(1, 3, figsize=(17, 5.5))
     for row in rows:
         axes[0].scatter(
-            100 * row["baseline_critical_iqr_fraction"],
-            100 * row["warmed_critical_iqr_fraction"],
+            100 * row["baseline_intrinsic_iqr_fraction"],
+            100 * row["warmed_intrinsic_iqr_fraction"],
             color=colors[row["group_size"]],
             s=65,
         )
     max_iqr = 100 * max(
-        max(row["baseline_critical_iqr_fraction"] for row in rows),
-        max(row["warmed_critical_iqr_fraction"] for row in rows),
+        max(row["baseline_intrinsic_iqr_fraction"] for row in rows),
+        max(row["warmed_intrinsic_iqr_fraction"] for row in rows),
     )
     axes[0].plot([0, max_iqr], [0, max_iqr], "--", color="black", linewidth=1)
     axes[0].set_xlabel("Historical control IQR / median (%)")
     axes[0].set_ylabel("Same-shape warmup IQR / median (%)")
-    axes[0].set_title("All-rank label stability")
+    axes[0].set_title("Skew-free intrinsic label stability")
     axes[0].grid(True, alpha=0.25)
 
     labels = [
@@ -228,14 +246,14 @@ def main():
     width = 0.38
     axes[1].bar(
         positions - width / 2,
-        [100 * row["baseline_critical_iqr_fraction"] for row in rows],
+        [100 * row["baseline_intrinsic_iqr_fraction"] for row in rows],
         width,
         color="#9ECAE1",
         label="Historical control (3 reps)",
     )
     axes[1].bar(
         positions + width / 2,
-        [100 * row["warmed_critical_iqr_fraction"] for row in rows],
+        [100 * row["warmed_intrinsic_iqr_fraction"] for row in rows],
         width,
         color=[colors[row["group_size"]] for row in rows],
         label="Same-shape warmup (10 reps)",
@@ -248,7 +266,7 @@ def main():
 
     axes[2].bar(
         positions,
-        [row["warmed_over_baseline_critical_median"] for row in rows],
+        [row["warmed_over_baseline_intrinsic_median"] for row in rows],
         color=[colors[row["group_size"]] for row in rows],
     )
     axes[2].axhline(1, color="black", linewidth=1, linestyle="--")
@@ -270,11 +288,11 @@ def main():
     plt.close(figure)
 
     baseline_iqr = [
-        row["baseline_critical_iqr_fraction"] for row in rows
+        row["baseline_intrinsic_iqr_fraction"] for row in rows
     ]
-    warmed_iqr = [row["warmed_critical_iqr_fraction"] for row in rows]
+    warmed_iqr = [row["warmed_intrinsic_iqr_fraction"] for row in rows]
     target_ratios = [
-        row["warmed_over_baseline_critical_median"] for row in rows
+        row["warmed_over_baseline_intrinsic_median"] for row in rows
     ]
     summary = {
         "schema_version": "qwen3-8b-prefill-warmup-control-v1",
@@ -282,7 +300,7 @@ def main():
         "baseline_repeat_count": 3,
         "same_shape_warmup_repeat_count": 10,
         "pattern_demand_unchanged_workloads": len(rows),
-        "critical_iqr_fraction": {
+        "skew_free_intrinsic_iqr_fraction": {
             "baseline_median": float(np.median(baseline_iqr)),
             "same_shape_warmup_median": float(np.median(warmed_iqr)),
             "improved_workloads": sum(
@@ -290,7 +308,7 @@ def main():
                 for before, after in zip(baseline_iqr, warmed_iqr)
             ),
         },
-        "same_shape_warmup_target_shift": {
+        "same_shape_warmup_intrinsic_target_shift": {
             "median_ratio": float(np.median(target_ratios)),
             "min_ratio": min(target_ratios),
             "max_ratio": max(target_ratios),
@@ -299,12 +317,30 @@ def main():
             "The historical control has three repeats and the warmed arm has ten; "
             "use this as a protocol gate, not as a randomized causal estimate."
         ),
+        "synchronization_inclusive_diagnostic_iqr_fraction": {
+            "baseline_median": float(
+                np.median(
+                    [
+                        row["baseline_sync_inclusive_iqr_fraction"]
+                        for row in rows
+                    ]
+                )
+            ),
+            "same_shape_warmup_median": float(
+                np.median(
+                    [
+                        row["warmed_sync_inclusive_iqr_fraction"]
+                        for row in rows
+                    ]
+                )
+            ),
+        },
     }
     (args.output_dir / "summary.json").write_text(
         json.dumps(summary, indent=2) + "\n"
     )
     print(
-        f"summarized {len(rows)} workloads; median critical IQR/median "
+        f"summarized {len(rows)} workloads; median intrinsic IQR/median "
         f"{np.median(baseline_iqr):.4f} -> {np.median(warmed_iqr):.4f}"
     )
 

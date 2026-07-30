@@ -8,6 +8,7 @@ MIN_FREE_MIB="${MIN_FREE_MIB:-160000}"
 MAX_IDLE_UTIL="${MAX_IDLE_UTIL:-20}"
 REPEAT_START="${REPEAT_START:-0}"
 REPEAT_END="${REPEAT_END:-9}"
+REEXTRACT="${REEXTRACT:-0}"
 
 cd "$REPO_ROOT"
 
@@ -114,6 +115,7 @@ rows = [
 ]
 assert len(results) == expected, (len(results), expected)
 assert len(rows) == expected, (len(rows), expected)
+assert all(row["schema_version"] == "all-rank-comm-labels-v2" for row in rows)
 assert all(row["same_shape_workload_warmup"] for row in results)
 assert all(row["workload_warmup_output_len"] == 8 for row in results)
 assert all(row["phase"] == "prefill" for row in rows)
@@ -126,6 +128,15 @@ assert all(
 )
 assert all(
     row["alignment"]["identical_full_phase_pattern_demand_on_every_rank"]
+    for row in rows
+)
+assert all(
+    row["all_rank_ground_truth"]["full_phase_estimate"][
+        "skew_free_intrinsic_kernel_time_us"
+    ]
+    <= row["all_rank_ground_truth"]["full_phase_estimate"][
+        "synchronization_inclusive_max_duration_sum_us"
+    ]
     for row in rows
 )
 print(f"validated {directory}: {expected} warmed Prefill workloads")
@@ -141,6 +152,10 @@ run_group() {
   local directory="$OUTPUT_ROOT/tp${tp}/r${repeat}/prefill/${label}"
 
   if [[ -s "$directory/DONE" ]]; then
+    if ((REEXTRACT)); then
+      extract_group "$tp" "$repeat" "$directory" \
+        >"$directory/extract.log" 2>&1
+    fi
     validate_group "$tp" "$directory" "$expected"
     printf 'skip TP=%s r=%s prefill/%s\n' "$tp" "$repeat" "$label"
     return

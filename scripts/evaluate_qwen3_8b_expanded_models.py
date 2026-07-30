@@ -66,7 +66,7 @@ def parse_args():
     )
     parser.add_argument(
         "--target-source",
-        choices=("representative-rank", "all-rank-critical"),
+        choices=("representative-rank", "all-rank-intrinsic"),
         default="representative-rank",
         help="Ground-truth schema and communication-time label to train against.",
     )
@@ -105,8 +105,7 @@ def parse_args():
         default=None,
         help=(
             "CustomAllReduce curve column. Defaults to intrinsic for the old "
-            "representative-rank target and max-rank completion for the "
-            "all-rank critical target."
+            "representative-rank and all-rank intrinsic targets."
         ),
     )
     parser.add_argument("--seed", type=int, default=20260729)
@@ -180,7 +179,7 @@ def load_dataset(
     grouped = defaultdict(list)
     filename = (
         "all_rank_ground_truth.jsonl"
-        if target_source == "all-rank-critical"
+        if target_source == "all-rank-intrinsic"
         else "comm_ground_truth.jsonl"
     )
     paths = sorted(input_dir.glob(f"tp*/r*/**/{filename}"))
@@ -211,7 +210,7 @@ def load_dataset(
         for candidate in patterns[1:]:
             if candidate != reference:
                 raise ValueError(f"{key}: PatternDemand changed across repeats")
-        if target_source == "all-rank-critical":
+        if target_source == "all-rank-intrinsic":
             if any(
                 not record["alignment"]["exact_count_on_every_rank"]
                 or not record["alignment"]["identical_backend_sequence"]
@@ -233,19 +232,16 @@ def load_dataset(
                 "calls_by_input_payload_bytes"
             ].items()
         }
-        if target_source == "all-rank-critical":
+        if target_source == "all-rank-intrinsic":
             estimates = [
                 record["all_rank_ground_truth"]["full_phase_estimate"]
                 for record in repeats
             ]
             measured = [
-                float(estimate["per_collective_critical_kernel_time_us"])
+                float(estimate["skew_free_intrinsic_kernel_time_us"])
                 for estimate in estimates
             ]
-            structural = [
-                float(estimate["max_rank_total_kernel_time_us"])
-                for estimate in estimates
-            ]
+            structural = list(measured)
             wall = [
                 float(estimate["phase_wall_time_us"])
                 for estimate in estimates
@@ -944,15 +940,17 @@ def main():
     )
     custom_latency_column = args.custom_latency_column
     if custom_latency_column is None:
-        custom_latency_column = (
-            "completion_median_latency_us"
-            if args.target_source == "all-rank-critical"
-            else "intrinsic_median_latency_us"
-        )
+        custom_latency_column = "intrinsic_median_latency_us"
+    nccl_latency_column = (
+        "intrinsic_min_median_latency_us"
+        if args.target_source == "all-rank-intrinsic"
+        else "median_latency_us"
+    )
     curve = BackendAwareCostCurve(
         args.custom_curve,
         args.nccl_curve,
         custom_latency_column=custom_latency_column,
+        nccl_latency_column=nccl_latency_column,
     )
     for row in rows:
         row["continuous_raw_us"] = continuous_cost(row, curve)
@@ -1102,11 +1100,13 @@ def main():
             "target": (
                 (
                     "median across three repeats of the sum over aligned "
-                    "group-level collectives of the maximum kernel duration "
-                    "across TP ranks; Decode uses an 8-step window scaled by "
-                    "full-phase calls and Prefill is fully profiled"
+                    "group-level collectives of the minimum kernel duration "
+                    "across TP ranks. This removes pre-entry synchronization "
+                    "wait and matches the skew-free intrinsic cost curve; "
+                    "Decode uses an 8-step window scaled by full-phase calls "
+                    "and Prefill is fully profiled"
                 )
-                if args.target_source == "all-rank-critical"
+                if args.target_source == "all-rank-intrinsic"
                 else (
                     "median across the available repeats (3 for the base grid "
                     "and 10 for rerun workloads) of the representative-rank GPU "
@@ -1124,7 +1124,7 @@ def main():
             },
             "continuous_histogram_curve": {
                 "custom_latency_column": custom_latency_column,
-                "nccl_latency_scope": "max-completion-across-ranks",
+                "nccl_latency_column": nccl_latency_column,
             },
             "dnn_residual": {
                 "architecture": "MLP(input,32,16,1), ReLU",

@@ -193,6 +193,7 @@ class BackendAwareCostCurve:
         custom_path,
         nccl_path,
         custom_latency_column="intrinsic_median_latency_us",
+        nccl_latency_column="median_latency_us",
     ):
         custom_rows = read_csv(custom_path)
         nccl_rows = [row for row in read_csv(nccl_path) if row["op"] == "all_reduce"]
@@ -211,10 +212,14 @@ class BackendAwareCostCurve:
                 )
             )
         for row in nccl_rows:
+            if nccl_latency_column not in row:
+                raise ValueError(
+                    f"{nccl_path} has no {nccl_latency_column} column"
+                )
             self.nccl[int(row["group_size"])].append(
                 (
                     int(row["payload_bytes"]),
-                    float(row["median_latency_us"]),
+                    float(row[nccl_latency_column]),
                     "NCCL",
                 )
             )
