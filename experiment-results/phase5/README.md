@@ -1,79 +1,82 @@
-# Phase 5：Qwen3-8B 稳定性、all-rank 标签与预测模型复核
+# Phase 5：Qwen3-8B PatternDemand 稳定性与通信标签复核
 
 ## 1. 本阶段回答的问题
 
-本阶段基于 Qwen3-8B，继续检验第一阶段 PatternDemand 是否稳定、消息
-直方图是否比 total bytes 更有信息，以及代表 rank 的 GPU kernel 时间能否
-作为最终通信时延标签。实验于 2026-07-29 至 2026-07-30 在 8×B200 节点
-上完成。
+本阶段基于 Qwen3-8B 检验：
 
-核心结论如下：
+1. 第一阶段 PatternDemand 是否可重复；
+2. 消息直方图是否比 total bytes 保留更多预测信息；
+3. 固定 rank 的 GPU kernel 时间为何长尾；
+4. all-rank traces 应如何构造与两阶段公式一致的通信代价标签。
 
-1. PatternDemand 是稳定的。25 个原高波动 workload 在 10 次重复中，
-   calls、payload 与消息直方图签名全部一致。
-2. 消息形态不能被 total bytes 替代。在总 payload 仅相差约 3% 的
-   Decode 对照中，小消息高频方案的 all-rank 通信时间是大消息低频方案的
-   10.07×、15.36×、25.26×，且差距随 TP=2、4、8 增大。
-3. 固定 rank 0 不是可靠的最终时延标签。all-rank 关键路径标签在 29 个
-   workload 中有 24 个更稳定，IQR/median 中位数由 34.15% 降至 17.16%。
-4. 当前四模型的 5.43% MAPE 是对 representative-rank proxy 的拟合精度，
-   不是最终调度通信时延精度。把这些模型直接用于 all-rank 关键路径时，
-   MAPE 约为 88%，说明下一阶段必须以修正后的标签重新采集和训练。
+实验于 2026-07-29 至 2026-07-30 在单节点 8×B200 上完成。
 
-## 2. 统计口径
+最终结论：
 
-第一阶段需求仍采用单份 group-level PatternDemand：
+1. PatternDemand 稳定。25 个原高波动 workload 在 10 次重复中，
+   calls、payload、消息直方图和 ring-equivalent demand 全部一致。
+2. total bytes 不能替代消息形态。在逻辑总 payload 仅相差 3.02% 的
+   Decode 对照中，小消息高频方案的 intrinsic 通信代价分别是大消息低频
+   方案的 10.49×、12.12×、12.21×（TP=2、4、8）。
+3. 固定 rank 的 kernel duration 会混入 rank 到达顺序和等待角色，因此
+   不是稳定的结构化通信标签。
+4. “每次 collective 取跨 rank 最大 duration 再求和”也不能作为标签。
+   它会重复累计不同 rank 上相互重叠的等待区间，相对 intrinsic 口径的
+   中位放大达到 57.82×。
+5. 最终采用 all-rank skew-free intrinsic 标签：每个对齐 collective
+   取各 rank kernel duration 的最小值，再按 group-level calls 求和。
+   该口径与第二阶段隔离代价曲线的 intrinsic 定义一致。
+
+## 2. PatternDemand 与时间标签口径
+
+第一阶段需求始终采用单份 group-level PatternDemand：
 
 - `count`：一次 TP group collective 计一次，不按 rank 累加；
-- `payload_bytes`：代表 rank 的 collective 逻辑输入大小，不是所有 rank
-  求和，也不是估算链路流量；
-- 每个 rank 都独立采集逻辑 calls/payload，但只用于验证各 rank 完全一致，
-  不重复累计；
-- ring equivalent bytes/rounds 是结构化建模量，不是实测 wire traffic。
+- `payload_bytes`：代表 rank 的逻辑输入大小；
+- 各 rank 独立采集 calls/payload，只用于一致性校验，不重复累计；
+- ring-equivalent bytes/rounds 是结构化建模量，不是实测 wire traffic。
 
-all-rank 通信标签定义为：
+设第 \(e\) 个 collective 在 rank \(r\) 上的 kernel duration 为
+\(d_{e,r}\)。推荐的结构化通信标签为：
 
 \[
-T_{\mathrm{critical}}=\sum_e\max_r t_{e,r},
+T_{\mathrm{intrinsic}}=\sum_e\min_r d_{e,r}.
 \]
 
-其中 \(e\) 是按调用顺序对齐的 group-level collective，\(r\) 是 TP rank。
-只有当所有 rank 的 kernel 数量、原语序列和 PatternDemand 均一致时，才允许
-按序号对齐。Decode 使用 8-step profile window，并按 full-phase calls 等比
-扩展；Prefill 全阶段采集。
+它去除某些 rank 提前进入 collective 所产生的 pre-entry wait，保留通信
+实现本身的 skew-free cost。Decode 使用 8-step profile window，并按
+full-phase calls 等比扩展；Prefill 全阶段采集。
 
-该定义避免把各 rank 时间求和，同时能够覆盖不同 collective 中“慢 rank”
-发生切换的情况。
+同时保留两个诊断量，但不用于训练：
 
-## 3. 实验 A：25 个高波动点扩展到 10 次重复
+- `post_rendezvous_completion`：
+  \(\sum_e(\max_r end_{e,r}-\max_r start_{e,r})\)，用于同节点时钟可比场景
+  下验证 intrinsic 下包络；
+- `synchronization_inclusive_max_duration_sum`：
+  \(\sum_e\max_r d_{e,r}\)，用于量化 rank 到达偏斜，不是通信本体标签。
 
-从 Phase 4 的 195 个 workload 中选择原始 3 次重复
-`IQR / median > 20%` 的 25 个点，增加 r3–r9 共 7 次重复。由于批量运行中的
-笛卡尔积顺带覆盖 4 个邻近点，最终有 29 个 workload 达到 10 次重复：
+## 3. 实验 A：高波动点扩展到 10 次重复
+
+从 Phase 4 的 195 个 workload 中选择原始三重复
+`IQR / median > 20%` 的 25 个点，增加 r3–r9。批量笛卡尔积额外覆盖
+4 个邻近点，最终 29 个 workload 达到 10 次重复：
 
 - 新增测量记录：203；
-- 25/25 目标点的 PatternDemand 签名在 10 次中完全一致；
-- 原 25 点 IQR/median 中位数：108.90%；
-- 10 次重复后 IQR/median 中位数：51.35%；
-- 17/25 点有所改善，但仍有 15/25 点高于 20%。
-
-GPU 健康遥测共 27,116 条样本，其中 6,986 条活跃样本全部处于 P0；活跃时
-SM clock 中位数和 P95 均为 1965 MHz，温度中位数 35°C、P95 39°C。这说明
-长尾不能主要归因于明显降频。结合不同重复中 rank 0 交替快/慢的现象，
-固定 rank 的 collective 等待角色是主要误差来源。
+- 25/25 目标点的 PatternDemand 签名完全一致；
+- GPU 活跃遥测均为 P0，SM clock 中位数和 P95 均为 1965 MHz；
+- 固定 rank 时间仍有明显长尾，说明问题主要来自 rank 等待角色，而不是
+  PatternDemand 或明显降频。
 
 输出：
 
-- `qwen3_8b_stability/`：新增 compact ground truth、运行日志与 GPU 遥测；
-- `qwen3_8b_stability_summary/stability_comparison.csv`：25 点前后对照；
-- `qwen3_8b_stability_summary/qwen3_8b_stability_comparison.png`：IQR 变化图；
-- `qwen3_8b_stability_summary/summary.json`：稳定性和遥测摘要。
+- `qwen3_8b_stability/`：compact ground truth、日志和 GPU 遥测；
+- `qwen3_8b_stability_summary/`：25 点稳定性对照 CSV、PNG 和 JSON。
 
-## 4. 实验 B：四种模型的混合 3/10 次重复重评
+## 4. 实验 B：旧 representative-rank 目标上的四模型消融
 
-数据仍有 195 个唯一 workload，按完整 workload 分组后划分为
-train/validation/test=135/30/30；166 个 workload 使用 3 次重复中位数，
-29 个 workload 使用 10 次重复中位数。
+Phase 4 的 195 个唯一 workload 按完整 workload 分为
+train/validation/test=135/30/30；166 点使用三重复中位数，29 点使用十重复
+中位数。
 
 | 模型 | Test MAPE | Stable-test MAPE | 等总 payload MAPE | Test R² |
 |---|---:|---:|---:|---:|
@@ -82,95 +85,95 @@ train/validation/test=135/30/30；166 个 workload 使用 3 次重复中位数�
 | Continuous histogram | 6.00% | 5.50% | 4.75% | 0.9860 |
 | Continuous histogram + DNN residual | 5.43% | 4.22% | 6.24% | 0.9917 |
 
-该结果证明消息尺度与 calls 分布相对 total bytes 有显著增益，也说明连续代价
-曲线优于三个硬桶。但本表目标仍是 representative-rank GPU kernel envelope，
-因此只能作为“表征能力消融”，不能作为最终调度时延精度。
+该表仍使用旧 representative-rank 目标，只作为消息表征能力消融。它证明
+连续消息直方图明显优于 total bytes 和三个硬桶，但不是最终 intrinsic
+标签上的正式精度。
 
-输出：
+输出位于 `qwen3_8b_prediction_eval_stabilized/`。
 
-- `qwen3_8b_prediction_eval_stabilized/aggregated_workloads.csv`：195 个聚合点；
-- `qwen3_8b_prediction_eval_stabilized/metrics.csv`：各 scope 指标；
-- `qwen3_8b_prediction_eval_stabilized/predictions.csv`：逐点预测；
-- `qwen3_8b_prediction_eval_stabilized/summary.json`：数据、划分与指标摘要；
-- 两张 PNG：整体留出评测和等总 payload 评测。
+## 5. 实验 C：TP=2/4/8 all-rank 标签复核
 
-## 5. 实验 C：TP=2/4/8 all-rank 关键路径
-
-正式网格包含 29 个唯一 workload、3 次重复，共 87 条 all-rank 记录和
-57 个运行组：
-
-- 18 个机理点：每个 TP 下 3 个 Prefill 长度和 3 个近等总 payload Decode；
-- 11 个代表性高波动点：验证修正标签能否降低 rank 角色噪声。
-
-所有记录均满足：
+正式网格包含 29 个唯一 workload、三次重复，共 87 条记录。所有记录均满足：
 
 - 每个 rank 的 logical calls/payload 完全一致；
-- 每个 rank 的 matched kernel 数等于 group-level collective calls；
-- 各 rank backend sequence 完全一致；
-- all-rank critical time 不小于 rank 0 time。
+- 每个 rank 的 matched kernel 数等于 group-level calls；
+- backend sequence 完全一致；
+- PatternDemand 未按 rank 重复累计。
 
-最终结果：
+标签稳定性：
 
-- `critical / rank0` 中位数 1.26×，P95 30.05×，最大 60.09×；
-- rank0 IQR/median 中位数 34.15%；
-- all-rank critical IQR/median 中位数 17.16%；
-- 24/29 个 workload 的 all-rank 标签更稳定。
+- rank0 `IQR / median` 中位数：34.15%；
+- all-rank intrinsic `IQR / median` 中位数：5.44%；
+- 29 个 workload 中 27 个使用 intrinsic 后更稳定。
 
-近等总 payload 对照的 B1/M512 与 B16/M32 逻辑总量之比仅为 1.030：
+同步等待诊断：
 
-| TP | 小消息高频 / 大消息低频的 all-rank 时间比 |
-|---:|---:|
-| 2 | 10.07× |
-| 4 | 15.36× |
-| 8 | 25.26× |
+- synchronization-inclusive / intrinsic 中位数：57.82×；
+- P95：82.60×；
+- 最大：103.92×。
 
-这组结果直接证明：相同 total bytes 不代表相同通信代价，calls、单消息大小与
-group size/rounds 必须进入结构化需求和代价模型。
+这不是网络本体慢了几十倍，而是说明提前进入 collective 的 kernel 把等待
+时间记入 duration；逐调用取最大值再求和会跨 rank 重复累计等待。
+
+近等总 payload 的 intrinsic 对照：
+
+| TP | 逻辑 payload 比 | 小消息高频 / 大消息低频 |
+|---:|---:|---:|
+| 2 | 1.030 | 10.49× |
+| 4 | 1.030 | 12.12× |
+| 8 | 1.030 | 12.21× |
+
+这直接支持论文核心论点：总 bytes 相近不代表通信代价相近，calls、单消息
+大小、group size 与 rounds 必须进入 PatternDemand。
 
 输出：
 
-- `qwen3_8b_all_rank/`：逐组 compact all-rank ground truth 与日志；
-- `qwen3_8b_all_rank_summary/all_rank_summary.csv`：29 个聚合 workload；
-- `qwen3_8b_all_rank_summary/qwen3_8b_equal_payload_all_rank.png`：核心等总量图；
-- `qwen3_8b_all_rank_summary/qwen3_8b_all_rank_critical.png`：rank0/critical 差距；
+- `qwen3_8b_all_rank/`：compact all-rank labels 与日志；
+- `qwen3_8b_all_rank_summary/all_rank_summary.csv`：29 个聚合点；
+- `qwen3_8b_all_rank_summary/qwen3_8b_equal_payload_all_rank.png`：核心对照图；
 - `qwen3_8b_all_rank_summary/qwen3_8b_all_rank_stability.png`：标签稳定性；
-- `qwen3_8b_all_rank_summary/summary.json`：all-rank 摘要。
+- `qwen3_8b_all_rank_summary/summary.json`：统计摘要。
 
-## 6. 实验 D：旧目标与修正目标的差距
+## 6. 旧目标与 intrinsic 标签的关系
 
-在 29 个共同 workload 上，all-rank critical target 相对 Phase 4/5
-representative-rank target 的中位比值为 44.57×，P95 为 77.47×。四个旧模型
-没有重新训练，直接对 corrected target 评测时 MAPE 均约 88%。
+在 29 个共同 workload 上，intrinsic / 旧 representative-rank 聚合目标的
+中位比为 0.993，P95 为 1.036，最大为 1.116。说明三重复中位数在多数点上
+能够近似 intrinsic，但固定 rank 的单次测量和尾部仍不可靠。
 
-该诊断不是对直方图特征的最终公平评测，而是证明 ground-truth 定义发生了
-实质变化。相关输出位于：
+旧模型未重训，直接在这 29 个 intrinsic 点上诊断：
 
-- `qwen3_8b_all_rank_target_gap/all_rank_target_gap.csv`；
-- `qwen3_8b_all_rank_target_gap/qwen3_8b_all_rank_target_gap.png`；
-- `qwen3_8b_all_rank_target_gap/summary.json`。
+- total bytes MAPE：66.15%；
+- three hard bins：19.89%；
+- continuous histogram：3.80%；
+- continuous + DNN residual：50.45%。
 
-## 7. 对开题设计的判断
+DNN 在小诊断子集上的大尾部不能作为最终结论；需要在完整 intrinsic 数据集
+上重新分组划分、训练和留出评测。
 
-原两阶段设计仍然可行，但需修正“时间标签与第二阶段曲线”的采集口径：
+输出位于 `qwen3_8b_all_rank_target_gap/`。
 
-1. 第一阶段继续输出 topology-independent PatternDemand，包括
+## 7. 对开题设计的修正
+
+两阶段设计继续成立，且统计口径现已闭环：
+
+1. 第一阶段输出 topology-independent PatternDemand：
    `op × payload histogram × calls × group size × ring-equivalent rounds`；
-2. 第二阶段的 `op × payload × TP × topology → latency` 曲线必须使用
-   all-rank critical latency，而不是固定 rank kernel time；
-3. 结构化公式先计算通信基线，DNN 只拟合 corrected target 的残差；
-4. 当前 5.43% 结果作为消息表征消融保留，但最终模型需在 corrected labels
-   上重新训练和留出评测。
+2. 第二阶段连续曲线使用与 workload 标签一致的 skew-free intrinsic cost；
+3. 结构化公式先预测 intrinsic 通信基线；
+4. DNN 只拟合结构化公式残差，不学习或放大 rank 到达等待；
+5. synchronization/overlap 若要进入调度器，应作为独立特征或独立残差项，
+   不能混入链路本体标签。
 
 ## 8. 下一步
 
-1. 给每个 workload 增加同形状 warmup，重点复核仍有长尾的 Prefill 点；
-2. 将 all-rank 采集扩到完整 195 点，至少 train/validation/test 各 TP、阶段
-   均有覆盖；
-3. 用 all-rank 口径重测连续 `op × payload × TP × topology` 代价曲线；
-4. 在 corrected dataset 上重新比较 total bytes、三桶、连续直方图和
+1. 用 v2 intrinsic 口径采集完整 195 点、三重复 all-rank 数据；
+2. 在 corrected dataset 上重训 total bytes、三桶、连续直方图和
    连续直方图+DNN residual；
-5. Qwen3-8B 口径闭环后，再选择结构不同的模型做跨模型验证。
+3. 完成 grouped workload holdout、等总 payload holdout 和 TP 分层评测；
+4. Qwen3-8B 闭环后，再选结构不同的模型做跨模型泛化；
+5. 后续拓扑实验分别测 L1/L2/L3 intrinsic 代价曲线，不把 rank 启动偏斜
+   当成网络 RTT。
 
-原始 profiler trace 保留在远端
+原始 profiler traces 保留在远端
 `/sgl-workspace/sglang-src/experiment-results/phase5/**/traces/`，不提交 Git；
-compact JSONL、CSV、日志、遥测、图和模型文件提交到实验分支。
+compact JSONL、CSV、日志、遥测、图和模型文件提交实验分支。
