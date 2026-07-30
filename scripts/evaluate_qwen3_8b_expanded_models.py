@@ -60,6 +60,17 @@ def parse_args():
         default=repo_root / "experiment-results" / "phase5" / "qwen3_8b_stability",
     )
     parser.add_argument(
+        "--no-stability-data",
+        action="store_true",
+        help="Do not merge the optional Phase 5 representative-rank reruns.",
+    )
+    parser.add_argument(
+        "--target-source",
+        choices=("representative-rank", "all-rank-critical"),
+        default="representative-rank",
+        help="Ground-truth schema and communication-time label to train against.",
+    )
+    parser.add_argument(
         "--custom-curve",
         type=Path,
         default=repo_root
@@ -84,6 +95,19 @@ def parse_args():
         / "experiment-results"
         / "phase4"
         / "qwen3_8b_prediction_eval",
+    )
+    parser.add_argument(
+        "--custom-latency-column",
+        choices=(
+            "intrinsic_median_latency_us",
+            "completion_median_latency_us",
+        ),
+        default=None,
+        help=(
+            "CustomAllReduce curve column. Defaults to intrinsic for the old "
+            "representative-rank target and max-rank completion for the "
+            "all-rank critical target."
+        ),
     )
     parser.add_argument("--seed", type=int, default=20260729)
     parser.add_argument("--max-epochs", type=int, default=3000)
@@ -147,10 +171,24 @@ def is_controlled_equal_payload(row):
     )
 
 
-def load_dataset(input_dir, stability_dir):
+def load_dataset(
+    input_dir,
+    stability_dir,
+    target_source,
+    include_stability_data,
+):
     grouped = defaultdict(list)
-    paths = sorted(input_dir.glob("tp*/r*/**/comm_ground_truth.jsonl"))
-    if stability_dir.exists():
+    filename = (
+        "all_rank_ground_truth.jsonl"
+        if target_source == "all-rank-critical"
+        else "comm_ground_truth.jsonl"
+    )
+    paths = sorted(input_dir.glob(f"tp*/r*/**/{filename}"))
+    if (
+        target_source == "representative-rank"
+        and include_stability_data
+        and stability_dir.exists()
+    ):
         paths.extend(
             sorted(stability_dir.glob("tp*/r*/**/comm_ground_truth.jsonl"))
         )
@@ -173,7 +211,17 @@ def load_dataset(input_dir, stability_dir):
         for candidate in patterns[1:]:
             if candidate != reference:
                 raise ValueError(f"{key}: PatternDemand changed across repeats")
-        if any(
+        if target_source == "all-rank-critical":
+            if any(
+                not record["alignment"]["exact_count_on_every_rank"]
+                or not record["alignment"]["identical_backend_sequence"]
+                or not record["alignment"][
+                    "identical_full_phase_pattern_demand_on_every_rank"
+                ]
+                for record in repeats
+            ):
+                raise ValueError(f"{key}: all-rank alignment failed")
+        elif any(
             not record["alignment"]["exact_one_kernel_per_call"]
             for record in repeats
         ):
@@ -185,34 +233,64 @@ def load_dataset(input_dir, stability_dir):
                 "calls_by_input_payload_bytes"
             ].items()
         }
-        measured = [
-            float(
-                record["gpu_ground_truth"]["full_phase_estimate"][
-                    "collective_kernel_time_us"
-                ]
+        if target_source == "all-rank-critical":
+            estimates = [
+                record["all_rank_ground_truth"]["full_phase_estimate"]
+                for record in repeats
+            ]
+            measured = [
+                float(estimate["per_collective_critical_kernel_time_us"])
+                for estimate in estimates
+            ]
+            structural = [
+                float(estimate["max_rank_total_kernel_time_us"])
+                for estimate in estimates
+            ]
+            wall = [
+                float(estimate["phase_wall_time_us"])
+                for estimate in estimates
+            ]
+            backends = sorted(
+                {
+                    record["all_rank_ground_truth"][
+                        "backend_sequence_signature"
+                    ]
+                    for record in repeats
+                }
             )
-            for record in repeats
-        ]
-        structural = [
-            float(
-                record["gpu_ground_truth"]["full_phase_estimate"][
-                    "structural_median_kernel_time_us"
-                ]
-            )
-            for record in repeats
-        ]
-        wall = [
-            float(record["gpu_ground_truth"]["full_phase_wall_time_us"])
-            for record in repeats
-        ]
-        backends = sorted(
-            {
-                "+".join(
-                    sorted(record["gpu_ground_truth"]["backend_kernel_counts"])
+        else:
+            measured = [
+                float(
+                    record["gpu_ground_truth"]["full_phase_estimate"][
+                        "collective_kernel_time_us"
+                    ]
                 )
                 for record in repeats
-            }
-        )
+            ]
+            structural = [
+                float(
+                    record["gpu_ground_truth"]["full_phase_estimate"][
+                        "structural_median_kernel_time_us"
+                    ]
+                )
+                for record in repeats
+            ]
+            wall = [
+                float(record["gpu_ground_truth"]["full_phase_wall_time_us"])
+                for record in repeats
+            ]
+            backends = sorted(
+                {
+                    "+".join(
+                        sorted(
+                            record["gpu_ground_truth"][
+                                "backend_kernel_counts"
+                            ]
+                        )
+                    )
+                    for record in repeats
+                }
+            )
         if len(backends) != 1:
             raise ValueError(f"{key}: backend changed across repeats: {backends}")
         rows.append(
@@ -856,9 +934,26 @@ def main():
     args = parse_args()
     torch.set_num_threads(1)
     rows = assign_splits(
-        load_dataset(args.input_dir, args.stability_dir), args.seed
+        load_dataset(
+            args.input_dir,
+            args.stability_dir,
+            args.target_source,
+            not args.no_stability_data,
+        ),
+        args.seed,
     )
-    curve = BackendAwareCostCurve(args.custom_curve, args.nccl_curve)
+    custom_latency_column = args.custom_latency_column
+    if custom_latency_column is None:
+        custom_latency_column = (
+            "completion_median_latency_us"
+            if args.target_source == "all-rank-critical"
+            else "intrinsic_median_latency_us"
+        )
+    curve = BackendAwareCostCurve(
+        args.custom_curve,
+        args.nccl_curve,
+        custom_latency_column=custom_latency_column,
+    )
     for row in rows:
         row["continuous_raw_us"] = continuous_cost(row, curve)
 
@@ -962,7 +1057,7 @@ def main():
         args.output_dir / "dnn_residual_model.pt",
     )
     summary = {
-        "schema_version": "qwen3-8b-expanded-prediction-v1",
+        "schema_version": "qwen3-8b-expanded-prediction-v2",
         "dataset": {
             "unique_workloads": len(rows),
             "repeat_count_distribution": {
@@ -1003,11 +1098,21 @@ def main():
                     "state/outlier noise rather than silently filtering it."
                 ),
             },
+            "target_source": args.target_source,
             "target": (
-                "median across the available repeats (3 for the base grid and "
-                "10 for rerun workloads) of the representative-rank GPU "
-                "collective-kernel envelope, scaled from an 8-step Decode "
-                "window to full-phase calls; Prefill is fully profiled"
+                (
+                    "median across three repeats of the sum over aligned "
+                    "group-level collectives of the maximum kernel duration "
+                    "across TP ranks; Decode uses an 8-step window scaled by "
+                    "full-phase calls and Prefill is fully profiled"
+                )
+                if args.target_source == "all-rank-critical"
+                else (
+                    "median across the available repeats (3 for the base grid "
+                    "and 10 for rerun workloads) of the representative-rank GPU "
+                    "collective-kernel envelope, scaled from an 8-step Decode "
+                    "window to full-phase calls; Prefill is fully profiled"
+                )
             ),
         },
         "models": {
@@ -1016,6 +1121,10 @@ def main():
             "continuous_histogram_calibration": {
                 f"{phase}_tp{tp}": value
                 for (phase, tp), value in sorted(calibration.items())
+            },
+            "continuous_histogram_curve": {
+                "custom_latency_column": custom_latency_column,
+                "nccl_latency_scope": "max-completion-across-ranks",
             },
             "dnn_residual": {
                 "architecture": "MLP(input,32,16,1), ReLU",

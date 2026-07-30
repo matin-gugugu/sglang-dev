@@ -188,16 +188,25 @@ def load_ground_truth(phase1_dir):
 
 
 class BackendAwareCostCurve:
-    def __init__(self, custom_path, nccl_path):
+    def __init__(
+        self,
+        custom_path,
+        nccl_path,
+        custom_latency_column="intrinsic_median_latency_us",
+    ):
         custom_rows = read_csv(custom_path)
         nccl_rows = [row for row in read_csv(nccl_path) if row["op"] == "all_reduce"]
         self.custom = defaultdict(list)
         self.nccl = defaultdict(list)
         for row in custom_rows:
+            if custom_latency_column not in row:
+                raise ValueError(
+                    f"{custom_path} has no {custom_latency_column} column"
+                )
             self.custom[int(row["group_size"])].append(
                 (
                     int(row["payload_bytes"]),
-                    float(row["intrinsic_median_latency_us"]),
+                    float(row[custom_latency_column]),
                     row["algorithm"],
                 )
             )
