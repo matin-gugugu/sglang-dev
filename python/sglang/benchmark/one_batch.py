@@ -211,6 +211,7 @@ class BenchArgs:
     profile_start_step: Optional[int] = None
     profile_steps: Optional[int] = None
     profile_all_ranks: bool = False
+    warmup_each_workload: bool = False
     comm_profile: bool = False
     comm_profile_mode: str = "full-trace"
     output_lens_per_request: Tuple[int] = ()
@@ -290,6 +291,15 @@ class BenchArgs:
             help=(
                 "Enable the requested profiler on every TP rank and add a rank "
                 "component to each trace prefix. By default only rank 0 is profiled."
+            ),
+        )
+        parser.add_argument(
+            "--warmup-each-workload",
+            action="store_true",
+            help=(
+                "Before measuring every workload point, run an unprofiled warmup "
+                "with the same batch size, input length, and execution knobs. "
+                "Decode warmup lengths are capped at 32 tokens."
             ),
         )
         parser.add_argument(
@@ -1080,6 +1090,26 @@ def latency_test(
     custom_inputs = [tokenizer.encode(p.strip()) for p in custom_inputs]
     custom_input_len = len(custom_inputs)
 
+    def prepare_workload_inputs(bs, il, bs_aligned_inputs):
+        if bench_args.prefill_chunk_size > 0:
+            if bs_aligned_inputs:
+                full_input_ids = [
+                    np.asarray(ids, dtype=np.int32) for ids in bs_aligned_inputs
+                ]
+            else:
+                full_input_ids = np.random.randint(
+                    0, 10000, (bs, il), dtype=np.int32
+                )
+            first_chunk_end = min(bench_args.prefill_chunk_size, il)
+            first_chunk_inputs = [ids[:first_chunk_end] for ids in full_input_ids]
+            reqs = prepare_synthetic_inputs_for_latency_test(
+                bs, first_chunk_end, first_chunk_inputs
+            )
+        else:
+            full_input_ids = None
+            reqs = prepare_synthetic_inputs_for_latency_test(bs, il, bs_aligned_inputs)
+        return reqs, full_input_ids
+
     # Run the sweep
     result_list = []
     for bs, il, ol in itertools.product(
@@ -1105,21 +1135,42 @@ def latency_test(
                     [bs_aligned_inputs[-1]] * (bs - custom_input_len)
                 )
 
-        if bench_args.prefill_chunk_size > 0:
-            if bs_aligned_inputs:
-                full_input_ids = [
-                    np.asarray(ids, dtype=np.int32) for ids in bs_aligned_inputs
-                ]
-            else:
-                full_input_ids = np.random.randint(0, 10000, (bs, il), dtype=np.int32)
-            first_chunk_end = min(bench_args.prefill_chunk_size, il)
-            first_chunk_inputs = [ids[:first_chunk_end] for ids in full_input_ids]
-            reqs = prepare_synthetic_inputs_for_latency_test(
-                bs, first_chunk_end, first_chunk_inputs
+        reqs, full_input_ids = prepare_workload_inputs(bs, il, bs_aligned_inputs)
+
+        if bench_args.warmup_each_workload:
+            warmup_output_lens = tuple(
+                min(32, length) for length in bench_args.output_lens_per_request
             )
-        else:
-            full_input_ids = None
-            reqs = prepare_synthetic_inputs_for_latency_test(bs, il, bs_aligned_inputs)
+            rank_print(
+                f"Warmup workload: batch_size={bs}, input_len={il}, "
+                f"output_len={min(32, ol)}"
+            )
+            latency_test_run_once(
+                run_name=bench_args.run_name,
+                model_runner=model_runner,
+                rank_print=rank_print,
+                reqs=reqs,
+                batch_size=bs,
+                input_len=il,
+                output_len=min(32, ol),
+                log_decode_step=0,
+                profile=False,
+                profile_record_shapes=False,
+                profile_activities=("CPU", "GPU"),
+                profile_prefix="",
+                profile_stage="all",
+                tp_rank=tp_rank,
+                profile_start_step=None,
+                profile_steps=None,
+                enable_comm_profile=False,
+                output_lens_per_request=warmup_output_lens,
+                prefill_chunk_size=bench_args.prefill_chunk_size,
+                full_input_ids=full_input_ids,
+            )
+            reqs, full_input_ids = prepare_workload_inputs(
+                bs, il, bs_aligned_inputs
+            )
+
         profile_this_rank = bench_args.profile and (
             tp_rank == 0 or bench_args.profile_all_ranks
         )
@@ -1152,6 +1203,10 @@ def latency_test(
             full_input_ids,
         )
         if ret is not None:
+            ret["same_shape_workload_warmup"] = bench_args.warmup_each_workload
+            ret["workload_warmup_output_len"] = (
+                min(32, ol) if bench_args.warmup_each_workload else None
+            )
             result_list.append(ret)
 
     # Write results in jsonlines format on rank 0.
