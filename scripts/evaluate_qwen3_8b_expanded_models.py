@@ -66,7 +66,11 @@ def parse_args():
     )
     parser.add_argument(
         "--target-source",
-        choices=("representative-rank", "all-rank-intrinsic"),
+        choices=(
+            "representative-rank",
+            "all-rank-intrinsic",
+            "all-rank-post-rendezvous",
+        ),
         default="representative-rank",
         help="Ground-truth schema and communication-time label to train against.",
     )
@@ -104,8 +108,8 @@ def parse_args():
         ),
         default=None,
         help=(
-            "CustomAllReduce curve column. Defaults to intrinsic for the old "
-            "representative-rank and all-rank intrinsic targets."
+            "CustomAllReduce curve column. Defaults to completion for the "
+            "post-rendezvous target and intrinsic otherwise."
         ),
     )
     parser.add_argument("--seed", type=int, default=20260729)
@@ -179,7 +183,7 @@ def load_dataset(
     grouped = defaultdict(list)
     filename = (
         "all_rank_ground_truth.jsonl"
-        if target_source == "all-rank-intrinsic"
+        if target_source.startswith("all-rank-")
         else "comm_ground_truth.jsonl"
     )
     paths = sorted(input_dir.glob(f"tp*/r*/**/{filename}"))
@@ -210,7 +214,7 @@ def load_dataset(
         for candidate in patterns[1:]:
             if candidate != reference:
                 raise ValueError(f"{key}: PatternDemand changed across repeats")
-        if target_source == "all-rank-intrinsic":
+        if target_source.startswith("all-rank-"):
             if any(
                 not record["alignment"]["exact_count_on_every_rank"]
                 or not record["alignment"]["identical_backend_sequence"]
@@ -232,15 +236,17 @@ def load_dataset(
                 "calls_by_input_payload_bytes"
             ].items()
         }
-        if target_source == "all-rank-intrinsic":
+        if target_source.startswith("all-rank-"):
             estimates = [
                 record["all_rank_ground_truth"]["full_phase_estimate"]
                 for record in repeats
             ]
-            measured = [
-                float(estimate["skew_free_intrinsic_kernel_time_us"])
-                for estimate in estimates
-            ]
+            target_field = (
+                "post_rendezvous_completion_kernel_time_us"
+                if target_source == "all-rank-post-rendezvous"
+                else "skew_free_intrinsic_kernel_time_us"
+            )
+            measured = [float(estimate[target_field]) for estimate in estimates]
             structural = list(measured)
             wall = [
                 float(estimate["phase_wall_time_us"])
@@ -940,7 +946,11 @@ def main():
     )
     custom_latency_column = args.custom_latency_column
     if custom_latency_column is None:
-        custom_latency_column = "intrinsic_median_latency_us"
+        custom_latency_column = (
+            "completion_median_latency_us"
+            if args.target_source == "all-rank-post-rendezvous"
+            else "intrinsic_median_latency_us"
+        )
     nccl_latency_column = (
         "intrinsic_min_median_latency_us"
         if args.target_source == "all-rank-intrinsic"
@@ -1107,6 +1117,15 @@ def main():
                     "and Prefill is fully profiled"
                 )
                 if args.target_source == "all-rank-intrinsic"
+                else (
+                    "median across three repeats of the sum over aligned "
+                    "group-level collectives of max(end timestamp) minus "
+                    "max(start timestamp) across TP ranks. This excludes "
+                    "pre-entry wait while retaining completion after the final "
+                    "rank enters; Decode uses an 8-step window scaled by "
+                    "full-phase calls and Prefill is fully profiled"
+                )
+                if args.target_source == "all-rank-post-rendezvous"
                 else (
                     "median across the available repeats (3 for the base grid "
                     "and 10 for rerun workloads) of the representative-rank GPU "
