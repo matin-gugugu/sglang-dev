@@ -100,8 +100,7 @@ rows = [
 assert len(rows) == expected, (directory, len(rows), expected)
 assert all(row["same_shape_workload_warmup"] for row in rows)
 assert all(
-    row["generated_output_tokens"]
-    == row["batch_size"] * row["output_len"]
+    row["generated_output_tokens"] == row["output_len"]
     for row in rows
 )
 assert all(
