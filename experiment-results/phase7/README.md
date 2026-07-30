@@ -124,6 +124,18 @@ transport 未核验前不得开始完整套件。
 4. 在各拓扑上重复四模型消融：
    total bytes、三硬桶、连续直方图、连续直方图 + DNN residual。
 
+跨节点评测必须传入对应拓扑的 NCCL 曲线并启用：
+
+```bash
+python scripts/evaluate_qwen3_8b_expanded_models.py \
+  --curve-mode nccl-only \
+  --nccl-curve <topology-summary>/collective_curve_summary.csv \
+  ...
+```
+
+这是因为 SGLang CustomAllReduce 仅用于单节点；L2/L3 的小消息也必须查询
+NCCL/RoCE 曲线，不能继续复用 L1 的 CustomAllReduce 代价。
+
 关键验收条件：
 
 - 五重复的曲线中心值和尾部稳定；

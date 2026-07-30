@@ -15,7 +15,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from evaluate_pattern_cost_ablation import BackendAwareCostCurve
+from evaluate_pattern_cost_ablation import BackendAwareCostCurve, NCCLOnlyCostCurve
 
 
 MODEL_NAMES = (
@@ -110,6 +110,16 @@ def parse_args():
         help=(
             "CustomAllReduce curve column. Defaults to completion for the "
             "post-rendezvous target and intrinsic otherwise."
+        ),
+    )
+    parser.add_argument(
+        "--curve-mode",
+        choices=("backend-aware", "nccl-only"),
+        default="backend-aware",
+        help=(
+            "backend-aware uses single-node CustomAllReduce below its payload "
+            "limit and NCCL above it. nccl-only uses the supplied NCCL curve "
+            "for every payload, as required by cross-node deployments."
         ),
     )
     parser.add_argument("--seed", type=int, default=20260729)
@@ -956,12 +966,18 @@ def main():
         if args.target_source == "all-rank-intrinsic"
         else "median_latency_us"
     )
-    curve = BackendAwareCostCurve(
-        args.custom_curve,
-        args.nccl_curve,
-        custom_latency_column=custom_latency_column,
-        nccl_latency_column=nccl_latency_column,
-    )
+    if args.curve_mode == "nccl-only":
+        curve = NCCLOnlyCostCurve(
+            args.nccl_curve,
+            latency_column=nccl_latency_column,
+        )
+    else:
+        curve = BackendAwareCostCurve(
+            args.custom_curve,
+            args.nccl_curve,
+            custom_latency_column=custom_latency_column,
+            nccl_latency_column=nccl_latency_column,
+        )
     for row in rows:
         row["continuous_raw_us"] = continuous_cost(row, curve)
 
@@ -1144,6 +1160,7 @@ def main():
             "continuous_histogram_curve": {
                 "custom_latency_column": custom_latency_column,
                 "nccl_latency_column": nccl_latency_column,
+                "curve_mode": args.curve_mode,
             },
             "dnn_residual": {
                 "architecture": "MLP(input,32,16,1), ReLU",

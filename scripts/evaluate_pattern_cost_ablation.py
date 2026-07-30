@@ -266,6 +266,36 @@ class BackendAwareCostCurve:
         return sorted(points)
 
 
+class NCCLOnlyCostCurve:
+    def __init__(self, nccl_path, latency_column="median_latency_us"):
+        rows = [row for row in read_csv(nccl_path) if row["op"] == "all_reduce"]
+        self.nccl = defaultdict(list)
+        for row in rows:
+            if latency_column not in row:
+                raise ValueError(f"{nccl_path} has no {latency_column} column")
+            self.nccl[int(row["group_size"])].append(
+                (
+                    int(row["payload_bytes"]),
+                    float(row[latency_column]),
+                )
+            )
+        for values in self.nccl.values():
+            values.sort()
+        missing = sorted({2, 4, 8} - set(self.nccl))
+        if missing:
+            raise ValueError(f"{nccl_path} has no AllReduce curves for TP={missing}")
+
+    def lookup(self, group_size, payload_bytes):
+        points = [
+            (payload, cost, "NCCL")
+            for payload, cost in self.nccl[group_size]
+        ]
+        return BackendAwareCostCurve.interpolate(points, payload_bytes)
+
+    def production_points(self, group_size):
+        return list(self.nccl[group_size])
+
+
 def bucket_name(payload_bytes):
     for name, lower, upper in BIN_DEFINITIONS:
         if lower < payload_bytes <= upper:
