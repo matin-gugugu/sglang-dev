@@ -128,6 +128,12 @@ def main():
                 "post_rendezvous_us_median": statistics.median(
                     post_rendezvous
                 ),
+                "post_rendezvous_over_intrinsic_median": statistics.median(
+                    post_value / intrinsic_value
+                    for post_value, intrinsic_value in zip(
+                        post_rendezvous, intrinsic
+                    )
+                ),
                 "sync_inclusive_us_median": statistics.median(sync_inclusive),
                 "sync_inclusive_over_intrinsic_median": statistics.median(
                     sync_value / intrinsic_value
@@ -337,6 +343,12 @@ def main():
     ]
     rank0_iqr = [row["rank0_repeat_iqr_fraction"] for row in rows]
     intrinsic_iqr = [row["intrinsic_repeat_iqr_fraction"] for row in rows]
+    post_rendezvous_iqr = [
+        row["post_rendezvous_repeat_iqr_fraction"] for row in rows
+    ]
+    post_rendezvous_ratios = [
+        row["post_rendezvous_over_intrinsic_median"] for row in rows
+    ]
     equal_payload_summary = {}
     for tp, selected in equal_payload_rows.items():
         small_message = selected[0]
@@ -365,11 +377,24 @@ def main():
         "repeat_iqr_fraction": {
             "rank0_median": float(np.median(rank0_iqr)),
             "all_rank_intrinsic_median": float(np.median(intrinsic_iqr)),
+            "post_rendezvous_median": float(
+                np.median(post_rendezvous_iqr)
+            ),
             "intrinsic_more_stable_workloads": sum(
                 intrinsic < rank0
                 for intrinsic, rank0 in zip(intrinsic_iqr, rank0_iqr)
             ),
             "workload_count": len(rows),
+        },
+        "post_rendezvous_over_intrinsic": {
+            "median": float(np.median(post_rendezvous_ratios)),
+            "p95": float(np.percentile(post_rendezvous_ratios, 95)),
+            "max": max(post_rendezvous_ratios),
+            "note": (
+                "Post-rendezvous uses cross-rank timestamps and is retained "
+                "as a same-node diagnostic; the portable structural target "
+                "uses only per-rank durations."
+            ),
         },
         "near_equal_payload": equal_payload_summary,
         "definition": (
