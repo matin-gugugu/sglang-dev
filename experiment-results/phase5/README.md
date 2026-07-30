@@ -23,9 +23,10 @@
 4. “每次 collective 取跨 rank 最大 duration 再求和”也不能作为标签。
    它会重复累计不同 rank 上相互重叠的等待区间，相对 intrinsic 口径的
    中位放大达到 57.82×。
-5. 最终采用 all-rank skew-free intrinsic 标签：每个对齐 collective
-   取各 rank kernel duration 的最小值，再按 group-level calls 求和。
-   该口径与第二阶段隔离代价曲线的 intrinsic 定义一致。
+5. Phase 5 因而引入 skew-free intrinsic 与 post-rendezvous 两个候选：
+   前者是 duration-only 可移植下包络，后者表示最后一个 rank 到齐后的
+   completion。Phase 6 完整 195 点比较后，将 post-rendezvous 选为同节点
+   主标签，intrinsic 保留为下包络消融。
 
 ## 2. PatternDemand 与时间标签口径
 
@@ -37,21 +38,22 @@
 - ring-equivalent bytes/rounds 是结构化建模量，不是实测 wire traffic。
 
 设第 \(e\) 个 collective 在 rank \(r\) 上的 kernel duration 为
-\(d_{e,r}\)。推荐的结构化通信标签为：
+\(d_{e,r}\)。Phase 5 首先构造 skew-free intrinsic 候选：
 
 \[
 T_{\mathrm{intrinsic}}=\sum_e\min_r d_{e,r}.
 \]
 
-它去除某些 rank 提前进入 collective 所产生的 pre-entry wait，保留通信
-实现本身的 skew-free cost。Decode 使用 8-step profile window，并按
-full-phase calls 等比扩展；Prefill 全阶段采集。
+它去除某些 rank 提前进入 collective 所产生的 pre-entry wait，作为
+duration-only 下包络。Decode 使用 8-step profile window，并按 full-phase
+calls 等比扩展；Prefill 全阶段采集。
 
 同时保留两个诊断量，但不用于训练：
 
 - `post_rendezvous_completion`：
-  \(\sum_e(\max_r end_{e,r}-\max_r start_{e,r})\)，用于同节点时钟可比场景
-  下验证 intrinsic 下包络；
+  \(\sum_e(\max_r end_{e,r}-\max_r start_{e,r})\)，表示最后一个 rank
+  到齐后的完成时间；Phase 6 完整数据证明它是同节点最稳定、语义最直接的
+  主标签；
 - `synchronization_inclusive_max_duration_sum`：
   \(\sum_e\max_r d_{e,r}\)，用于量化 rank 到达偏斜，不是通信本体标签。
 
@@ -154,19 +156,20 @@ DNN 在小诊断子集上的大尾部不能作为最终结论；需要在完整 
 
 ## 7. 对开题设计的修正
 
-两阶段设计继续成立，且统计口径现已闭环：
+两阶段设计继续成立。结合 Phase 6 的完整标签对照，统计口径闭环为：
 
 1. 第一阶段输出 topology-independent PatternDemand：
    `op × payload histogram × calls × group size × ring-equivalent rounds`；
-2. 第二阶段连续曲线使用与 workload 标签一致的 skew-free intrinsic cost；
-3. 结构化公式先预测 intrinsic 通信基线；
+2. 同节点主标签使用 post-rendezvous completion，并匹配 synchronized
+   completion curve；intrinsic 保留为可移植下包络；
+3. 结构化公式先预测与目标语义匹配的通信基线；
 4. DNN 只拟合结构化公式残差，不学习或放大 rank 到达等待；
 5. synchronization/overlap 若要进入调度器，应作为独立特征或独立残差项，
    不能混入链路本体标签。
 
 ## 8. 下一步
 
-1. 用 v2 intrinsic 口径采集完整 195 点、三重复 all-rank 数据；
+1. 用 v2 三标签口径采集完整 195 点、三重复 all-rank 数据；
 2. 在 corrected dataset 上重训 total bytes、三桶、连续直方图和
    连续直方图+DNN residual；
 3. 完成 grouped workload holdout、等总 payload holdout 和 TP 分层评测；

@@ -159,6 +159,12 @@ def main():
         warmed_intrinsic = metric_values(
             warmed_records, "skew_free_intrinsic_kernel_time_us"
         )
+        baseline_post_rendezvous = metric_values(
+            baseline_records, "post_rendezvous_completion_kernel_time_us"
+        )
+        warmed_post_rendezvous = metric_values(
+            warmed_records, "post_rendezvous_completion_kernel_time_us"
+        )
         baseline_sync_inclusive = metric_values(
             baseline_records,
             "synchronization_inclusive_max_duration_sum_us",
@@ -206,6 +212,22 @@ def main():
                 ),
                 "warmed_intrinsic_p95_over_median": tail_fraction(
                     warmed_intrinsic
+                ),
+                "baseline_post_rendezvous_median_us": float(
+                    np.median(baseline_post_rendezvous)
+                ),
+                "warmed_post_rendezvous_median_us": float(
+                    np.median(warmed_post_rendezvous)
+                ),
+                "warmed_over_baseline_post_rendezvous_median": float(
+                    np.median(warmed_post_rendezvous)
+                    / np.median(baseline_post_rendezvous)
+                ),
+                "baseline_post_rendezvous_iqr_fraction": iqr_fraction(
+                    baseline_post_rendezvous
+                ),
+                "warmed_post_rendezvous_iqr_fraction": iqr_fraction(
+                    warmed_post_rendezvous
                 ),
                 "baseline_sync_inclusive_iqr_fraction": iqr_fraction(
                     baseline_sync_inclusive
@@ -294,6 +316,15 @@ def main():
     target_ratios = [
         row["warmed_over_baseline_intrinsic_median"] for row in rows
     ]
+    post_rendezvous_iqr_before = [
+        row["baseline_post_rendezvous_iqr_fraction"] for row in rows
+    ]
+    post_rendezvous_iqr_after = [
+        row["warmed_post_rendezvous_iqr_fraction"] for row in rows
+    ]
+    post_rendezvous_target_ratios = [
+        row["warmed_over_baseline_post_rendezvous_median"] for row in rows
+    ]
     summary = {
         "schema_version": "qwen3-8b-prefill-warmup-control-v1",
         "workload_count": len(rows),
@@ -312,6 +343,28 @@ def main():
             "median_ratio": float(np.median(target_ratios)),
             "min_ratio": min(target_ratios),
             "max_ratio": max(target_ratios),
+        },
+        "post_rendezvous_iqr_fraction": {
+            "baseline_median": float(
+                np.median(post_rendezvous_iqr_before)
+            ),
+            "same_shape_warmup_median": float(
+                np.median(post_rendezvous_iqr_after)
+            ),
+            "improved_workloads": sum(
+                after < before
+                for before, after in zip(
+                    post_rendezvous_iqr_before,
+                    post_rendezvous_iqr_after,
+                )
+            ),
+        },
+        "same_shape_warmup_post_rendezvous_target_shift": {
+            "median_ratio": float(
+                np.median(post_rendezvous_target_ratios)
+            ),
+            "min_ratio": min(post_rendezvous_target_ratios),
+            "max_ratio": max(post_rendezvous_target_ratios),
         },
         "comparison_note": (
             "The historical control has three repeats and the warmed arm has ten; "

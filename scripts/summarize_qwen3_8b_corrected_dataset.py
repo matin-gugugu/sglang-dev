@@ -297,6 +297,40 @@ def main():
     sync_ratios = [
         row["sync_inclusive_over_intrinsic"] for row in rows
     ]
+    equal_payload = {}
+    for tp in (2, 4, 8):
+        small_message = next(
+            row
+            for row in rows
+            if row["phase"] == "decode"
+            and row["group_size"] == tp
+            and row["input_len"] == 2048
+            and row["batch_size"] == 1
+            and row["output_len"] == 512
+        )
+        large_message = next(
+            row
+            for row in rows
+            if row["phase"] == "decode"
+            and row["group_size"] == tp
+            and row["input_len"] == 2048
+            and row["batch_size"] == 16
+            and row["output_len"] == 32
+        )
+        equal_payload[str(tp)] = {
+            "logical_payload_ratio": (
+                small_message["logical_payload_bytes"]
+                / large_message["logical_payload_bytes"]
+            ),
+            "intrinsic_time_ratio_small_over_large_message": (
+                small_message["intrinsic_median_us"]
+                / large_message["intrinsic_median_us"]
+            ),
+            "post_rendezvous_time_ratio_small_over_large_message": (
+                small_message["post_rendezvous_median_us"]
+                / large_message["post_rendezvous_median_us"]
+            ),
+        }
     summary = {
         "schema_version": "qwen3-8b-corrected-dataset-audit-v1",
         "record_count": record_count,
@@ -316,8 +350,16 @@ def main():
             "p95": percentile(sync_ratios, 95),
             "max": max(sync_ratios),
         },
-        "recommended_training_target": (
-            "skew_free_intrinsic_kernel_time_us"
+        "near_equal_payload": equal_payload,
+        "recommended_same_node_training_target": (
+            "post_rendezvous_completion_kernel_time_us"
+        ),
+        "portable_lower_bound": "skew_free_intrinsic_kernel_time_us",
+        "target_note": (
+            "Post-rendezvous is the stable completion label after the final "
+            "rank enters, but requires comparable cross-rank timestamps. "
+            "Intrinsic uses durations only and remains the portable lower bound "
+            "when timestamp synchronization is unavailable."
         ),
     }
     (args.output_dir / "summary.json").write_text(
