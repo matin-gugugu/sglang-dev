@@ -85,6 +85,7 @@ def main():
             record["all_rank_ground_truth"]["profiled_window"]
             for record in records
         ]
+        demand = records[0]["full_phase_pattern_demand"]
         rank0 = [item["rank0_kernel_time_us"] for item in full]
         max_rank = [item["max_rank_total_kernel_time_us"] for item in full]
         critical = [
@@ -101,6 +102,19 @@ def main():
                 "input_len": input_len,
                 "output_len": output_len,
                 "repeat_count": len(records),
+                "calls": int(demand["all_reduce_calls"]),
+                "logical_payload_bytes": int(demand["input_payload_bytes"]),
+                "message_payload_bytes": int(
+                    next(
+                        iter(demand["calls_by_input_payload_bytes"])
+                    )
+                ),
+                "ring_equivalent_bytes": float(
+                    demand["ring_equivalent"]["bytes"]
+                ),
+                "ring_equivalent_rounds": int(
+                    demand["ring_equivalent"]["rounds"]
+                ),
                 "rank0_us_median": statistics.median(rank0),
                 "max_rank_total_us_median": statistics.median(max_rank),
                 "critical_us_median": statistics.median(critical),
@@ -189,6 +203,72 @@ def main():
     )
     plt.close(figure)
 
+    equal_payload_shapes = ((1, 512), (4, 128), (16, 32))
+    equal_payload_rows = {
+        tp: [
+            next(
+                row
+                for row in rows
+                if row["phase"] == "decode"
+                and row["group_size"] == tp
+                and row["input_len"] == 2048
+                and row["batch_size"] == batch_size
+                and row["output_len"] == output_len
+            )
+            for batch_size, output_len in equal_payload_shapes
+        ]
+        for tp in (2, 4, 8)
+    }
+    figure, axes = plt.subplots(1, 3, figsize=(14.5, 5.2), sharey=True)
+    shape_colors = ("#4C78A8", "#F58518", "#54A24B")
+    for axis, tp in zip(axes, (2, 4, 8)):
+        selected = equal_payload_rows[tp]
+        positions = np.arange(len(selected))
+        seconds = [
+            row["critical_us_median"] / 1_000_000 for row in selected
+        ]
+        bars = axis.bar(positions, seconds, color=shape_colors)
+        axis.set_xticks(
+            positions,
+            [
+                f"B{row['batch_size']} / M{row['output_len']}"
+                for row in selected
+            ],
+        )
+        for bar, row in zip(bars, selected):
+            axis.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height(),
+                (
+                    f"{row['calls']:,} calls\n"
+                    f"{row['message_payload_bytes'] / 1024:.0f} KiB/msg"
+                ),
+                ha="center",
+                va="bottom",
+                fontsize=8,
+            )
+        payload_mib = [
+            row["logical_payload_bytes"] / (1024**2) for row in selected
+        ]
+        axis.set_title(
+            f"TP={tp}\nlogical payload {min(payload_mib):.0f}–"
+            f"{max(payload_mib):.0f} MiB"
+        )
+        axis.set_xlabel("Batch size / output length")
+        axis.grid(True, axis="y", alpha=0.25)
+    axes[0].set_ylabel("All-rank critical communication time (s)")
+    figure.suptitle(
+        "Near-equal total payload, different message shapes and call counts",
+        fontsize=13,
+    )
+    figure.tight_layout()
+    figure.savefig(
+        args.output_dir / "qwen3_8b_equal_payload_all_rank.png",
+        dpi=180,
+        bbox_inches="tight",
+    )
+    plt.close(figure)
+
     figure, axis = plt.subplots(figsize=(7, 6))
     for phase in ("prefill", "decode"):
         for tp in (2, 4, 8):
@@ -233,6 +313,22 @@ def main():
     ratios = [row["critical_over_rank0_median"] for row in rows]
     rank0_iqr = [row["rank0_repeat_iqr_fraction"] for row in rows]
     critical_iqr = [row["critical_repeat_iqr_fraction"] for row in rows]
+    equal_payload_summary = {}
+    for tp, selected in equal_payload_rows.items():
+        small_message = selected[0]
+        large_message = selected[-1]
+        equal_payload_summary[str(tp)] = {
+            "small_message_workload": small_message["workload_id"],
+            "large_message_workload": large_message["workload_id"],
+            "logical_payload_ratio": (
+                small_message["logical_payload_bytes"]
+                / large_message["logical_payload_bytes"]
+            ),
+            "critical_time_ratio_small_over_large_message": (
+                small_message["critical_us_median"]
+                / large_message["critical_us_median"]
+            ),
+        }
     summary = {
         "schema_version": "all-rank-critical-summary-v1",
         "workload_count": len(rows),
@@ -251,6 +347,7 @@ def main():
             ),
             "workload_count": len(rows),
         },
+        "near_equal_payload": equal_payload_summary,
         "definition": (
             "Per workload, sum the maximum kernel duration across aligned ranks "
             "for every group-level collective; report median across three repeats."
