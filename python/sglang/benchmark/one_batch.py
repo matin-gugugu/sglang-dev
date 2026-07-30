@@ -1057,32 +1057,33 @@ def latency_test(
     # Load the model
     model_runner, tokenizer = load_model(server_args, port_args, gpu_id, tp_rank)
 
-    # Prepare inputs for warm up
-    reqs = prepare_synthetic_inputs_for_latency_test(
-        bench_args.batch_size[0], bench_args.input_len[0]
-    )
-
-    # Warm up
-    rank_print("Warmup ...")
-    latency_test_run_once(
-        bench_args.run_name,
-        model_runner,
-        rank_print,
-        reqs,
-        bench_args.batch_size[0],
-        bench_args.input_len[0],
-        min(32, bench_args.output_len[0]),  # shorter decoding to speed up the warmup
-        log_decode_step=0,
-        profile=False,
-        profile_record_shapes=False,
-        profile_activities=("CPU", "GPU"),
-        profile_prefix="",
-        profile_stage="all",
-        tp_rank=tp_rank,
-        profile_start_step=None,
-        profile_steps=None,
-        enable_comm_profile=False,
-    )
+    if bench_args.warmup_each_workload:
+        rank_print("Warmup is enabled separately for every workload point.")
+    else:
+        # Preserve the legacy single warmup when the per-workload protocol is off.
+        reqs = prepare_synthetic_inputs_for_latency_test(
+            bench_args.batch_size[0], bench_args.input_len[0]
+        )
+        rank_print("Warmup ...")
+        latency_test_run_once(
+            bench_args.run_name,
+            model_runner,
+            rank_print,
+            reqs,
+            bench_args.batch_size[0],
+            bench_args.input_len[0],
+            min(32, bench_args.output_len[0]),
+            log_decode_step=0,
+            profile=False,
+            profile_record_shapes=False,
+            profile_activities=("CPU", "GPU"),
+            profile_prefix="",
+            profile_stage="all",
+            tp_rank=tp_rank,
+            profile_start_step=None,
+            profile_steps=None,
+            enable_comm_profile=False,
+        )
 
     rank_print("Benchmark ...")
 
