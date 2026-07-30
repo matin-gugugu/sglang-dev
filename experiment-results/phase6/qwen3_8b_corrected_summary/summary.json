@@ -1,0 +1,68 @@
+{
+  "schema_version": "qwen3-8b-corrected-dataset-audit-v1",
+  "record_count": 585,
+  "unique_workloads": 195,
+  "repeat_count": 3,
+  "phase_counts": {
+    "prefill": 60,
+    "decode": 135
+  },
+  "tp_counts": {
+    "2": 65,
+    "4": 65,
+    "8": 65
+  },
+  "pattern_demand_unchanged_workloads": 195,
+  "label_repeat_stability": {
+    "rank0": {
+      "median_iqr_fraction": 0.14247629220212257,
+      "p95_iqr_fraction": 5.555264198242345,
+      "workloads_above_20pct": 82
+    },
+    "intrinsic": {
+      "median_iqr_fraction": 0.042574613295200944,
+      "p95_iqr_fraction": 0.18615528598094463,
+      "workloads_above_20pct": 5
+    },
+    "post_rendezvous": {
+      "median_iqr_fraction": 0.015912068047922345,
+      "p95_iqr_fraction": 0.062399897375540414,
+      "workloads_above_20pct": 0
+    },
+    "sync_inclusive": {
+      "median_iqr_fraction": 0.05620325487913231,
+      "p95_iqr_fraction": 0.3372968977463105,
+      "workloads_above_20pct": 37
+    }
+  },
+  "post_rendezvous_over_intrinsic": {
+    "median": 1.2462814247860854,
+    "p95": 1.6859739184563078,
+    "max": 1.8315545917149736
+  },
+  "sync_inclusive_over_intrinsic": {
+    "median": 49.81129146110129,
+    "p95": 70.03592361458651,
+    "max": 80.00116632316397
+  },
+  "near_equal_payload": {
+    "2": {
+      "logical_payload_ratio": 1.030241935483871,
+      "intrinsic_time_ratio_small_over_large_message": 10.642384096294018,
+      "post_rendezvous_time_ratio_small_over_large_message": 11.628888982287677
+    },
+    "4": {
+      "logical_payload_ratio": 1.030241935483871,
+      "intrinsic_time_ratio_small_over_large_message": 11.224923788428791,
+      "post_rendezvous_time_ratio_small_over_large_message": 12.060286182544166
+    },
+    "8": {
+      "logical_payload_ratio": 1.030241935483871,
+      "intrinsic_time_ratio_small_over_large_message": 12.600049786070818,
+      "post_rendezvous_time_ratio_small_over_large_message": 12.5873855663412
+    }
+  },
+  "recommended_same_node_training_target": "post_rendezvous_completion_kernel_time_us",
+  "portable_lower_bound": "skew_free_intrinsic_kernel_time_us",
+  "target_note": "Post-rendezvous is the stable completion label after the final rank enters, but requires comparable cross-rank timestamps. Intrinsic uses durations only and remains the portable lower bound when timestamp synchronization is unavailable."
+}

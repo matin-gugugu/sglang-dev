@@ -1,36 +1,36 @@
 {
-  "schema_version": "all-rank-target-gap-v1",
+  "schema_version": "all-rank-intrinsic-target-gap-v2",
   "workload_count": 29,
-  "critical_over_representative_rank_target": {
-    "median": 44.567399792460535,
-    "p95": 77.4662855553946,
-    "max": 120.79516782547924
+  "intrinsic_over_representative_rank_target": {
+    "median": 0.9933142581634508,
+    "p95": 1.036115824160418,
+    "max": 1.1163644182254158
   },
-  "existing_model_error_against_all_rank_critical": {
+  "existing_model_error_against_all_rank_intrinsic": {
     "total_bytes_only": {
-      "mape": 0.8844110693352106,
-      "median_ape": 0.9790766454919011,
-      "p95_ape": 0.9956623676781277,
-      "mae_us": 2966519.547147191
+      "mape": 0.6614673531148973,
+      "median_ape": 0.4527259366626028,
+      "p95_ape": 2.4541325926863005,
+      "mae_us": 31228.198265138777
     },
     "three_hard_bins": {
-      "mape": 0.884695586188729,
-      "median_ape": 0.9793113968376197,
-      "p95_ape": 0.9847784333939367,
-      "mae_us": 2946509.072000744
+      "mape": 0.19887350569675924,
+      "median_ape": 0.1712285542684309,
+      "p95_ape": 0.45635088191783635,
+      "mae_us": 5262.677378055317
     },
     "continuous_histogram": {
-      "mape": 0.8867008163284843,
-      "median_ape": 0.9816574000190812,
-      "p95_ape": 0.9875782717186629,
-      "mae_us": 2951611.814423957
+      "mape": 0.03799789873207031,
+      "median_ape": 0.02874773667477777,
+      "p95_ape": 0.10271155999896667,
+      "mae_us": 2360.2780540741674
     },
     "continuous_histogram_dnn_residual": {
-      "mape": 0.8812331331002337,
-      "median_ape": 0.9791883951229762,
-      "p95_ape": 0.987007784969419,
-      "mae_us": 2939891.3902121754
+      "mape": 0.5044690613734232,
+      "median_ape": 0.04051925016792419,
+      "p95_ape": 3.938799895546127,
+      "mae_us": 14000.771067547015
     }
   },
-  "interpretation": "Diagnostic only: the four existing models were trained on the representative-rank target and are not retrained here. Large error quantifies target-definition mismatch; it is not a fair final benchmark of histogram features against corrected labels."
+  "interpretation": "Diagnostic only: the four existing models were trained on the representative-rank target and are not retrained here. This small shared-workload subset measures transfer to the intrinsic label; it is not a substitute for retraining and grouped holdout on the complete corrected dataset."
 }
