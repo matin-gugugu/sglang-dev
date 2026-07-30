@@ -1,0 +1,37 @@
+{
+  "schema_version": "all-rank-critical-summary-v1",
+  "workload_count": 29,
+  "repeat_count": 3,
+  "critical_over_rank0": {
+    "median": 1.2591743922474474,
+    "p95": 30.051934077065503,
+    "max": 60.088207819207845
+  },
+  "repeat_iqr_fraction": {
+    "rank0_median": 0.3414796350168149,
+    "all_rank_critical_median": 0.17162352044160373,
+    "critical_more_stable_workloads": 24,
+    "workload_count": 29
+  },
+  "near_equal_payload": {
+    "2": {
+      "small_message_workload": "decode-tp2-b1-l2048-m512",
+      "large_message_workload": "decode-tp2-b16-l2048-m32",
+      "logical_payload_ratio": 1.030241935483871,
+      "critical_time_ratio_small_over_large_message": 10.073078831585875
+    },
+    "4": {
+      "small_message_workload": "decode-tp4-b1-l2048-m512",
+      "large_message_workload": "decode-tp4-b16-l2048-m32",
+      "logical_payload_ratio": 1.030241935483871,
+      "critical_time_ratio_small_over_large_message": 15.358185601529051
+    },
+    "8": {
+      "small_message_workload": "decode-tp8-b1-l2048-m512",
+      "large_message_workload": "decode-tp8-b16-l2048-m32",
+      "logical_payload_ratio": 1.030241935483871,
+      "critical_time_ratio_small_over_large_message": 25.264138614918647
+    }
+  },
+  "definition": "Per workload, sum the maximum kernel duration across aligned ranks for every group-level collective; report median across three repeats."
+}

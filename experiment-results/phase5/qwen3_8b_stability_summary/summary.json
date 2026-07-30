@@ -1,0 +1,69 @@
+{
+  "schema_version": "qwen3-8b-stability-summary-v1",
+  "selection": {
+    "baseline_repeat_count": 3,
+    "high_iqr_threshold": 0.2,
+    "selected_workloads": 25
+  },
+  "rerun": {
+    "added_repeat_count": 7,
+    "combined_repeat_count": 10,
+    "pattern_demand_unchanged_workloads": 25
+  },
+  "repeat_iqr_fraction": {
+    "baseline_median": 1.088966766901622,
+    "combined_median": 0.5135025519014288,
+    "improved_workloads": 17,
+    "remaining_above_threshold": 15,
+    "combined_p95": 3.4382809601812845,
+    "combined_max": 6.939247883936833
+  },
+  "gpu_telemetry": {
+    "sample_count": 27116,
+    "active_sample_count": 6986,
+    "active_definition": "GPU utilization >= 20%",
+    "active_or_all_sample_pstate_counts": {
+      "P0": 6986
+    },
+    "active_or_all_sample_distributions": {
+      "temperature_c": {
+        "min": 33.0,
+        "median": 35.0,
+        "p95": 39.0,
+        "max": 46.0
+      },
+      "power_w": {
+        "min": 236.72,
+        "median": 270.265,
+        "p95": 327.07,
+        "max": 459.88
+      },
+      "sm_clock_mhz": {
+        "min": 1837.0,
+        "median": 1965.0,
+        "p95": 1965.0,
+        "max": 1965.0
+      },
+      "memory_clock_mhz": {
+        "min": 3996.0,
+        "median": 3996.0,
+        "p95": 3996.0,
+        "max": 3996.0
+      },
+      "utilization_percent": {
+        "min": 20.0,
+        "median": 95.0,
+        "p95": 100.0,
+        "max": 100.0
+      },
+      "memory_used_mib": {
+        "min": 4.0,
+        "median": 160341.0,
+        "p95": 162891.0,
+        "max": 162891.0
+      }
+    },
+    "note": "Telemetry is sampled once per second for the selected TP ranks. It is a run-health diagnostic, not a per-collective feature."
+  },
+  "interpretation": "PatternDemand is deterministic when the pattern signature is unchanged; the IQR comparison quantifies noise in the measured GPU communication-time label."
+}
