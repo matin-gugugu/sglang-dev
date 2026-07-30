@@ -31,6 +31,28 @@ def parse_args():
         default=[48 * 1024],
         help="Extra observed payload sizes added to the power-of-two sweep.",
     )
+    parser.add_argument(
+        "--topology",
+        default="single-node-nvlink",
+        help=(
+            "Physical placement label recorded in every row, for example "
+            "single-node-nvlink or cross-node-same-rdma-pod."
+        ),
+    )
+    parser.add_argument(
+        "--timing-mode",
+        choices=("steady_state", "rendezvous"),
+        default="steady_state",
+        help=(
+            "steady_state preserves the original back-to-back measurement. "
+            "rendezvous synchronizes all ranks before each isolated collective."
+        ),
+    )
+    parser.add_argument(
+        "--transport-label",
+        default="auto",
+        help="Human-readable transport label such as nvlink, roce, or tcp.",
+    )
     return parser.parse_args()
 
 
@@ -87,6 +109,17 @@ def main():
     device_name = torch.cuda.get_device_name(local_rank)
     device_uuid = torch.cuda.get_device_properties(local_rank).uuid
     commit = git_commit()
+    local_rank_metadata = {
+        "rank": rank,
+        "local_rank": local_rank,
+        "hostname": socket.gethostname(),
+        "device_name": device_name,
+        "device_uuid": str(device_uuid),
+        "visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
+    }
+    rank_metadata = [None for _ in range(world_size)]
+    dist.all_gather_object(rank_metadata, local_rank_metadata)
+    hostnames = sorted({metadata["hostname"] for metadata in rank_metadata})
 
     if rank == 0:
         args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -108,21 +141,42 @@ def main():
 
         dist.barrier()
         for _ in range(args.warmup):
+            if args.timing_mode == "rendezvous":
+                dist.barrier(device_ids=[local_rank])
+                torch.cuda.synchronize()
             run_collective()
         torch.cuda.synchronize()
         dist.barrier()
 
-        starts = [torch.cuda.Event(enable_timing=True) for _ in range(args.iterations)]
-        ends = [torch.cuda.Event(enable_timing=True) for _ in range(args.iterations)]
-        for start, end in zip(starts, ends):
-            start.record()
-            run_collective()
-            end.record()
-        torch.cuda.synchronize()
+        if args.timing_mode == "steady_state":
+            starts = [
+                torch.cuda.Event(enable_timing=True) for _ in range(args.iterations)
+            ]
+            ends = [
+                torch.cuda.Event(enable_timing=True) for _ in range(args.iterations)
+            ]
+            for start, end in zip(starts, ends):
+                start.record()
+                run_collective()
+                end.record()
+            torch.cuda.synchronize()
+            local_samples_us = [
+                float(start.elapsed_time(end) * 1000.0)
+                for start, end in zip(starts, ends)
+            ]
+        else:
+            local_samples_us = []
+            for _ in range(args.iterations):
+                dist.barrier(device_ids=[local_rank])
+                torch.cuda.synchronize()
+                start = torch.cuda.Event(enable_timing=True)
+                end = torch.cuda.Event(enable_timing=True)
+                start.record()
+                run_collective()
+                end.record()
+                torch.cuda.synchronize()
+                local_samples_us.append(float(start.elapsed_time(end) * 1000.0))
 
-        local_samples_us = [
-            float(start.elapsed_time(end) * 1000.0) for start, end in zip(starts, ends)
-        ]
         gathered_samples = [None for _ in range(world_size)]
         dist.all_gather_object(gathered_samples, local_samples_us)
         dist.barrier()
@@ -140,11 +194,20 @@ def main():
                 "timestamp_utc": datetime.now(timezone.utc).isoformat(),
                 "repeat_id": args.repeat_id,
                 "hostname": socket.gethostname(),
-                "topology": "single-node-nvlink",
+                "hostnames": hostnames,
+                "node_count": len(hostnames),
+                "rank_layout": rank_metadata,
+                "topology": args.topology,
+                "transport_label": args.transport_label,
+                "timing_mode": args.timing_mode,
                 "op": args.op,
                 "backend": "nccl",
                 "group_size": world_size,
-                "rank_scope": "max-completion-across-ranks",
+                "rank_scope": (
+                    "max-completion-across-ranks"
+                    if args.timing_mode == "steady_state"
+                    else "max-rank-local-envelope-after-rendezvous"
+                ),
                 "payload_scope": payload_scope,
                 "payload_bytes": payload_bytes,
                 "input_payload_bytes_per_rank": (
@@ -177,6 +240,22 @@ def main():
                     "device_name": device_name,
                     "device_uuid_rank0": str(device_uuid),
                     "visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
+                    "master_addr": os.environ.get("MASTER_ADDR"),
+                    "master_port": os.environ.get("MASTER_PORT"),
+                    "nccl_env": {
+                        key: os.environ.get(key)
+                        for key in (
+                            "NCCL_ALGO",
+                            "NCCL_CROSS_NIC",
+                            "NCCL_DEBUG",
+                            "NCCL_IB_DISABLE",
+                            "NCCL_IB_GID_INDEX",
+                            "NCCL_IB_HCA",
+                            "NCCL_NET_GDR_LEVEL",
+                            "NCCL_SOCKET_IFNAME",
+                        )
+                        if os.environ.get(key) is not None
+                    },
                 },
             }
             with args.output.open("a") as output:

@@ -29,6 +29,17 @@ def parse_args():
         type=Path,
         default=repo_root / "experiment-results" / "phase2" / "summary_l1_curve",
     )
+    parser.add_argument(
+        "--expected-repeats",
+        type=int,
+        default=5,
+        help="Number of independent process-level repeats expected per curve.",
+    )
+    parser.add_argument(
+        "--plot-name",
+        default="b200_l1_collective_curve.png",
+        help="Output filename for the four-panel curve figure.",
+    )
     return parser.parse_args()
 
 
@@ -53,10 +64,16 @@ def read_records(input_dir):
     return rows
 
 
-def validate_records(records):
+def validate_records(records, expected_repeats):
     expected_sizes = {1 << exponent for exponent in range(10, 28)}
     expected_sizes.add(48 * 1024)
     grouped = defaultdict(list)
+    topologies = {record["topology"] for record in records}
+    timing_modes = {record.get("timing_mode", "steady_state") for record in records}
+    if len(topologies) != 1:
+        raise ValueError(f"expected one topology, found {sorted(topologies)}")
+    if len(timing_modes) != 1:
+        raise ValueError(f"expected one timing mode, found {sorted(timing_modes)}")
     for record in records:
         key = (
             record["op"],
@@ -82,7 +99,7 @@ def validate_records(records):
         (op, group_size, repeat)
         for op in OPS
         for group_size in GROUP_SIZES
-        for repeat in range(5)
+        for repeat in range(expected_repeats)
     }
     if set(grouped) != expected_keys:
         missing = sorted(expected_keys - set(grouped))
@@ -103,6 +120,10 @@ def flatten_records(records):
         rows.append(
             {
                 "op": record["op"],
+                "topology": record["topology"],
+                "transport_label": record.get("transport_label", "unspecified"),
+                "timing_mode": record.get("timing_mode", "steady_state"),
+                "node_count": int(record.get("node_count", 1)),
                 "group_size": int(record["group_size"]),
                 "repeat_id": int(record["repeat_id"]),
                 "payload_scope": record["payload_scope"],
@@ -189,7 +210,12 @@ def aggregate_records(records):
         )
         rows.append(
             {
-                "topology": "single-node-nvlink",
+                "topology": group[0]["topology"],
+                "transport_label": group[0].get(
+                    "transport_label", "unspecified"
+                ),
+                "timing_mode": group[0].get("timing_mode", "steady_state"),
+                "node_count": int(group[0].get("node_count", 1)),
                 "backend": "nccl",
                 "op": op,
                 "group_size": group_size,
@@ -266,7 +292,10 @@ def build_cost_model(summary):
                 {
                     "op": op,
                     "group_size": group_size,
-                    "topology": "single-node-nvlink",
+                    "topology": rows[0]["topology"],
+                    "transport_label": rows[0]["transport_label"],
+                    "timing_mode": rows[0]["timing_mode"],
+                    "node_count": rows[0]["node_count"],
                     "backend": "nccl",
                     "payload_scope": rows[0]["payload_scope"],
                     "ring_equivalent_factor": rows[0]["ring_equivalent_factor"],
@@ -307,8 +336,16 @@ def build_cost_model(summary):
     return {
         "schema_version": "continuous-collective-cost-v1",
         "interpolation": "linear-in-log2-payload",
+        "topology": summary[0]["topology"],
+        "transport_label": summary[0]["transport_label"],
+        "timing_mode": summary[0]["timing_mode"],
+        "node_count": summary[0]["node_count"],
         "latency_scopes": {
-            "median_latency_us": "max-completion-across-ranks",
+            "median_latency_us": (
+                "max-rank-local-envelope-after-rendezvous"
+                if summary[0]["timing_mode"] == "rendezvous"
+                else "max-completion-across-ranks"
+            ),
             "intrinsic_min_median_latency_us": (
                 "skew-free-minimum-duration-across-ranks"
             ),
@@ -407,7 +444,7 @@ def main():
     args = parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     records = read_records(args.input_dir)
-    validate_records(records)
+    validate_records(records, args.expected_repeats)
     repeat_rows = flatten_records(records)
     summary = aggregate_records(records)
     cost_model = build_cost_model(summary)
@@ -417,7 +454,7 @@ def main():
     with (args.output_dir / "collective_cost_knots.json").open("w") as output:
         json.dump(cost_model, output, indent=2)
         output.write("\n")
-    plot_curves(args.output_dir / "b200_l1_collective_curve.png", summary)
+    plot_curves(args.output_dir / args.plot_name, summary)
     print(
         f"Wrote {len(summary)} aggregate points from {len(records)} records "
         f"and {sum(len(record['samples_us']) for record in records)} samples"
