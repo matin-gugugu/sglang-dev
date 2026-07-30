@@ -74,6 +74,8 @@ T_{\mathrm{sync}}=\sum_e\max_r d_{e,r}.
 - 10/10 workload 的 PatternDemand 在历史三重复和新十重复中完全一致；
 - intrinsic 历史/十重复 IQR 中位数为 0.41%/1.10%；
 - intrinsic 热身后/历史目标中位比为 1.000，范围 0.978–1.005；
+- post-rendezvous 历史/十重复 IQR 中位数为 0.46%/0.73%；
+- post-rendezvous 热身后/历史目标中位比为 1.001，范围 0.968–1.006；
 - synchronization-inclusive IQR 中位数由 24.19% 降至 18.51%。
 
 结论：warmup 能部分降低 rank 到达等待，但不会系统性改变通信本体。完整网格
