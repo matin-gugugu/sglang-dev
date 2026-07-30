@@ -149,9 +149,10 @@ def main():
         "existing_model_error_against_all_rank_intrinsic": model_metrics,
         "interpretation": (
             "Diagnostic only: the four existing models were trained on the "
-            "representative-rank target and are not retrained here. Large error "
-            "quantifies target-definition mismatch; it is not a fair final "
-            "benchmark of histogram features against corrected labels."
+            "representative-rank target and are not retrained here. This small "
+            "shared-workload subset measures transfer to the intrinsic label; "
+            "it is not a substitute for retraining and grouped holdout on the "
+            "complete corrected dataset."
         ),
     }
     (args.output_dir / "summary.json").write_text(
