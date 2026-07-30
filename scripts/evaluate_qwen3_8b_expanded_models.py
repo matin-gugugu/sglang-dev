@@ -1158,7 +1158,11 @@ def main():
                 for (phase, tp), value in sorted(calibration.items())
             },
             "continuous_histogram_curve": {
-                "custom_latency_column": custom_latency_column,
+                "custom_latency_column": (
+                    None
+                    if args.curve_mode == "nccl-only"
+                    else custom_latency_column
+                ),
                 "nccl_latency_column": nccl_latency_column,
                 "curve_mode": args.curve_mode,
             },

@@ -143,3 +143,18 @@ NCCL/RoCE 曲线，不能继续复用 L1 的 CustomAllReduce 代价。
 - 等总 payload 对照在不同拓扑下仍能区分消息形态；
 - 连续结构模型在未见 workload 上显著优于 total bytes；
 - DNN 只学习结构模型残差，不直接绕过 PatternDemand。
+
+## 7. 实现验证
+
+在正式占用第二台节点前已完成以下工程验证：
+
+- 使用原 Phase 2 数据重跑通用汇总器，114 个聚合点、6 条曲线及全部 cost
+  knots 与原结果逐字段一致；
+- 在 node55 上运行 TP=2、1 KiB、10 次正式调用的 rendezvous smoke test，
+  Rank 布局、主机集合、逐 Rank 样本和计时语义均通过断言；
+- 使用 Phase 6 的 195 个 workload 跑通 `nccl-only` 四模型训练与 grouped
+  holdout 全链路，确认跨节点曲线可以直接替换 L1 曲线。
+
+最后一项只验证软件链路，不作为论文精度结果：Phase 6 的真实 L1 小消息使用
+CustomAllReduce，强行用 L1 NCCL-only 曲线预测会产生预期的 backend mismatch。
+正式 L2/L3 精度只能使用相应拓扑下采集的推理 ground truth 和 NCCL 曲线。
