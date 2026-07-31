@@ -1,0 +1,42 @@
+[1;33m'--disable-cuda-graph' is deprecated and will be removed in a future release. Use '--cuda-graph-backend-{decode,prefill}=disabled' instead.[0m
+TensorRT-LLM MHA only supports page_size of 16, 32 or 64, changing page_size from None to 64.
+[2026-07-31 08:24:27 TP0] Init torch distributed begin.
+[2026-07-31 08:24:27 TP1] Init torch distributed begin.
+[2026-07-31 08:24:27 TP0] sglang is using nccl==2.28.9
+[2026-07-31 08:24:28 TP0] Init torch distributed ends. elapsed=1.33 s, mem usage=1.16 GB
+[2026-07-31 08:24:28 TP1] Init torch distributed ends. elapsed=1.30 s, mem usage=1.16 GB
+[2026-07-31 08:24:30 TP1] Load weight begin. avail mem=176.54 GB
+[2026-07-31 08:24:30 TP0] Load weight begin. avail mem=176.54 GB
+Multi-thread loading shards:   0% Completed | 0/5 [00:00<?, ?it/s]Multi-thread loading shards:  20% Completed | 1/5 [00:00<00:02,  1.73it/s]Multi-thread loading shards:  40% Completed | 2/5 [00:01<00:01,  1.55it/s]Multi-thread loading shards:  60% Completed | 3/5 [00:01<00:01,  1.53it/s]Multi-thread loading shards:  80% Completed | 4/5 [00:02<00:00,  1.62it/s]Multi-thread loading shards: 100% Completed | 5/5 [00:02<00:00,  2.23it/s]Multi-thread loading shards: 100% Completed | 5/5 [00:02<00:00,  1.89it/s]
+[2026-07-31 08:24:33 TP1] Load weight end. elapsed=2.79 s, type=Qwen3ForCausalLM, avail mem=168.90 GB, mem usage=7.65 GB.
+[2026-07-31 08:24:33 TP0] Load weight end. elapsed=2.79 s, type=Qwen3ForCausalLM, avail mem=168.90 GB, mem usage=7.65 GB.
+[2026-07-31 08:24:33 TP1] KV Cache is allocated. dtype: torch.bfloat16, #tokens: 2073920, K size: 71.20 GB, V size: 71.20 GB
+[2026-07-31 08:24:33 TP0] KV Cache is allocated. dtype: torch.bfloat16, #tokens: 2073920, K size: 71.20 GB, V size: 71.20 GB
+[2026-07-31 08:24:33 TP1] Memory pool end. avail mem=25.81 GB
+[2026-07-31 08:24:33 TP0] Memory pool end. avail mem=25.81 GB
+[2026-07-31 08:24:33 TP0] Disable prefill CUDA graph because cuda_graph_config resolved prefill.backend='disabled' (e.g. via --cuda-graph-backend-prefill=disabled or auto-disable rules).
+[2026-07-31 08:24:33 TP1] Disable prefill CUDA graph because cuda_graph_config resolved prefill.backend='disabled' (e.g. via --cuda-graph-backend-prefill=disabled or auto-disable rules).
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W731 08:24:34.117513334 ProcessGroupNCCL.cpp:5188] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+max_total_num_tokens=2073920
+Warmup is enabled separately for every workload point.
+Benchmark ...
+Warmup workload: batch_size=8, input_len=512, output_len=32
+Prefill. latency: 2.76112 s, throughput:   1483.46 token/s
+Decode 0. Batch size: 8, latency: 0.10206 s, throughput:     78.38 token/s
+Decode 1. Batch size: 8, latency: 0.02573 s, throughput:    310.94 token/s
+Decode 2. Batch size: 8, latency: 0.02325 s, throughput:    344.12 token/s
+Decode 3. Batch size: 8, latency: 0.02295 s, throughput:    348.64 token/s
+Decode 4. Batch size: 8, latency: 0.02279 s, throughput:    351.07 token/s
+Decode.  median latency: 0.02319 s, median throughput:    130.02 token/s
+Total. latency:  3.575 s, throughput:   1190.36 token/s
+Prefill. latency: 0.03016 s, throughput: 135797.09 token/s
+Decode 0. Batch size: 8, latency: 0.02430 s, throughput:    329.17 token/s
+Decode 1. Batch size: 8, latency: 0.02411 s, throughput:    331.84 token/s
+Decode 2. Batch size: 8, latency: 0.02389 s, throughput:    334.93 token/s
+Decode 3. Batch size: 8, latency: 0.02412 s, throughput:    331.72 token/s
+Decode 4. Batch size: 8, latency: 0.02428 s, throughput:    329.53 token/s
+Decode.  median latency: 0.02438 s, median throughput:    123.39 token/s
+Total. latency:  1.579 s, throughput:   2755.33 token/s
+kill_process_tree called: parent_pid=846953, include_parent=False, pid=846953

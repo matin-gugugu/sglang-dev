@@ -1,0 +1,63 @@
+{
+  "schema_version": "multiscale-pattern-analysis-v1",
+  "mixed": {
+    "aggregate_rows": 6,
+    "profiles": [
+      "balanced",
+      "staircase",
+      "bimodal"
+    ],
+    "coarse_feature_collision": "Within each model all profiles have identical B, L, M_max, sum output tokens, total payload, and calls, but distinct message histograms."
+  },
+  "chunked": {
+    "aggregate_rows": 72,
+    "equal_payload_collision_pairs": 24,
+    "chunk_sizes": [
+      1024,
+      2048,
+      4096
+    ]
+  },
+  "metrics": [
+    {
+      "experiment": "mixed_decode",
+      "predictor": "coarse_w_equals_L_M",
+      "samples": 6,
+      "mean_calls_ape": 0.0,
+      "mean_total_payload_ape": 0.0,
+      "mean_histogram_tv": 0.656084656084656,
+      "max_histogram_tv": 0.8253968253968254
+    },
+    {
+      "experiment": "mixed_decode",
+      "predictor": "output_survival_formula",
+      "samples": 6,
+      "mean_calls_ape": 0.0,
+      "mean_total_payload_ape": 0.0,
+      "mean_histogram_tv": 0.0,
+      "max_histogram_tv": 0.0
+    },
+    {
+      "experiment": "chunked_prefill_collision",
+      "predictor": "coarse_without_chunk_size",
+      "samples": 48,
+      "mean_calls_ape": 0.6388888888888888,
+      "mean_total_payload_ape": 0.0,
+      "mean_histogram_tv": 0.8888888888888888,
+      "max_histogram_tv": 1.0
+    },
+    {
+      "experiment": "chunked_prefill_collision",
+      "predictor": "chunk_aware_formula",
+      "samples": 48,
+      "mean_calls_ape": 0.0,
+      "mean_total_payload_ape": 0.0,
+      "mean_histogram_tv": 0.0,
+      "max_histogram_tv": 0.0
+    }
+  ],
+  "recommended_workload_extension": {
+    "decode": "Replace scalar M_max-only representation with the requested output-length distribution or active_batch(t) survival curve.",
+    "prefill": "Include chunk_size and scheduling policy in execution config."
+  }
+}
