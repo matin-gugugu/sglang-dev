@@ -6,6 +6,8 @@ OUTPUT_ROOT="${OUTPUT_ROOT:-$REPO_ROOT/experiment-results/phase10/multiscale_pat
 MIN_FREE_MIB="${MIN_FREE_MIB:-160000}"
 MAX_IDLE_UTIL="${MAX_IDLE_UTIL:-20}"
 TP=2
+GPU_START="${GPU_START:-0}"
+VISIBLE_DEVICES="$GPU_START,$((GPU_START + 1))"
 
 cd "$REPO_ROOT"
 
@@ -16,7 +18,11 @@ check_gpus_idle() {
   while IFS=, read -r free_mib utilization; do
     free_mib="${free_mib//[[:space:]]/}"
     utilization="${utilization//[[:space:]]/}"
-    if ((index < TP && (free_mib < MIN_FREE_MIB || utilization > MAX_IDLE_UTIL))); then
+    if ((
+      index >= GPU_START
+      && index < GPU_START + TP
+      && (free_mib < MIN_FREE_MIB || utilization > MAX_IDLE_UTIL)
+    )); then
       printf 'GPU %d busy: free=%s MiB util=%s%%\n' \
         "$index" "$free_mib" "$utilization" >&2
       failed=1
@@ -121,7 +127,7 @@ run_mixed_case() {
     "$MODEL_NAME" "$profile" "$repeat"
   start_telemetry "$directory/telemetry.csv"
   trap stop_telemetry EXIT INT TERM
-  CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=python \
+  CUDA_VISIBLE_DEVICES="$VISIBLE_DEVICES" PYTHONPATH=python \
     python -m sglang.benchmark.one_batch \
       --model-path "$MODEL_PATH" \
       --tp "$TP" \
@@ -202,7 +208,7 @@ run_chunked_case() {
     "$MODEL_NAME" "$chunk_size" "$repeat"
   start_telemetry "$directory/telemetry.csv"
   trap stop_telemetry EXIT INT TERM
-  CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=python \
+  CUDA_VISIBLE_DEVICES="$VISIBLE_DEVICES" PYTHONPATH=python \
     python -m sglang.benchmark.one_batch \
       --model-path "$MODEL_PATH" \
       --tp "$TP" \
