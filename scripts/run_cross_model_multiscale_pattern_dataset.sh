@@ -9,6 +9,7 @@ TP=2
 GPU_START="${GPU_START:-0}"
 VISIBLE_DEVICES="$GPU_START,$((GPU_START + 1))"
 read -r -a REPEAT_ID_LIST <<<"${REPEAT_IDS:-0 1 2}"
+read -r -a CHUNK_SIZE_LIST <<<"${CHUNK_SIZES:-1024 2048 4096}"
 
 cd "$REPO_ROOT"
 
@@ -252,7 +253,7 @@ run_mixed_suite() {
 run_chunked_suite() {
   local repeat chunk_size
   for repeat in "${REPEAT_ID_LIST[@]}"; do
-    for chunk_size in 1024 2048 4096; do
+    for chunk_size in "${CHUNK_SIZE_LIST[@]}"; do
       run_chunked_case "$chunk_size" "$repeat"
     done
   done
