@@ -94,20 +94,46 @@ experiment-results/phase8/deepseek_v2_lite_pattern_demand/
 - [x] TP=2/4/8 可切分性核验；
 - [x] histogram-only 数据集脚本；
 - [x] TP=2 dummy-weight 软件链路预检；
-- [ ] 完整权重下载；
-- [ ] TP=2 冒烟；
-- [ ] TP=2/4/8 三重复正式采集；
-- [ ] Qwen3-8B 与 DeepSeek-V2-Lite 跨模型分析。
+- [x] 官方 BF16 完整权重下载与 shard/index 校验；
+- [x] TP=2 与 TP=8 官方权重冒烟；
+- [x] TP=2/4/8 三重复正式采集；
+- [x] Qwen3-8B 与 DeepSeek-V2-Lite 跨模型分析。
 
-dummy-weight 预检只验证执行和埋点，不进入正式数据。在
-`B=1,L=128,M=8,TP=2` 下观察到：
+正式数据共包含 585 条运行记录和 195 个
+`TP × phase × B × L × M` 聚合 workload。18 个阶段目录全部生成 `DONE`，
+且通过以下验证：
+
+- 每个 workload 的三个重复完整；
+- 每个请求实际生成长度等于 `output_len`；
+- 每条记录包含 TP 个 rank profile，rank 编号连续；
+- 同一 TP group 内各 rank 的 `stats` 与直方图完全一致；
+- 所有记录均为 `histogram-only`，没有保存 raw events。
+
+在 `B=1,L=128,M=8` 下，正式结果为：
 
 | 模型 | Prefill PatternDemand | Decode 每步 PatternDemand |
 |---|---|---|
 | Qwen3-8B | 73 calls × 1 MiB | 73 calls × 8 KiB |
 | DeepSeek-V2-Lite | 55 calls × 512 KiB | 55 calls × 4 KiB |
 
-两个 rank 的 histogram 完全一致，且每个请求实际生成 8 个 token。55 与 73
+各 TP group 内所有 rank 的 histogram 完全一致，且每个请求实际生成 8 个
+token。55 与 73
 分别对应两个模型不同的层数和层内 TP collective 结构；payload 的二倍差异对应
-hidden size 2048 与 4096。该结果已经验证执行链路能捕获模型结构差异，但必须
-使用完整官方权重重跑后才作为 Phase 8 正式结果。
+hidden size 2048 与 4096。
+
+跨模型分析获得 390 个 `model × workload` 聚合点和 195 个同 workload
+匹配点。Qwen3-8B 相对 DeepSeek-V2-Lite 的 calls 比值中位数为 1.327，总逻辑
+payload 比值中位数为 2.655。分析还自动找到 126 组总 payload 相差不超过
+3.5%、但消息直方图不同的样本对。其中 `B=1,M=512` 与 `B=16,M=32` 的
+Decode 对照在两个模型和 TP=2/4/8 上均复现：总 payload 仅相差 2.94%，calls
+却相差 16.48 倍。这支持将连续消息直方图作为核心中间表征，并将 total bytes
+仅作为消融基线。
+
+### TP=8 运行说明
+
+DeepSeek-V2-Lite 的 dense MLP intermediate size 为 10944；TP=8 时每卡分片
+宽度为 1368 个 BF16 元素，不满足 B200 JIT 激活内核的 16 元素向量对齐要求。
+因此在该形状下使用数学等价的原生 PyTorch `SiLU × Mul` 实现，其余满足对齐的
+形状仍使用 JIT 内核。该回退只改变本地激活计算实现，不改变 TP collective 的
+调用位置、group size、逻辑 payload 或直方图统计口径；TP=8 单点验证及完整
+195 条数据均已通过 rank 一致性检查。
