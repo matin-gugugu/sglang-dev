@@ -8,6 +8,7 @@ MAX_IDLE_UTIL="${MAX_IDLE_UTIL:-20}"
 TP=2
 GPU_START="${GPU_START:-0}"
 VISIBLE_DEVICES="$GPU_START,$((GPU_START + 1))"
+read -r -a REPEAT_ID_LIST <<<"${REPEAT_IDS:-0 1 2}"
 
 cd "$REPO_ROOT"
 
@@ -241,7 +242,7 @@ run_chunked_case() {
 
 run_mixed_suite() {
   local repeat profile
-  for repeat in 0 1 2; do
+  for repeat in "${REPEAT_ID_LIST[@]}"; do
     for profile in balanced staircase bimodal; do
       run_mixed_case "$profile" "$repeat"
     done
@@ -250,7 +251,7 @@ run_mixed_suite() {
 
 run_chunked_suite() {
   local repeat chunk_size
-  for repeat in 0 1 2; do
+  for repeat in "${REPEAT_ID_LIST[@]}"; do
     for chunk_size in 1024 2048 4096; do
       run_chunked_case "$chunk_size" "$repeat"
     done
