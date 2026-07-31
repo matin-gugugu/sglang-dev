@@ -1,0 +1,52 @@
+[1;33m'--disable-cuda-graph' is deprecated and will be removed in a future release. Use '--cuda-graph-backend-{decode,prefill}=disabled' instead.[0m
+[2026-07-31 02:47:47 TP0] Init torch distributed begin.
+[2026-07-31 02:47:47 TP1] Init torch distributed begin.
+[2026-07-31 02:47:48 TP0] sglang is using nccl==2.28.9
+[2026-07-31 02:47:48 TP0] Init torch distributed ends. elapsed=1.44 s, mem usage=1.16 GB
+[2026-07-31 02:47:48 TP1] Init torch distributed ends. elapsed=1.35 s, mem usage=1.16 GB
+[2026-07-31 02:47:50 TP0] Load weight begin. avail mem=176.54 GB
+[2026-07-31 02:47:50 TP1] Load weight begin. avail mem=176.54 GB
+[2026-07-31 02:47:50 TP0] Config does not support fused shared expert(s). Shared experts fusion optimization is disabled.
+[2026-07-31 02:47:50 TP0] FlashInfer TRTLLM MoE deferred finalize is disabled (moe_runner_backend=auto, quant_method=UnquantizedFusedMoEMethod).
+[2026-07-31 02:47:50 TP1] FlashInfer TRTLLM MoE deferred finalize is disabled (moe_runner_backend=auto, quant_method=UnquantizedFusedMoEMethod).
+Multi-thread loading shards:   0% Completed | 0/4 [00:00<?, ?it/s]Multi-thread loading shards:  25% Completed | 1/4 [00:00<00:00,  3.77it/s]Multi-thread loading shards:  50% Completed | 2/4 [00:00<00:00,  3.20it/s]Multi-thread loading shards: 100% Completed | 4/4 [00:00<00:00,  6.05it/s]
+[2026-07-31 02:47:55 TP1] Load weight end. elapsed=4.71 s, type=DeepseekV2ForCausalLM, avail mem=161.74 GB, mem usage=14.81 GB.
+[2026-07-31 02:47:55 TP0] Load weight end. elapsed=4.71 s, type=DeepseekV2ForCausalLM, avail mem=161.74 GB, mem usage=14.81 GB.
+[2026-07-31 02:47:55 TP1] KV Cache is allocated. dtype: torch.bfloat16, #tokens: 4668865, KV size: 135.25 GB
+[2026-07-31 02:47:55 TP0] KV Cache is allocated. dtype: torch.bfloat16, #tokens: 4668865, KV size: 135.25 GB
+[2026-07-31 02:47:55 TP1] Memory pool end. avail mem=23.93 GB
+[2026-07-31 02:47:55 TP0] Memory pool end. avail mem=23.93 GB
+[2026-07-31 02:47:55 TP0] Disable prefill CUDA graph because cuda_graph_config resolved prefill.backend='disabled' (e.g. via --cuda-graph-backend-prefill=disabled or auto-disable rules).
+[2026-07-31 02:47:55 TP1] Disable prefill CUDA graph because cuda_graph_config resolved prefill.backend='disabled' (e.g. via --cuda-graph-backend-prefill=disabled or auto-disable rules).
+[2026-07-31 02:47:57 TP0] Fixing v5 tokenizer component mismatch for /media/ssd1/DeepSeek-V2-Lite: pre_tokenizer Metaspace -> Sequence, decoder Sequence -> ByteLevel
+[2026-07-31 02:47:57 TP1] Fixing v5 tokenizer component mismatch for /media/ssd1/DeepSeek-V2-Lite: pre_tokenizer Metaspace -> Sequence, decoder Sequence -> ByteLevel
+[2026-07-31 02:47:57 TP0] Restoring add_bos_token=True for /media/ssd1/DeepSeek-V2-Lite (was False after v5 loading)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W731 02:47:57.893592713 ProcessGroupNCCL.cpp:5188] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[2026-07-31 02:47:57 TP1] Restoring add_bos_token=True for /media/ssd1/DeepSeek-V2-Lite (was False after v5 loading)
+[2026-07-31 02:48:00 TP1] Using default MoE kernel config. Performance might be sub-optimal! Config file not found at /sgl-workspace/sglang-src/python/sglang/srt/layers/moe/moe_runner/triton_utils/configs/triton_3_6_0/E=64,N=704,device_name=NVIDIA_B200.json, you can create them with https://github.com/sgl-project/sglang/tree/main/benchmark/kernels/fused_moe_triton
+[2026-07-31 02:48:00 TP1] Using MoE kernel config with down_moe=False. Performance might be sub-optimal! Config file not found at /sgl-workspace/sglang-src/python/sglang/srt/layers/moe/moe_runner/triton_utils/configs/triton_3_6_0/E=64,N=704,device_name=NVIDIA_B200_down.json, you can create them with https://github.com/sgl-project/sglang/tree/main/benchmark/kernels/fused_moe_triton
+[2026-07-31 02:48:00 TP0] Using default MoE kernel config. Performance might be sub-optimal! Config file not found at /sgl-workspace/sglang-src/python/sglang/srt/layers/moe/moe_runner/triton_utils/configs/triton_3_6_0/E=64,N=704,device_name=NVIDIA_B200.json, you can create them with https://github.com/sgl-project/sglang/tree/main/benchmark/kernels/fused_moe_triton
+[2026-07-31 02:48:00 TP0] Using MoE kernel config with down_moe=False. Performance might be sub-optimal! Config file not found at /sgl-workspace/sglang-src/python/sglang/srt/layers/moe/moe_runner/triton_utils/configs/triton_3_6_0/E=64,N=704,device_name=NVIDIA_B200_down.json, you can create them with https://github.com/sgl-project/sglang/tree/main/benchmark/kernels/fused_moe_triton
+max_total_num_tokens=4668865
+Warmup is enabled separately for every workload point.
+Benchmark ...
+Warmup workload: batch_size=1, input_len=128, output_len=8
+Prefill. latency: 3.45465 s, throughput:     37.05 token/s
+Decode 0. Batch size: 1, latency: 0.77395 s, throughput:      1.29 token/s
+Decode 1. Batch size: 1, latency: 0.04939 s, throughput:     20.25 token/s
+Decode 2. Batch size: 1, latency: 0.04793 s, throughput:     20.86 token/s
+Decode 3. Batch size: 1, latency: 0.04856 s, throughput:     20.59 token/s
+Decode 4. Batch size: 1, latency: 0.04777 s, throughput:     20.93 token/s
+Decode.  median latency: 0.04850 s, median throughput:     20.62 token/s
+Total. latency:  4.519 s, throughput:     30.10 token/s
+Prefill. latency: 0.05145 s, throughput:   2487.91 token/s
+Decode 0. Batch size: 1, latency: 0.04913 s, throughput:     20.35 token/s
+Decode 1. Batch size: 1, latency: 0.04992 s, throughput:     20.03 token/s
+Decode 2. Batch size: 1, latency: 0.04878 s, throughput:     20.50 token/s
+Decode 3. Batch size: 1, latency: 0.04876 s, throughput:     20.51 token/s
+Decode 4. Batch size: 1, latency: 0.05339 s, throughput:     18.73 token/s
+Decode.  median latency: 0.04878 s, median throughput:     20.50 token/s
+Total. latency:  0.399 s, throughput:    341.04 token/s
+kill_process_tree called: parent_pid=796699, include_parent=False, pid=796699
