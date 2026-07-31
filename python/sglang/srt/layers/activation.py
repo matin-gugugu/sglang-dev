@@ -101,6 +101,14 @@ class SiluAndMul(MultiPlatformOp):
 
     def forward_cuda(self, x: torch.Tensor) -> torch.Tensor:
         d = x.shape[-1] // 2
+        # The JIT kernel vectorizes to 32 bytes on Blackwell and 16 bytes on
+        # earlier CUDA architectures. Some valid TP shards (for example,
+        # DeepSeek-V2-Lite's 10944 / TP=8 = 1368 BF16 elements) do not meet
+        # that alignment, so use the shape-generic implementation for them.
+        major, _ = torch.cuda.get_device_capability(x.device)
+        vector_bytes = 32 if major >= 10 else 16
+        if (d * x.element_size()) % vector_bytes != 0:
+            return self.forward_native(x)
         output_shape = x.shape[:-1] + (d,)
         out = torch.empty(output_shape, dtype=x.dtype, device=x.device)
         silu_and_mul(x, out)
