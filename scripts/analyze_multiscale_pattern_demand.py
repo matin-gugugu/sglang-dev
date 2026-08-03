@@ -22,7 +22,12 @@ MODEL_METADATA = {
         "hidden_size": 4096,
         "calls_per_forward": 73,
     },
+    "qwen3-30b-a3b": {
+        "hidden_size": 2048,
+        "calls_per_forward": 97,
+    },
 }
+MODEL_ORDER = ("qwen3-8b", "deepseek-v2-lite", "qwen3-30b-a3b")
 PROFILE_ORDER = ("balanced", "staircase", "bimodal")
 PROFILE_COLORS = {
     "balanced": "#4C78A8",
@@ -37,10 +42,11 @@ def parse_args():
     parser.add_argument(
         "--input-dir",
         type=Path,
-        default=repo_root
-        / "experiment-results"
-        / "phase10"
-        / "multiscale_pattern_demand",
+        action="append",
+        help=(
+            "PatternDemand root. Repeat to combine Phase 10 with a newer "
+            "model dataset. Defaults to the Phase 10 two-model root."
+        ),
     )
     parser.add_argument(
         "--output-dir",
@@ -50,7 +56,15 @@ def parse_args():
         / "phase10"
         / "multiscale_pattern_analysis",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.input_dir is None:
+        args.input_dir = [
+            repo_root
+            / "experiment-results"
+            / "phase10"
+            / "multiscale_pattern_demand"
+        ]
+    return args
 
 
 def read_jsonl(path):
@@ -129,17 +143,19 @@ def mean_histogram(histograms):
     return dict(result)
 
 
-def mixed_paths(input_dir):
+def mixed_paths(input_dirs):
     return sorted(
-        input_dir.glob(
+        path
+        for input_dir in input_dirs
+        for path in input_dir.glob(
             "*/mixed_same_coarse/*/r*/result.jsonl"
         )
     )
 
 
-def load_mixed(input_dir):
+def load_mixed(input_dirs):
     grouped = defaultdict(list)
-    for path in mixed_paths(input_dir):
+    for path in mixed_paths(input_dirs):
         model = path.parts[-5]
         profile = path.parts[-3]
         records = read_jsonl(path)
@@ -177,8 +193,12 @@ def load_mixed(input_dir):
                 "histogram_json": histogram_json(histogram),
             }
         )
-    assert len(rows) == len(MODEL_METADATA) * len(PROFILE_ORDER)
-    for model in MODEL_METADATA:
+    observed_models = {row["model"] for row in rows}
+    models = tuple(model for model in MODEL_ORDER if model in observed_models)
+    assert models
+    assert set(models) == observed_models, observed_models
+    assert len(rows) == len(models) * len(PROFILE_ORDER)
+    for model in models:
         selected = [row for row in rows if row["model"] == model]
         for field in (
             "tp",
@@ -198,7 +218,8 @@ def load_mixed(input_dir):
 
 def evaluate_mixed_collision(rows, histograms):
     predictions = []
-    for model in MODEL_METADATA:
+    observed_models = {row["model"] for row in rows}
+    for model in (item for item in MODEL_ORDER if item in observed_models):
         for held_profile in PROFILE_ORDER:
             train_histograms = [
                 histograms[(model, profile)]
@@ -237,17 +258,19 @@ def evaluate_mixed_collision(rows, histograms):
     return predictions
 
 
-def chunked_paths(input_dir):
+def chunked_paths(input_dirs):
     return sorted(
-        input_dir.glob(
+        path
+        for input_dir in input_dirs
+        for path in input_dir.glob(
             "*/chunked_prefill/c*/r*/result.jsonl"
         )
     )
 
 
-def load_chunked(input_dir):
+def load_chunked(input_dirs):
     grouped = defaultdict(list)
-    for path in chunked_paths(input_dir):
+    for path in chunked_paths(input_dirs):
         model = path.parts[-5]
         chunk_size = int(path.parts[-3][1:])
         for record in read_jsonl(path):
@@ -283,7 +306,11 @@ def load_chunked(input_dir):
                 "histogram_json": histogram_json(histogram),
             }
         )
-    assert len(rows) == len(MODEL_METADATA) * 3 * 12
+    observed_models = {row["model"] for row in rows}
+    models = tuple(model for model in MODEL_ORDER if model in observed_models)
+    assert models
+    assert set(models) == observed_models, observed_models
+    assert len(rows) == len(models) * 3 * 12
     return rows, private_histograms
 
 
@@ -434,18 +461,27 @@ def plot_mixed_histogram(axis, model, histograms):
 
 
 def plot_results(path, mixed_histograms, chunked_rows, metrics):
-    figure, axes = plt.subplots(2, 2, figsize=(15, 10.5))
-    plot_mixed_histogram(
-        axes[0, 0], "qwen3-8b", mixed_histograms
+    observed_models = {model for model, _ in mixed_histograms}
+    models = tuple(model for model in MODEL_ORDER if model in observed_models)
+    columns = max(2, len(models))
+    figure, axes = plt.subplots(
+        2,
+        columns,
+        figsize=(7.5 * columns, 10.5),
+        squeeze=False,
     )
-    plot_mixed_histogram(
-        axes[0, 1], "deepseek-v2-lite", mixed_histograms
-    )
+    for index, model in enumerate(models):
+        plot_mixed_histogram(axes[0, index], model, mixed_histograms)
+    for index in range(len(models), columns):
+        axes[0, index].axis("off")
 
+    focus_model = (
+        "qwen3-30b-a3b" if "qwen3-30b-a3b" in models else "qwen3-8b"
+    )
     selected = [
         row
         for row in chunked_rows
-        if row["model"] == "qwen3-8b" and row["batch_size"] == 1
+        if row["model"] == focus_model and row["batch_size"] == 1
     ]
     for chunk_size, marker in ((1024, "o"), (2048, "s"), (4096, "^")):
         values = sorted(
@@ -465,7 +501,9 @@ def plot_results(path, mixed_histograms, chunked_rows, metrics):
         )
     axes[1, 0].set_xlabel("Prompt length L")
     axes[1, 0].set_ylabel("Group-level Prefill calls")
-    axes[1, 0].set_title("Chunk policy creates discrete call-count boundaries")
+    axes[1, 0].set_title(
+        f"{focus_model}: chunk policy creates discrete call-count boundaries"
+    )
     axes[1, 0].grid(True, alpha=0.25)
     axes[1, 0].legend()
 
@@ -515,8 +553,11 @@ def plot_results(path, mixed_histograms, chunked_rows, metrics):
     axes[1, 1].set_title("Total bytes can be exact while histogram is wrong")
     axes[1, 1].grid(True, axis="y", alpha=0.25)
     axes[1, 1].legend(fontsize=8)
+    for index in range(2, columns):
+        axes[1, index].axis("off")
 
-    figure.suptitle("Phase 10: multi-support PatternDemand evidence")
+    phase_label = "Phase 10/13" if len(models) > 2 else "Phase 10"
+    figure.suptitle(f"{phase_label}: multi-support PatternDemand evidence")
     figure.tight_layout()
     figure.savefig(path, dpi=180, bbox_inches="tight")
     plt.close(figure)
@@ -555,7 +596,12 @@ def main():
         metrics,
     )
     summary = {
-        "schema_version": "multiscale-pattern-analysis-v1",
+        "schema_version": "multiscale-pattern-analysis-v2",
+        "models": [
+            model
+            for model in MODEL_ORDER
+            if any(row["model"] == model for row in mixed_rows)
+        ],
         "mixed": {
             "aggregate_rows": len(mixed_rows),
             "profiles": list(PROFILE_ORDER),

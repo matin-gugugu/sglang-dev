@@ -65,6 +65,10 @@ set_model() {
       MODEL_NAME="qwen3-8b"
       MODEL_PATH="/media/ssd1/Qwen3-8B"
       ;;
+    qwen30)
+      MODEL_NAME="qwen3-30b-a3b"
+      MODEL_PATH="/media/ssd1/Qwen3-30B-A3B"
+      ;;
     deepseek)
       MODEL_NAME="deepseek-v2-lite"
       MODEL_PATH="/media/ssd1/DeepSeek-V2-Lite"
@@ -78,6 +82,13 @@ set_model() {
     printf 'model missing: %s\n' "$MODEL_PATH" >&2
     return 2
   }
+  if [[ "$MODEL_NAME" == "qwen3-30b-a3b" ]]; then
+    [[ -s "$REPO_ROOT/experiment-results/phase12/qwen3_30b_a3b_admission/tp2/DONE" \
+      && -s "$REPO_ROOT/experiment-results/phase12/qwen3_30b_a3b_admission/tp8/DONE" ]] || {
+      printf 'Qwen3-30B-A3B TP=2/8 admission is incomplete\n' >&2
+      return 2
+    }
+  fi
 }
 
 set_profile() {
@@ -264,11 +275,11 @@ case "$MODE_SELECTOR" in
   all)
     MODELS=(qwen deepseek)
     ;;
-  qwen|deepseek)
+  qwen|qwen30|deepseek)
     MODELS=("$MODE_SELECTOR")
     ;;
   *)
-    printf 'usage: %s [all|mixed|chunked] [all|qwen|deepseek]\n' "$0" >&2
+    printf 'usage: %s [all|mixed|chunked] [all|qwen|qwen30|deepseek]\n' "$0" >&2
     exit 64
     ;;
 esac
@@ -287,7 +298,7 @@ for model_selector in "${MODELS[@]}"; do
       run_chunked_suite
       ;;
     *)
-      printf 'usage: %s [all|mixed|chunked] [all|qwen|deepseek]\n' "$0" >&2
+      printf 'usage: %s [all|mixed|chunked] [all|qwen|qwen30|deepseek]\n' "$0" >&2
       exit 64
       ;;
   esac

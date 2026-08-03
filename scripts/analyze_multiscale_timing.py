@@ -37,7 +37,17 @@ MODEL_COLORS = {
     "continuous_histogram": "#4C78A8",
     "continuous_histogram_dnn_residual": "#54A24B",
 }
-MODEL_ORDER = ("qwen3-8b", "deepseek-v2-lite")
+SUPPORTED_MODEL_ORDER = (
+    "qwen3-8b",
+    "deepseek-v2-lite",
+    "qwen3-30b-a3b",
+)
+MODEL_ORDER = SUPPORTED_MODEL_ORDER[:2]
+MODEL_STYLES = {
+    "qwen3-8b": ("o", "#4C78A8"),
+    "deepseek-v2-lite": ("s", "#F58518"),
+    "qwen3-30b-a3b": ("^", "#54A24B"),
+}
 BIN_DEFINITIONS = (
     ("small", 0, 64 * 1024),
     ("medium", 64 * 1024, 4 * 1024 * 1024),
@@ -52,10 +62,11 @@ def parse_args():
     parser.add_argument(
         "--input-dir",
         type=Path,
-        default=repo_root
-        / "experiment-results"
-        / "phase11"
-        / "multiscale_timing_ground_truth",
+        action="append",
+        help=(
+            "All-rank timing root. Repeat to combine Phase 11 with a newer "
+            "model dataset. Defaults to the Phase 11 two-model root."
+        ),
     )
     parser.add_argument(
         "--custom-curve",
@@ -86,7 +97,15 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=20260803)
     parser.add_argument("--max-epochs", type=int, default=2500)
     parser.add_argument("--patience", type=int, default=250)
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.input_dir is None:
+        args.input_dir = [
+            repo_root
+            / "experiment-results"
+            / "phase11"
+            / "multiscale_timing_ground_truth"
+        ]
+    return args
 
 
 def read_jsonl(path):
@@ -165,15 +184,32 @@ def workload_id(key):
     )
 
 
-def load_dataset(input_dir):
+def load_dataset(input_dirs):
     grouped = defaultdict(list)
-    paths = sorted(input_dir.glob("*/*/*/r*/all_rank_ground_truth.jsonl"))
-    if len(paths) != 36:
-        raise ValueError(f"expected 36 ground-truth files, found {len(paths)}")
-    for path in paths:
+    sources = sorted(
+        (input_dir, path)
+        for input_dir in input_dirs
+        for path in input_dir.glob("*/*/*/r*/all_rank_ground_truth.jsonl")
+    )
+    observed_models = {
+        path.relative_to(input_dir).parts[0]
+        for input_dir, path in sources
+    }
+    model_order = tuple(
+        model for model in SUPPORTED_MODEL_ORDER if model in observed_models
+    )
+    if set(model_order) != observed_models:
+        raise ValueError(f"unexpected model directories: {sorted(observed_models)}")
+    expected_files = 18 * len(model_order)
+    if len(sources) != expected_files:
+        raise ValueError(
+            f"expected {expected_files} ground-truth files for "
+            f"{len(model_order)} models, found {len(sources)}"
+        )
+    for input_dir, path in sources:
         relative = path.relative_to(input_dir)
         model, mode, case_label, repeat_dir, _ = relative.parts
-        if model not in MODEL_ORDER:
+        if model not in model_order:
             raise ValueError(f"unexpected model path: {path}")
         for record in read_jsonl(path):
             record["_source"] = str(path)
@@ -302,10 +338,13 @@ def load_dataset(input_dir):
             }
         )
 
-    if len(rows) != 78:
-        raise ValueError(f"expected 78 aggregated configurations, got {len(rows)}")
+    expected_rows = 39 * len(model_order)
+    if len(rows) != expected_rows:
+        raise ValueError(
+            f"expected {expected_rows} aggregated configurations, got {len(rows)}"
+        )
     mark_equal_payload_rows(rows)
-    return rows
+    return rows, model_order
 
 
 def mark_equal_payload_rows(rows):
@@ -847,8 +886,11 @@ def equal_payload_pairs(rows):
                     left_prediction, right_prediction
                 ) / min(left_prediction, right_prediction)
             output.append(row)
-    if len(output) != 30:
-        raise ValueError(f"expected 30 equal-payload pairs, got {len(output)}")
+    expected = 15 * len(MODEL_ORDER)
+    if len(output) != expected:
+        raise ValueError(
+            f"expected {expected} equal-payload pairs, got {len(output)}"
+        )
     return output
 
 
@@ -897,8 +939,11 @@ def boundary_comparisons(rows):
                             "above_workload_id": above["workload_id"],
                         }
                     )
-    if len(output) != 24:
-        raise ValueError(f"expected 24 boundary comparisons, got {len(output)}")
+    expected = 12 * len(MODEL_ORDER)
+    if len(output) != expected:
+        raise ValueError(
+            f"expected {expected} boundary comparisons, got {len(output)}"
+        )
     return output
 
 
@@ -906,10 +951,10 @@ def holdout_source_split(rows, held_model, seed):
     source = [row for row in rows if row["model"] != held_model]
     strata = defaultdict(list)
     for row in source:
-        strata[row["mode"]].append(row)
+        strata[(row["model"], row["mode"])].append(row)
     train_ids = set()
     validation_ids = set()
-    for mode, values in strata.items():
+    for (_, mode), values in strata.items():
         values.sort(
             key=lambda row: stable_hash(
                 (held_model, row["workload_id"]), seed
@@ -1087,10 +1132,8 @@ def plot_results(path, rows, metrics, pairs, boundaries):
     axes[1, 0].grid(True, alpha=0.25)
     axes[1, 0].legend()
 
-    for model, marker, color in (
-        ("qwen3-8b", "o", "#4C78A8"),
-        ("deepseek-v2-lite", "s", "#F58518"),
-    ):
+    for model in MODEL_ORDER:
+        marker, color = MODEL_STYLES[model]
         selected = [row for row in boundaries if row["model"] == model]
         axes[1, 1].scatter(
             [row["above_over_at_calls"] for row in selected],
@@ -1108,16 +1151,21 @@ def plot_results(path, rows, metrics, pairs, boundaries):
     axes[1, 1].grid(True, alpha=0.25)
     axes[1, 1].legend()
 
-    figure.suptitle("Phase 11: multiscale all-rank communication timing")
+    phase_label = "Phase 11/13" if len(MODEL_ORDER) > 2 else "Phase 11"
+    figure.suptitle(
+        f"{phase_label}: multiscale all-rank communication timing"
+    )
     figure.tight_layout()
     figure.savefig(path, dpi=180, bbox_inches="tight")
     plt.close(figure)
 
 
 def main():
+    global MODEL_ORDER
     args = parse_args()
     torch.set_num_threads(1)
-    rows = assign_splits(load_dataset(args.input_dir), args.seed)
+    loaded_rows, MODEL_ORDER = load_dataset(args.input_dir)
+    rows = assign_splits(loaded_rows, args.seed)
     curve = BackendAwareCostCurve(
         args.custom_curve,
         args.nccl_curve,
@@ -1195,9 +1243,13 @@ def main():
     )
 
     summary = {
-        "schema_version": "multiscale-timing-analysis-v1",
+        "schema_version": (
+            "multiscale-timing-analysis-v2"
+            if len(MODEL_ORDER) > 2
+            else "multiscale-timing-analysis-v1"
+        ),
         "dataset": {
-            "raw_label_rows": 234,
+            "raw_label_rows": len(rows) * 3,
             "aggregated_configurations": len(rows),
             "models": {
                 model: sum(row["model"] == model for row in rows)

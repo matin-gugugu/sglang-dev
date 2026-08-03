@@ -17,6 +17,12 @@ MODEL_METADATA = {
         "hidden_size": 4096,
         "calls_per_forward": 73,
     },
+    "qwen3-30b-a3b": {
+        "hidden_size": 2048,
+        # TP-only path: two reductions per decoder layer plus the final
+        # reduction. The admission smoke must confirm this before Phase 13.
+        "calls_per_forward": 97,
+    },
 }
 DTYPE_BYTES = 2
 
