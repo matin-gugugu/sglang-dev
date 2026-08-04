@@ -172,7 +172,9 @@ extract_all_rank() {
       args+=(--overwrite)
       first=0
     fi
-    "${args[@]}"
+    if ! "${args[@]}"; then
+      return 1
+    fi
   done
 }
 

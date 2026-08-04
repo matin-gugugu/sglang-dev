@@ -97,11 +97,14 @@ def classify_collective_kernel(name):
     for algorithm in custom_algorithms:
         if algorithm in lowered:
             return f"sglang_custom:{algorithm.removesuffix('_kernel')}"
-    if (
-        "trtllm_mnnvl_allreduce" in lowered
-        and "allreducefusionkernel" in lowered
-    ):
-        return "flashinfer_mnnvl:fused_allreduce_residual_rmsnorm"
+    if "trtllm_mnnvl_allreduce" in lowered:
+        if "allreducefusionkernel" in lowered:
+            return "flashinfer_mnnvl:fused_allreduce_residual_rmsnorm"
+        # The two-shot fused path emits one communication kernel followed by
+        # a separate RMSNorm kernel. Match only the AllReduce kernel so one
+        # logical collective still maps to one timed communication kernel.
+        if "twoshotallreducekernel" in lowered:
+            return "flashinfer_mnnvl:fused_allreduce_residual_rmsnorm_twoshot"
     if "nccl" in lowered and ("allreduce" in lowered or "all_reduce" in lowered):
         return "nccl:all_reduce"
     return None
