@@ -1,0 +1,60 @@
+[1;33m'--disable-cuda-graph' is deprecated and will be removed in a future release. Use '--cuda-graph-backend-{decode,prefill}=disabled' instead.[0m
+TensorRT-LLM MHA only supports page_size of 16, 32 or 64, changing page_size from None to 64.
+FlashInfer TRTLLM MoE is enabled. --disable-shared-experts-fusion is automatically set.
+[2026-08-03 10:56:18 TP1] Init torch distributed begin.
+[2026-08-03 10:56:18 TP0] Init torch distributed begin.
+[2026-08-03 10:56:19 TP0] sglang is using nccl==2.28.9
+[2026-08-03 10:56:20 TP0] Init torch distributed ends. elapsed=1.58 s, mem usage=1.16 GB
+[2026-08-03 10:56:20 TP1] Init torch distributed ends. elapsed=1.78 s, mem usage=1.16 GB
+[2026-08-03 10:56:22 TP0] Load weight begin. avail mem=176.52 GB
+[2026-08-03 10:56:22 TP1] Load weight begin. avail mem=176.52 GB
+[2026-08-03 10:56:22 TP0] FlashInfer TRTLLM MoE deferred finalize is disabled (moe_runner_backend=flashinfer_trtllm, quant_method=UnquantizedFusedMoEMethod).
+[2026-08-03 10:56:22 TP0] Setting inplace to False for FlashInfer TRTLLM MoE backend.
+[2026-08-03 10:56:22 TP1] FlashInfer TRTLLM MoE deferred finalize is disabled (moe_runner_backend=flashinfer_trtllm, quant_method=UnquantizedFusedMoEMethod).
+[2026-08-03 10:56:22 TP1] Setting inplace to False for FlashInfer TRTLLM MoE backend.
+Multi-thread loading shards:   0% Completed | 0/16 [00:00<?, ?it/s]Multi-thread loading shards:   6% Completed | 1/16 [00:01<00:19,  1.27s/it]Multi-thread loading shards:  12% Completed | 2/16 [00:01<00:12,  1.11it/s]Multi-thread loading shards:  19% Completed | 3/16 [00:02<00:10,  1.28it/s]Multi-thread loading shards:  25% Completed | 4/16 [00:03<00:09,  1.30it/s]Multi-thread loading shards:  31% Completed | 5/16 [00:04<00:08,  1.31it/s]Multi-thread loading shards:  38% Completed | 6/16 [00:04<00:07,  1.34it/s]Multi-thread loading shards:  44% Completed | 7/16 [00:05<00:06,  1.38it/s]Multi-thread loading shards:  50% Completed | 8/16 [00:06<00:05,  1.43it/s]Multi-thread loading shards:  56% Completed | 9/16 [00:06<00:04,  1.48it/s]Multi-thread loading shards:  62% Completed | 10/16 [00:07<00:03,  1.52it/s]Multi-thread loading shards:  69% Completed | 11/16 [00:07<00:03,  1.54it/s]Multi-thread loading shards:  75% Completed | 12/16 [00:08<00:02,  1.48it/s]Multi-thread loading shards:  81% Completed | 13/16 [00:09<00:02,  1.49it/s]Multi-thread loading shards:  88% Completed | 14/16 [00:09<00:01,  1.52it/s]Multi-thread loading shards:  94% Completed | 15/16 [00:10<00:00,  1.55it/s]Multi-thread loading shards: 100% Completed | 16/16 [00:10<00:00,  1.97it/s]Multi-thread loading shards: 100% Completed | 16/16 [00:10<00:00,  1.48it/s]
+[2026-08-03 10:56:33 TP0] Load weight end. elapsed=11.79 s, type=Qwen3MoeForCausalLM, avail mem=147.96 GB, mem usage=28.56 GB.
+[2026-08-03 10:56:33 TP1] Load weight end. elapsed=11.79 s, type=Qwen3MoeForCausalLM, avail mem=147.96 GB, mem usage=28.56 GB.
+[2026-08-03 10:56:34 TP0] KV Cache is allocated. dtype: torch.bfloat16, #tokens: 2653568, K size: 60.74 GB, V size: 60.74 GB
+[2026-08-03 10:56:34 TP1] KV Cache is allocated. dtype: torch.bfloat16, #tokens: 2653568, K size: 60.74 GB, V size: 60.74 GB
+[2026-08-03 10:56:34 TP0] Memory pool end. avail mem=25.83 GB
+[2026-08-03 10:56:34 TP1] Memory pool end. avail mem=25.83 GB
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W803 10:56:34.015785178 ProcessGroupNCCL.cpp:5188] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+[2026-08-03 10:56:34 TP1] FlashInfer AllReduce Fusion enabled and workspace initialized: backend=mnnvl, rank=1, world_size=2, max_token_num=2048, hidden_dim=2048
+[2026-08-03 10:56:34 TP0] FlashInfer AllReduce Fusion enabled and workspace initialized: backend=mnnvl, rank=0, world_size=2, max_token_num=2048, hidden_dim=2048
+[2026-08-03 10:56:34 TP0] FlashInfer AllReduce Fusion enabled and workspace initialized: backend=mnnvl, rank=0, world_size=2, max_token_num=2048, hidden_dim=2048
+[2026-08-03 10:56:34 TP1] FlashInfer AllReduce Fusion enabled and workspace initialized: backend=mnnvl, rank=1, world_size=2, max_token_num=2048, hidden_dim=2048
+[2026-08-03 10:56:34 TP0] Running FlashInfer autotune with cache: /root/.cache/sglang/flashinfer/autotune/0.6.12/sm100/670068fb0b09c878/rank_tp0_pp0_dp0.json
+[2026-08-03 10:56:34 TP1] Running FlashInfer autotune with cache: /root/.cache/sglang/flashinfer/autotune/0.6.12/sm100/670068fb0b09c878/rank_tp1_pp0_dp0.json
+[AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:   0%|          | 0/20 [00:00<?, ?profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:   0%|          | 0/20 [00:00<?, ?profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:   5%|▌         | 1/20 [00:03<00:59,  3.12s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:   5%|▌         | 1/20 [00:03<01:00,  3.16s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  10%|█         | 2/20 [00:05<00:51,  2.87s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  10%|█         | 2/20 [00:05<00:52,  2.92s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  15%|█▌        | 3/20 [00:08<00:49,  2.89s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  15%|█▌        | 3/20 [00:08<00:50,  2.94s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  20%|██        | 4/20 [00:11<00:46,  2.92s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  20%|██        | 4/20 [00:11<00:47,  2.98s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  25%|██▌       | 5/20 [00:14<00:44,  2.97s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  25%|██▌       | 5/20 [00:15<00:45,  3.02s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  30%|███       | 6/20 [00:17<00:42,  3.01s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  30%|███       | 6/20 [00:18<00:42,  3.06s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  35%|███▌      | 7/20 [00:20<00:39,  3.06s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  35%|███▌      | 7/20 [00:21<00:40,  3.12s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  40%|████      | 8/20 [00:24<00:37,  3.11s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  40%|████      | 8/20 [00:24<00:38,  3.18s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  45%|████▌     | 9/20 [00:27<00:35,  3.19s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  45%|████▌     | 9/20 [00:28<00:35,  3.27s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  50%|█████     | 10/20 [00:29<00:28,  2.89s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  50%|█████     | 10/20 [00:30<00:29,  2.97s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  55%|█████▌    | 11/20 [00:30<00:20,  2.24s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  55%|█████▌    | 11/20 [00:31<00:20,  2.31s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  60%|██████    | 12/20 [00:31<00:14,  1.80s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  65%|██████▌   | 13/20 [00:31<00:09,  1.29s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  70%|███████   | 14/20 [00:31<00:05,  1.07profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  75%|███████▌  | 15/20 [00:31<00:03,  1.46profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  80%|████████  | 16/20 [00:31<00:02,  1.95profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  85%|████████▌ | 17/20 [00:31<00:01,  2.53profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  60%|██████    | 12/20 [00:32<00:14,  1.84s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  90%|█████████ | 18/20 [00:32<00:00,  3.20profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  65%|██████▌   | 13/20 [00:32<00:09,  1.32s/profile][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  95%|█████████▌| 19/20 [00:32<00:00,  3.90profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  70%|███████   | 14/20 [00:32<00:05,  1.04profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe: 100%|██████████| 20/20 [00:32<00:00,  4.64profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe: 100%|██████████| 20/20 [00:32<00:00,  1.61s/profile]
+[AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  75%|███████▌  | 15/20 [00:32<00:03,  1.42profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  80%|████████  | 16/20 [00:32<00:02,  1.90profile/s][2026-08-03 10:57:09 TP0] FlashInfer autotune completed.
+[2026-08-03 10:57:09 TP0] Disable prefill CUDA graph because cuda_graph_config resolved prefill.backend='disabled' (e.g. via --cuda-graph-backend-prefill=disabled or auto-disable rules).
+[AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  85%|████████▌ | 17/20 [00:32<00:01,  2.48profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  90%|█████████ | 18/20 [00:32<00:00,  3.14profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe:  95%|█████████▌| 19/20 [00:32<00:00,  3.85profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe: 100%|██████████| 20/20 [00:32<00:00,  4.57profile/s][AutoTuner]: Tuning flashinfer::trtllm_bf16_moe: 100%|██████████| 20/20 [00:32<00:00,  1.65s/profile]
+[2026-08-03 10:57:10 TP1] FlashInfer autotune completed.
+[2026-08-03 10:57:10 TP1] Disable prefill CUDA graph because cuda_graph_config resolved prefill.backend='disabled' (e.g. via --cuda-graph-backend-prefill=disabled or auto-disable rules).
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W803 10:57:10.996577670 ProcessGroupNCCL.cpp:5188] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+max_total_num_tokens=2653568
+Warmup is enabled separately for every workload point.
+Benchmark ...
+Warmup workload: batch_size=1, input_len=128, output_len=8
+Prefill. latency: 0.77067 s, throughput:    166.09 token/s
+Decode 0. Batch size: 1, latency: 0.20919 s, throughput:      4.78 token/s
+Decode 1. Batch size: 1, latency: 0.06596 s, throughput:     15.16 token/s
+Decode 2. Batch size: 1, latency: 0.06788 s, throughput:     14.73 token/s
+Decode 3. Batch size: 1, latency: 0.06584 s, throughput:     15.19 token/s
+Decode 4. Batch size: 1, latency: 0.06710 s, throughput:     14.90 token/s
+Decode.  median latency: 0.06710 s, median throughput:     14.90 token/s
+Total. latency:  1.379 s, throughput:     98.59 token/s
+Prefill. latency: 0.06969 s, throughput:   1836.79 token/s
+Decode 0. Batch size: 1, latency: 0.06828 s, throughput:     14.65 token/s
+Decode 1. Batch size: 1, latency: 0.06953 s, throughput:     14.38 token/s
+Decode 2. Batch size: 1, latency: 0.06947 s, throughput:     14.40 token/s
+Decode 3. Batch size: 1, latency: 0.06932 s, throughput:     14.42 token/s
+Decode 4. Batch size: 1, latency: 0.06777 s, throughput:     14.76 token/s
+Decode.  median latency: 0.06932 s, median throughput:     14.42 token/s
+Total. latency:  0.551 s, throughput:    246.63 token/s
+kill_process_tree called: parent_pid=925482, include_parent=False, pid=925482
