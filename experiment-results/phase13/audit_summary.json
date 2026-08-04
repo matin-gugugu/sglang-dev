@@ -1,0 +1,78 @@
+{
+  "schema_version": "phase13b-qwen3-30b-multiscale-timing-audit-v1",
+  "audit_date": "2026-08-04",
+  "status": "passed",
+  "environment": {
+    "model": "qwen3-30b-a3b",
+    "hardware": "single-node B200",
+    "tensor_parallel_size": 2
+  },
+  "collection": {
+    "smoke_units_expected": 2,
+    "smoke_units_done": 2,
+    "formal_units_expected": 18,
+    "formal_units_done": 18,
+    "compact_labels_expected": 117,
+    "compact_labels_actual": 117,
+    "aggregated_configurations": 39,
+    "repeat_id_counts": {
+      "0": 39,
+      "1": 39,
+      "2": 39
+    },
+    "profiled_to_full_call_scale_min": 1.0,
+    "profiled_to_full_call_scale_max": 1.0,
+    "all_rank_exact_count_on_every_label": true,
+    "all_rank_identical_backend_sequence_on_every_label": true,
+    "raw_ops": [
+      "all_reduce",
+      "fused_allreduce_residual_rmsnorm"
+    ],
+    "raw_profiler_traces_remaining": 0,
+    "traces_removed_markers": 18
+  },
+  "three_model_analysis": {
+    "raw_label_rows": 351,
+    "aggregated_configurations": 117,
+    "split_counts": {
+      "train": 75,
+      "validation": 21,
+      "test": 21
+    },
+    "post_rendezvous_reliability": {
+      "median_iqr_fraction": 0.004380158182078779,
+      "p95_iqr_fraction": 0.02424758184223669,
+      "configurations_above_20pct_iqr": 0
+    },
+    "test_all": {
+      "total_bytes_only": {
+        "mape": 0.151378934531755,
+        "p95_ape": 0.31344425723918906,
+        "r2": 0.9079703223211391
+      },
+      "three_hard_bins": {
+        "mape": 0.0922562857102707,
+        "p95_ape": 0.260451755661263,
+        "r2": 0.9295353065370534
+      },
+      "continuous_histogram": {
+        "mape": 0.037713145694250126,
+        "p95_ape": 0.13432038069888366,
+        "r2": 0.9874642725316426
+      },
+      "continuous_histogram_dnn_residual": {
+        "mape": 0.03272323452988002,
+        "p95_ape": 0.19340744056164796,
+        "r2": 0.958073993938582
+      }
+    },
+    "preferred_default_model": "continuous_histogram",
+    "preferred_model_reason": "Best test-tail error and R2; DNN residual has slightly lower mean MAPE but worse P95, R2, decode behavior, and held-out Qwen3-30B-A3B generalization."
+  },
+  "validation": {
+    "formal_revalidation_passed": true,
+    "smoke_revalidation_passed": true,
+    "known_error_markers_in_final_run": [],
+    "raw_op_payload_marginalization_passed": true
+  }
+}
