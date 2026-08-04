@@ -15,6 +15,13 @@ OP_FACTORS = {
         "bytes": lambda p: 2 * (p - 1) / p,
         "rounds": lambda p: 2 * (p - 1),
     },
+    # This fused runtime op still performs an AllReduce. Keep the raw op in
+    # histogram_json, but use the AllReduce family factors for topology-aware
+    # equivalent bytes and rounds.
+    "fused_allreduce_residual_rmsnorm": {
+        "bytes": lambda p: 2 * (p - 1) / p,
+        "rounds": lambda p: 2 * (p - 1),
+    },
     "all_gather": {
         "bytes": lambda p: (p - 1) / p,
         "rounds": lambda p: p - 1,
