@@ -5,15 +5,35 @@ REPO_ROOT="${REPO_ROOT:-/sgl-workspace/sglang-src}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-$REPO_ROOT/experiment-results/phase11/multiscale_timing_ground_truth}"
 MIN_FREE_MIB="${MIN_FREE_MIB:-160000}"
 MAX_IDLE_UTIL="${MAX_IDLE_UTIL:-20}"
-TP=2
+TP="${TP:-2}"
 GPU_START="${GPU_START:-0}"
-VISIBLE_DEVICES="$GPU_START,$((GPU_START + 1))"
 KEEP_TRACES="${KEEP_TRACES:-0}"
 read -r -a REPEAT_ID_LIST <<<"${REPEAT_IDS:-0 1 2}"
 read -r -a CHUNK_SIZE_LIST <<<"${CHUNK_SIZES:-1024 2048 4096}"
 read -r -a MIXED_PROFILE_LIST <<<"${MIXED_PROFILES:-balanced staircase bimodal}"
+read -r -a CHUNK_BATCH_SIZE_LIST <<<"${CHUNK_BATCH_SIZES:-1 4}"
 
 cd "$REPO_ROOT"
+
+if [[ ! "$TP" =~ ^(2|4|8)$ ]]; then
+  printf 'unsupported TP size: %s (expected 2, 4, or 8)\n' "$TP" >&2
+  exit 64
+fi
+
+GPU_COUNT="$(nvidia-smi --query-gpu=index --format=csv,noheader | wc -l)"
+if ((GPU_START < 0 || GPU_START + TP > GPU_COUNT)); then
+  printf 'GPU range [%s, %s) exceeds the %s visible GPUs\n' \
+    "$GPU_START" "$((GPU_START + TP))" "$GPU_COUNT" >&2
+  exit 2
+fi
+
+VISIBLE_DEVICES=""
+for ((gpu = GPU_START; gpu < GPU_START + TP; gpu++)); do
+  if [[ -n "$VISIBLE_DEVICES" ]]; then
+    VISIBLE_DEVICES+=","
+  fi
+  VISIBLE_DEVICES+="$gpu"
+done
 
 check_gpus_idle() {
   local index=0
@@ -85,9 +105,10 @@ set_model() {
     return 2
   }
   if [[ "$MODEL_NAME" == "qwen3-30b-a3b" ]]; then
-    [[ -s "$REPO_ROOT/experiment-results/phase12/qwen3_30b_a3b_admission/tp2/DONE" \
-      && -s "$REPO_ROOT/experiment-results/phase12/qwen3_30b_a3b_admission/tp8/DONE" ]] || {
-      printf 'Qwen3-30B-A3B TP=2/8 admission is incomplete\n' >&2
+    [[ -s "$REPO_ROOT/experiment-results/phase12/qwen3_30b_a3b_pattern_demand/tp${TP}/r0/prefill/DONE" \
+      && -s "$REPO_ROOT/experiment-results/phase12/qwen3_30b_a3b_pattern_demand/tp${TP}/r0/decode/DONE" ]] || {
+      printf 'Qwen3-30B-A3B TP=%s PatternDemand admission is incomplete\n' \
+        "$TP" >&2
       return 2
     }
   fi
@@ -112,6 +133,12 @@ set_profile() {
 }
 
 set_chunk_inputs() {
+  local override_name="CHUNK_INPUT_LENS_$1"
+  local override="${!override_name:-}"
+  if [[ -n "$override" ]]; then
+    read -r -a INPUT_LENS <<<"$override"
+    return
+  fi
   case "$1" in
     1024)
       INPUT_LENS=(1023 1024 1025 2047 2048 2049)
@@ -265,7 +292,7 @@ run_profiled_case() {
       --profile-all-ranks \
       --profile-activities GPU \
       --profile-prefix "$directory/traces/trace" \
-      --run-name "$MODEL_NAME-tp2-timing-$mode-$label-r$repeat" \
+      --run-name "$MODEL_NAME-tp${TP}-timing-$mode-$label-r$repeat" \
       --result-filename "$directory/result.jsonl" \
       >"$directory/run.log" 2>&1
   stop_telemetry
@@ -306,12 +333,13 @@ run_mixed_suite() {
 }
 
 run_chunked_suite() {
-  local repeat chunk_size
+  local repeat chunk_size expected
   for repeat in "${REPEAT_ID_LIST[@]}"; do
     for chunk_size in "${CHUNK_SIZE_LIST[@]}"; do
       set_chunk_inputs "$chunk_size"
-      run_profiled_case chunked_prefill "c$chunk_size" "$repeat" 12 \
-        --batch-size 1 4 \
+      expected=$((${#CHUNK_BATCH_SIZE_LIST[@]} * ${#INPUT_LENS[@]}))
+      run_profiled_case chunked_prefill "c$chunk_size" "$repeat" "$expected" \
+        --batch-size "${CHUNK_BATCH_SIZE_LIST[@]}" \
         --input-len "${INPUT_LENS[@]}" \
         --output-len 8 \
         --prefill-chunk-size "$chunk_size"
