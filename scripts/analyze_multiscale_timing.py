@@ -145,6 +145,16 @@ def histogram_json(histogram):
     )
 
 
+def op_histogram_json(histogram):
+    return json.dumps(
+        {
+            f"{op}:{payload}": count
+            for (op, payload), count in sorted(histogram.items())
+        },
+        separators=(",", ":"),
+    )
+
+
 def public_row(row):
     return {
         key: value for key, value in row.items() if not key.startswith("_")
@@ -238,12 +248,43 @@ def load_dataset(input_dirs):
                 raise ValueError(f"{record['_source']}: all-rank alignment failed")
 
         reference = patterns[0]
-        calls_by_payload = {
+        op_payload_entries = reference.get(
+            "calls_by_raw_op_and_input_payload_bytes"
+        )
+        if op_payload_entries is None:
+            calls_by_op_payload = {
+                ("all_reduce", int(payload)): int(count)
+                for payload, count in reference[
+                    "calls_by_input_payload_bytes"
+                ].items()
+            }
+        else:
+            calls_by_op_payload = {
+                (
+                    entry["raw_op"],
+                    int(entry["input_payload_bytes"]),
+                ): int(entry["count"])
+                for entry in op_payload_entries
+            }
+            if len(calls_by_op_payload) != len(op_payload_entries):
+                raise ValueError(f"{key}: duplicate raw-op/payload entries")
+            if any(
+                entry["collective_family"] != "all_reduce"
+                for entry in op_payload_entries
+            ):
+                raise ValueError(f"{key}: unsupported collective family")
+        calls_by_payload = defaultdict(int)
+        for (_, payload), count in calls_by_op_payload.items():
+            calls_by_payload[payload] += count
+        calls_by_payload = dict(sorted(calls_by_payload.items()))
+        serialized_payloads = {
             int(payload): int(count)
             for payload, count in reference[
                 "calls_by_input_payload_bytes"
             ].items()
         }
+        if calls_by_payload != serialized_payloads:
+            raise ValueError(f"{key}: raw-op histogram marginal disagrees")
         estimates = [
             record["all_rank_ground_truth"]["full_phase_estimate"]
             for record in repeats
@@ -311,7 +352,26 @@ def load_dataset(input_dirs):
                     reference["ring_equivalent"]["rounds"]
                 ),
                 "payload_supports": len(calls_by_payload),
+                "op_payload_supports": len(calls_by_op_payload),
                 "calls_by_payload_json": histogram_json(calls_by_payload),
+                "calls_by_op_payload_json": op_histogram_json(
+                    calls_by_op_payload
+                ),
+                "raw_ops_json": json.dumps(
+                    sorted({op for op, _ in calls_by_op_payload}),
+                    separators=(",", ":"),
+                ),
+                "collective_families_json": '["all_reduce"]',
+                "raw_all_reduce_calls": sum(
+                    count
+                    for (op, _), count in calls_by_op_payload.items()
+                    if op == "all_reduce"
+                ),
+                "fused_allreduce_residual_rmsnorm_calls": sum(
+                    count
+                    for (op, _), count in calls_by_op_payload.items()
+                    if op == "fused_allreduce_residual_rmsnorm"
+                ),
                 "backend_signature": backends[0],
                 "target_post_us": target,
                 "target_post_p25_us": percentile(post, 25),
@@ -334,6 +394,7 @@ def load_dataset(input_dirs):
                 "comm_fraction_of_wall": target / float(statistics.median(wall)),
                 "controlled_equal_payload": False,
                 "_calls_by_payload": calls_by_payload,
+                "_calls_by_op_payload": calls_by_op_payload,
                 "_output_lens": output_lens,
             }
         )
@@ -365,8 +426,8 @@ def mark_equal_payload_rows(rows):
             if (
                 left["logical_payload_bytes"]
                 == right["logical_payload_bytes"]
-                and left["calls_by_payload_json"]
-                != right["calls_by_payload_json"]
+                and left["calls_by_op_payload_json"]
+                != right["calls_by_op_payload_json"]
             ):
                 left["controlled_equal_payload"] = True
                 right["controlled_equal_payload"] = True
@@ -535,6 +596,13 @@ def dnn_features(row):
         math.log1p(row["ring_equivalent_rounds"]),
         math.log1p(row["continuous_calibrated_us"]),
         math.log1p(row["payload_supports"]),
+        math.log1p(row["op_payload_supports"]),
+        math.log1p(row["raw_all_reduce_calls"]),
+        math.log1p(row["fused_allreduce_residual_rmsnorm_calls"]),
+        (
+            row["fused_allreduce_residual_rmsnorm_calls"]
+            / row["calls"]
+        ),
         weighted_mean,
         math.sqrt(weighted_variance),
         float(np.min(log_payloads)),
@@ -848,7 +916,10 @@ def equal_payload_pairs(rows):
         ):
             if left["logical_payload_bytes"] != right["logical_payload_bytes"]:
                 continue
-            if left["calls_by_payload_json"] == right["calls_by_payload_json"]:
+            if (
+                left["calls_by_op_payload_json"]
+                == right["calls_by_op_payload_json"]
+            ):
                 continue
             row = {
                 "comparison": key[0],
@@ -867,6 +938,12 @@ def equal_payload_pairs(rows):
                 "right_calls": right["calls"],
                 "left_payload_supports": left["payload_supports"],
                 "right_payload_supports": right["payload_supports"],
+                "left_op_payload_histogram_json": left[
+                    "calls_by_op_payload_json"
+                ],
+                "right_op_payload_histogram_json": right[
+                    "calls_by_op_payload_json"
+                ],
                 "left_post_us": left["target_post_us"],
                 "right_post_us": right["target_post_us"],
                 "measured_time_ratio_max_over_min": max(

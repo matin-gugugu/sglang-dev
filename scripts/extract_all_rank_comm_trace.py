@@ -64,6 +64,7 @@ def demand_signature(pattern):
         pattern["calls"],
         pattern["payload_bytes"],
         tuple(sorted(pattern["calls_by_payload"].items())),
+        tuple(sorted(pattern["calls_by_op_payload"].items())),
     )
 
 

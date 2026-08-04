@@ -12,6 +12,12 @@ from pathlib import Path
 import numpy as np
 
 
+ALL_REDUCE_FAMILY_OPS = {
+    "all_reduce",
+    "fused_allreduce_residual_rmsnorm",
+}
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--trace", type=Path, required=True)
@@ -130,11 +136,16 @@ def phase_latency_us(result, phase, start_step, end_step):
 
 def aggregate_pattern_demand(rank_zero, phase, start_step, end_step):
     calls_by_payload = Counter()
+    calls_by_op_payload = Counter()
     calls = 0
     payload_bytes = 0
     group_sizes = set()
     for histogram in rank_zero["event_histograms"]:
-        if histogram["phase"] != phase or histogram["op"] != "all_reduce":
+        raw_op = histogram["op"]
+        if (
+            histogram["phase"] != phase
+            or raw_op not in ALL_REDUCE_FAMILY_OPS
+        ):
             continue
         count = profiled_count(
             histogram,
@@ -145,6 +156,7 @@ def aggregate_pattern_demand(rank_zero, phase, start_step, end_step):
         input_payload_bytes = int(histogram["input_payload_bytes"])
         group_sizes.add(int(histogram["group_size"]))
         calls_by_payload[input_payload_bytes] += count
+        calls_by_op_payload[(raw_op, input_payload_bytes)] += count
         calls += count
         payload_bytes += count * input_payload_bytes
     if len(group_sizes) != 1:
@@ -156,6 +168,7 @@ def aggregate_pattern_demand(rank_zero, phase, start_step, end_step):
         "calls": calls,
         "payload_bytes": payload_bytes,
         "calls_by_payload": calls_by_payload,
+        "calls_by_op_payload": calls_by_op_payload,
     }
 
 
@@ -184,6 +197,17 @@ def serialize_pattern_demand(pattern):
             str(key): value
             for key, value in sorted(pattern["calls_by_payload"].items())
         },
+        "calls_by_raw_op_and_input_payload_bytes": [
+            {
+                "raw_op": raw_op,
+                "collective_family": "all_reduce",
+                "input_payload_bytes": payload,
+                "count": count,
+            }
+            for (raw_op, payload), count in sorted(
+                pattern["calls_by_op_payload"].items()
+            )
+        ],
     }
 
 

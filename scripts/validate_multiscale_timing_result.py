@@ -40,6 +40,43 @@ def workload_key(workload):
     )
 
 
+def validate_op_aware_pattern(pattern, require_op_aware):
+    entries = pattern.get(
+        "calls_by_raw_op_and_input_payload_bytes"
+    )
+    if entries is None:
+        assert not require_op_aware
+        return
+    assert entries
+    assert all(
+        entry["collective_family"] == "all_reduce"
+        for entry in entries
+    )
+    assert all(
+        entry["raw_op"]
+        in {
+            "all_reduce",
+            "fused_allreduce_residual_rmsnorm",
+        }
+        for entry in entries
+    )
+    assert sum(int(entry["count"]) for entry in entries) == int(
+        pattern["all_reduce_calls"]
+    )
+    marginal = {}
+    for entry in entries:
+        payload = str(int(entry["input_payload_bytes"]))
+        marginal[payload] = marginal.get(payload, 0) + int(
+            entry["count"]
+        )
+    assert marginal == {
+        str(int(payload)): int(count)
+        for payload, count in pattern[
+            "calls_by_input_payload_bytes"
+        ].items()
+    }
+
+
 def main():
     args = parse_args()
     results = read_jsonl(args.result)
@@ -89,6 +126,14 @@ def main():
         assert alignment["identical_backend_sequence"]
         assert alignment["identical_profiled_pattern_demand_on_every_rank"]
         assert alignment["identical_full_phase_pattern_demand_on_every_rank"]
+        require_op_aware = args.model == "qwen3-30b-a3b"
+        validate_op_aware_pattern(
+            label["pattern_demand"], require_op_aware
+        )
+        validate_op_aware_pattern(
+            label["full_phase_pattern_demand"],
+            require_op_aware,
+        )
 
         truth = label["all_rank_ground_truth"]
         assert truth["rank_count"] == args.tp

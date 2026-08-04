@@ -103,14 +103,18 @@ def phase_histogram(record, phase):
     histogram = defaultdict(int)
     for item in representative_histograms(record):
         if item["phase"] == phase:
-            histogram[int(item["input_payload_bytes"])] += int(item["count"])
+            key = (item["op"], int(item["input_payload_bytes"]))
+            histogram[key] += int(item["count"])
     assert histogram
     return dict(sorted(histogram.items()))
 
 
 def histogram_json(histogram):
     return json.dumps(
-        {str(payload): count for payload, count in sorted(histogram.items())},
+        {
+            f"{op}:{payload}": count
+            for (op, payload), count in sorted(histogram.items())
+        },
         separators=(",", ":"),
     )
 
@@ -118,7 +122,10 @@ def histogram_json(histogram):
 def histogram_totals(histogram):
     return (
         sum(histogram.values()),
-        sum(payload * count for payload, count in histogram.items()),
+        sum(
+            payload * count
+            for (_, payload), count in histogram.items()
+        ),
     )
 
 
@@ -440,9 +447,12 @@ def plot_mixed_histogram(axis, model, histograms):
     x = np.arange(1, 9)
     for index, profile in enumerate(PROFILE_ORDER):
         histogram = histograms[(model, profile)]
+        payload_marginal = defaultdict(int)
+        for (_, payload), count in histogram.items():
+            payload_marginal[payload] += count
         calls_by_active = {
             payload // (metadata["hidden_size"] * 2): count
-            for payload, count in histogram.items()
+            for payload, count in payload_marginal.items()
         }
         total = sum(calls_by_active.values())
         axis.bar(
