@@ -97,6 +97,11 @@ def classify_collective_kernel(name):
     for algorithm in custom_algorithms:
         if algorithm in lowered:
             return f"sglang_custom:{algorithm.removesuffix('_kernel')}"
+    if (
+        "trtllm_mnnvl_allreduce" in lowered
+        and "allreducefusionkernel" in lowered
+    ):
+        return "flashinfer_mnnvl:fused_allreduce_residual_rmsnorm"
     if "nccl" in lowered and ("allreduce" in lowered or "all_reduce" in lowered):
         return "nccl:all_reduce"
     return None

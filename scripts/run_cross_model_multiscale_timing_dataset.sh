@@ -269,8 +269,13 @@ run_profiled_case() {
   stop_telemetry
   trap - EXIT INT TERM
 
-  extract_all_rank "$phase" "$repeat" "$directory" \
-    >"$directory/extract.log" 2>&1
+  if ! extract_all_rank "$phase" "$repeat" "$directory" \
+    >"$directory/extract.log" 2>&1; then
+    printf 'all-rank trace extraction failed: %s\n' \
+      "$directory/extract.log" >&2
+    tail -80 "$directory/extract.log" >&2
+    return 1
+  fi
   python scripts/validate_multiscale_timing_result.py \
     --result "$directory/result.jsonl" \
     --ground-truth "$directory/all_rank_ground_truth.jsonl" \
