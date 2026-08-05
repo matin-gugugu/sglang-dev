@@ -1,0 +1,80 @@
+{
+  "schema_version": "phase14d-tp-phase-interaction-audit-v1",
+  "audit_date": "2026-08-05",
+  "status": "experiment_complete_model_not_converged",
+  "input": {
+    "source": "experiment-results/phase14c/extended_dataset_analysis/aggregated_configurations.csv",
+    "models": ["qwen3-8b", "qwen3-30b-a3b", "deepseek-v2-lite"],
+    "tensor_parallel_sizes": [2, 4, 8],
+    "phases": ["prefill", "decode"],
+    "aggregated_configurations": 162,
+    "workload_groups": 54
+  },
+  "execution": {
+    "gpu_required": false,
+    "initial_background_runtime_seconds": 38.220855446,
+    "smoke_status": "passed",
+    "formal_status": "passed",
+    "formal_exit_code": 0
+  },
+  "validation": {
+    "outer_folds": 6,
+    "same_workload_tp_variants_kept_together": true,
+    "nested_ridge_alpha_selection": true,
+    "leave_one_model_out": true,
+    "smoke_recompute_byte_identical": true,
+    "formal_recompute_byte_identical": true,
+    "figure_recompute_byte_identical": true
+  },
+  "leakage_audit": {
+    "actual_backend_feature_used": false,
+    "backend_signature_use": "post-hoc residual diagnostics only",
+    "kernel_name_feature_used": false,
+    "model_identity_feature_used": false,
+    "phase2_cost_curve_feature_used": false,
+    "repeat_leakage": false
+  },
+  "method_comparison": {
+    "additive_tp_phase": {"features": 34, "mape": 0.12804730386975532, "p95_ape": 0.3936568880881959, "r2": 0.8960943349256768},
+    "ring_equivalent_pattern": {"features": 30, "mape": 0.25153763099184917, "p95_ape": 0.7784329240929556, "r2": 0.2996198549009558},
+    "tp_conditioned_pattern": {"features": 92, "mape": 0.12149907510878306, "p95_ape": 0.3901339750247527, "r2": 0.8952601046751575},
+    "phase_conditioned_pattern": {"features": 63, "mape": 0.22317376732150115, "p95_ape": 0.5906954254383603, "r2": 0.6764171646128565},
+    "tp_phase_conditioned_pattern": {"features": 179, "mape": 0.2211261848432523, "p95_ape": 0.5961117780724416, "r2": 0.6556486982818717}
+  },
+  "descriptive_best_candidate": {
+    "method": "tp_conditioned_pattern",
+    "selection_note": "Ranked on the common outer-CV predictions; model-family selection itself is not nested.",
+    "workload_cv": {
+      "all": {"mape": 0.12149907510878306, "p95_ape": 0.3901339750247527, "r2": 0.8952601046751575},
+      "prefill": {"mape": 0.09433475775645161, "p95_ape": 0.3329914810129375, "r2": 0.9364246540333335},
+      "decode": {"mape": 0.17582770981344598, "p95_ape": 0.6964304270594508, "r2": 0.6471189377281386},
+      "tp2": {"mape": 0.13371048552518336, "p95_ape": 0.4072046612430459},
+      "tp4": {"mape": 0.11107845972430327, "p95_ape": 0.3046915290610869},
+      "tp8": {"mape": 0.11970828007686256, "p95_ape": 0.3434352696863491}
+    },
+    "leave_one_model_out": {
+      "qwen3-8b": {"mape": 0.47337451258981517, "p95_ape": 0.80224698131178},
+      "qwen3-30b-a3b": {"mape": 0.19353246667859564, "p95_ape": 0.4103247263482468},
+      "deepseek-v2-lite": {"mape": 0.17921024108200634, "p95_ape": 0.46127848894829004}
+    },
+    "decision_gates": {
+      "overall_mape_below_10pct": false,
+      "overall_p95_below_25pct": false,
+      "prefill_mape_below_15pct": true,
+      "decode_mape_below_10pct": false,
+      "all_held_out_models_mape_below_15pct": false
+    }
+  },
+  "predeclared_full_interaction_candidate": {
+    "method": "tp_phase_conditioned_pattern",
+    "mape": 0.2211261848432523,
+    "p95_ape": 0.5961117780724416,
+    "decode_mape": 0.3506537023378168,
+    "interpretation": "The 179-feature shared-plus-interaction model overfits the 162-configuration dataset."
+  },
+  "conclusion": {
+    "tp_data_coverage_status": "sufficient_for_current_branch",
+    "model_convergence_status": "failed",
+    "next_priority": "pre-run Decode temporal/order features, not more TP intercepts or observed backend"
+  }
+}
