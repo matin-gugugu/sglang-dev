@@ -1,0 +1,98 @@
+{
+  "schema_version": "phase14-tp-group-size-timing-audit-v1",
+  "audit_date": "2026-08-05",
+  "status": "passed",
+  "environment": {
+    "models": [
+      "qwen3-8b",
+      "qwen3-30b-a3b"
+    ],
+    "hardware": "single-node 8xB200",
+    "tensor_parallel_sizes": [
+      2,
+      4,
+      8
+    ]
+  },
+  "collection": {
+    "smoke_units_expected": 8,
+    "smoke_units_done": 8,
+    "formal_units_expected": 60,
+    "formal_units_done": 60,
+    "phase14_compact_labels_expected": 180,
+    "phase14_compact_labels_actual": 180,
+    "joint_raw_labels": 270,
+    "joint_aggregated_configurations": 90,
+    "repeat_id_counts": {
+      "0": 60,
+      "1": 60,
+      "2": 60
+    },
+    "all_rank_exact_count_on_every_label": true,
+    "all_rank_identical_backend_sequence_on_every_label": true,
+    "raw_ops": [
+      "all_reduce",
+      "fused_allreduce_residual_rmsnorm"
+    ],
+    "raw_profiler_traces_remaining": 0,
+    "traces_removed_markers": 60
+  },
+  "stability": {
+    "tp2": {
+      "configurations_above_20pct_iqr": 0,
+      "median_iqr_fraction": 0.004390706306729581,
+      "p95_iqr_fraction": 0.028552342894641827
+    },
+    "tp4": {
+      "configurations_above_20pct_iqr": 0,
+      "median_iqr_fraction": 0.0059029116629314565,
+      "p95_iqr_fraction": 0.022413632236357398
+    },
+    "tp8": {
+      "configurations_above_20pct_iqr": 0,
+      "median_iqr_fraction": 0.0049021842169801955,
+      "p95_iqr_fraction": 0.019183556048620362
+    }
+  },
+  "tp_scaling": {
+    "backend_transition_groups": 12,
+    "calls_invariant_groups": 30,
+    "groups": 30,
+    "logical_bytes_invariant_groups": 30,
+    "op_payload_histogram_invariant_groups": 30,
+    "tp4_over_tp2_median": 1.3286696282191275,
+    "tp4_over_tp2_p95": 1.3939213988859176,
+    "tp8_over_tp2_median": 1.5357369245095605,
+    "tp8_over_tp2_p95": 1.6788280502093627
+  },
+  "prediction": {
+    "tp4_8_zero_shot": {
+      "total_bytes_tp2_fit": {
+        "mape": 0.25499717544403067,
+        "p95_ape": 0.4255149662297643,
+        "r2": 0.871459234085959
+      },
+      "continuous_tp2_calibrated": {
+        "mape": 0.6052278615666168,
+        "p95_ape": 1.918615549505519,
+        "r2": -3.4223578429657477
+      },
+      "continuous_per_tp_calibrated": {
+        "mape": 0.1976071675459633,
+        "p95_ape": 0.9995484162735713,
+        "r2": 0.9818379111958744
+      }
+    },
+    "curve_extrapolated_calls": 5238,
+    "curve_total_calls": 104550,
+    "preferred_interpretation": "TP2-calibrated continuous histogram does not zero-shot generalize to TP4/8; per-TP calibration is descriptive and still has poor Prefill/tail error."
+  },
+  "validation": {
+    "formal_revalidation_passed": true,
+    "smoke_revalidation_passed": true,
+    "known_error_markers_in_final_run": [],
+    "raw_op_payload_marginalization_passed": true,
+    "profiled_to_full_scale_is_one": true,
+    "gpu_processes_after_completion": 0
+  }
+}

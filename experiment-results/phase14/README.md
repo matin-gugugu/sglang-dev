@@ -1,6 +1,8 @@
 # Phase 14：TP4/8 代表点时间泛化验证
 
-状态：执行中
+更新时间：2026-08-05
+
+状态：smoke、正式采集、TP2/4/8 联合分析、复验和归档均已完成
 
 ## 1. 目标
 
@@ -80,8 +82,92 @@ TP8 使用全部 8 张 GPU，所有 model/TP 单元必须串行运行。通用 r
 - raw profiler trace 在 validator 通过后删除；
 - 日志、telemetry、README、summary、CSV、图和 manifest 提交并 push。
 
-## 6. 结论边界
+## 6. 数据与复验结果
+
+| 项目 | 结果 |
+|---|---:|
+| smoke 单元 | 8/8 通过 |
+| 正式实验单元 | 60/60 生成 `DONE` |
+| TP4/8 新增 compact labels | 180/180 |
+| TP2/4/8 联合原始标签 | 270 |
+| 聚合配置 | 90，每个配置恰好 3 个 repeat |
+| TP scaling 对照 | 30 组 |
+| all-rank 对齐 | 180/180 完全一致 |
+| raw-op/payload 边缘化复验 | 全部通过 |
+| 正式目录残留 raw trace | 0 |
+
+正式标签的 repeat 分布为 `r0/r1/r2 = 60/60/60`。每条标签的所有 rank
+kernel count、backend sequence、profiled/full-phase PatternDemand 均完全对齐；
+profiled-to-full scale 全部为 1.0。smoke 与 formal 的独立复验日志均为
+`PASS`，最终 driver 日志未发现 Traceback、OOM、NCCL error 或 validator failure。
+
+三次重复的 post-rendezvous IQR/median：
+
+| TP | 中位数 | P95 | 超过 20% |
+|---|---:|---:|---:|
+| TP2 | 0.439% | 2.855% | 0/30 |
+| TP4 | 0.590% | 2.241% | 0/30 |
+| TP8 | 0.490% | 1.918% | 0/30 |
+
+## 7. TP scaling 与 backend transition
+
+30/30 组对照的 logical calls、logical bytes 和 `(raw_op,payload)` 直方图跨
+TP 完全不变，但 group-size 时间并不保持不变：
+
+| 指标 | 中位数 | P95 |
+|---|---:|---:|
+| TP4 / TP2 真实时间 | 1.329× | 1.394× |
+| TP8 / TP2 真实时间 | 1.536× | 1.679× |
+
+其中 12/30 组至少发生一次 backend sequence transition。主要变化是 TP2 上的
+SGLang custom one-shot 在 TP4/8 上切换为 two-shot；大消息仍可能使用 NCCL，
+Qwen3-30B-A3B 的 fused residual RMSNorm 路径由 FlashInfer MNNVL 执行。TP4 与
+TP8 的匹配 workload backend sequence 相同，因此 TP8 相比 TP4 的额外时间不能
+只归因于 backend 切换，group size 和同步/轮次成本本身也必须进入模型。
+
+## 8. TP2 零样本泛化结果
+
+TP4/8 共 60 个聚合配置：
+
+| 方法 | MAPE | P95 APE | R² |
+|---|---:|---:|---:|
+| total bytes，TP2 拟合 | 25.500% | 42.551% | 0.8715 |
+| continuous histogram，TP2 校准 | 60.523% | 191.862% | -3.4224 |
+| continuous histogram，per-TP 描述性校准 | 19.761% | 99.955% | 0.9818 |
+
+TP2 校准的 continuous histogram 没有零样本泛化到 TP4/8。该结果不是采集失败，
+而是否定了“group-size-aware curve 加一个 TP2 calibration factor 即可跨 TP
+泛化”的假设。曲线外推调用仅为 `5238/104550 = 5.010%`，因此失败不能只由
+payload 超出微基准范围解释。
+
+per-TP 描述性校准使用了被评估 TP 的真实标签，只能用于判断额外校准的潜在价值，
+不能当作零样本结果。其 Decode MAPE 为 TP4 7.803%、TP8 1.041%，但 Prefill
+仍为 TP4 20.262%、TP8 26.929%，且整体 P95 仍接近 100%。后续应优先验证
+不读取运行后 backend 的 `PatternDemand + TP + phase` 条件模型，再决定是否需要
+可在运行前推导的 backend proxy。
+
+## 9. 正式产物
+
+```text
+experiment-results/phase14/
+├── README.md
+├── audit_summary.json
+├── manifest.sha256
+├── tp_group_size_timing_smoke/
+├── tp_group_size_timing_ground_truth/
+├── tp_group_size_timing_analysis/
+├── phase14_smoke_driver.log
+├── phase14_driver.log
+├── revalidate_phase14_smoke.log
+└── revalidate_phase14.log
+```
+
+runner 与初始分析实现提交为 `fb76599`。根 manifest 覆盖除自身以外的全部
+Phase 14 归档文件，并通过逐项 SHA-256 复验。
+
+## 10. 结论边界
 
 Phase 14 只覆盖单节点 B200、Qwen3 同家族两模型、代表性 TP2/4/8 mixed/chunked
 workload。不能外推到跨节点 L2/L3、PP、PD、expert-parallel All-to-All、其他 GPU
-或未知 backend lowering。
+或未知 backend lowering。当前可以声称 logical PatternDemand 跨 TP 不变，但不能
+声称 TP2 校准的通信时间模型可直接零样本迁移到 TP4/8。
