@@ -320,6 +320,28 @@ def main():
 
     comparison = method_comparison(metrics)
     best_method = min(METHODS, key=lambda method: comparison[method]["mape"])
+    selected = {
+        scope: compact_metric(metric(metrics, "workload_cv", scope, best_method))
+        for scope in ("all", "prefill", "decode", "tp2", "tp4", "tp8")
+    }
+    selected_held_out = {
+        model: compact_metric(
+            metric(metrics, "leave_one_model_out", model, best_method)
+        )
+        for model in models
+    }
+    selected_profiles = {
+        scope.split(":", 1)[1]: compact_metric(
+            metric(metrics, "workload_cv", scope, best_method)
+        )
+        for scope in sorted(
+            row["scope"]
+            for row in metrics
+            if row["evaluation"] == "workload_cv"
+            and row["method"] == best_method
+            and row["scope"].startswith("profile:")
+        )
+    }
     primary = {
         scope: compact_metric(
             metric(metrics, "workload_cv", scope, PRIMARY_CANDIDATE)
@@ -375,6 +397,13 @@ def main():
         "ridge_alphas": list(baseline.RIDGE_ALPHAS),
         "method_comparison": comparison,
         "best_workload_cv_mape_method": best_method,
+        "selected_candidate_note": (
+            "Descriptive ranking on the common outer-CV predictions; method-family "
+            "selection itself is not nested and is not an unbiased production score."
+        ),
+        "selected_workload_cv": selected,
+        "selected_by_profile": selected_profiles,
+        "selected_leave_one_model_out": selected_held_out,
         "primary_candidate": PRIMARY_CANDIDATE,
         "primary_workload_cv": primary,
         "primary_by_profile": profiles,
@@ -387,7 +416,16 @@ def main():
                 primary_all["p95_ape"] - additive["p95_ape"]
             ) / additive["p95_ape"],
         },
-        "decision_gates": {
+        "selected_decision_gates": {
+            "overall_mape_below_10pct": selected["all"]["mape"] < 0.10,
+            "overall_p95_below_25pct": selected["all"]["p95_ape"] < 0.25,
+            "prefill_mape_below_15pct": selected["prefill"]["mape"] < 0.15,
+            "decode_mape_below_10pct": selected["decode"]["mape"] < 0.10,
+            "all_held_out_models_mape_below_15pct": all(
+                row["mape"] < 0.15 for row in selected_held_out.values()
+            ),
+        },
+        "primary_decision_gates": {
             "overall_mape_below_10pct": primary_all["mape"] < 0.10,
             "overall_p95_below_25pct": primary_all["p95_ape"] < 0.25,
             "prefill_mape_below_15pct": primary["prefill"]["mape"] < 0.15,
@@ -425,7 +463,8 @@ def main():
     print(
         f"Phase 14D analyzed {len(rows)} configurations; "
         f"primary MAPE={primary_all['mape']:.6f}, "
-        f"P95={primary_all['p95_ape']:.6f}; best={best_method}"
+        f"P95={primary_all['p95_ape']:.6f}; best={best_method}, "
+        f"best MAPE={selected['all']['mape']:.6f}"
     )
 
 
