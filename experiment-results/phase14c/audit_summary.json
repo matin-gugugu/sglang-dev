@@ -1,0 +1,90 @@
+{
+  "schema_version": "phase14c-decode-model-extension-audit-v1",
+  "audit_date": "2026-08-05",
+  "status": "passed",
+  "environment": {
+    "models": [
+      "qwen3-8b",
+      "qwen3-30b-a3b",
+      "deepseek-v2-lite"
+    ],
+    "hardware": "single-node 8xB200",
+    "tensor_parallel_sizes": [2, 4, 8],
+    "phases": ["prefill", "decode"]
+  },
+  "collection": {
+    "smoke_units_expected": 3,
+    "smoke_units_done": 3,
+    "formal_units_expected": 111,
+    "formal_units_done": 111,
+    "deepseek_tp_extension_units": 30,
+    "decode_extension_units": 81,
+    "new_compact_label_rows_expected": 171,
+    "new_compact_label_rows_actual": 171,
+    "joint_raw_repeat_labels": 486,
+    "joint_aggregated_configurations": 162,
+    "tp_linked_workload_groups": 54,
+    "prefill_configurations": 108,
+    "decode_configurations": 54,
+    "source_files_hashed": 216,
+    "raw_profiler_traces_remaining": 0,
+    "traces_removed_markers": 111
+  },
+  "integrity": {
+    "three_repeats_per_configuration": true,
+    "all_rank_alignment": true,
+    "full_phase_scale_is_one": true,
+    "raw_op_payload_marginalization_passed": true,
+    "logical_pattern_invariant_across_tp": true
+  },
+  "stability": {
+    "median_iqr_fraction": 0.007042365461132296,
+    "p95_iqr_fraction": 0.032768374414190234,
+    "max_iqr_fraction": 0.12779203469533598
+  },
+  "tp_phase_no_backend_analysis": {
+    "aggregated_configurations": 162,
+    "workload_groups": 54,
+    "validation": {
+      "workload_cv_folds": 6,
+      "test_workload_groups_per_fold": 9,
+      "test_configurations_per_fold": 27,
+      "same_workload_tp_variants_kept_together": true,
+      "nested_alpha_selection": true,
+      "leave_one_model_out": true
+    },
+    "leakage_audit": {
+      "actual_backend_feature_used": false,
+      "backend_signature_use": "post-hoc residual diagnostics only",
+      "kernel_name_feature_used": false,
+      "model_identity_feature_used": false,
+      "phase2_cost_curve_feature_used": false,
+      "repeat_leakage": false
+    },
+    "preferred_candidate": "pattern_demand_plus_tp_phase",
+    "workload_cv": {
+      "all": {"samples": 162, "mape": 0.12804730386975532, "p95_ape": 0.3936568880881959, "r2": 0.8960943349256768},
+      "prefill": {"samples": 108, "mape": 0.10245292106691732, "p95_ape": 0.35530200906042597, "r2": 0.9289376646331051},
+      "decode": {"samples": 54, "mape": 0.17923606947543136, "p95_ape": 0.6670553516169679, "r2": 0.6527076322132144}
+    },
+    "leave_one_model_out": {
+      "qwen3-8b": {"samples": 54, "mape": 0.36618228334625386, "p95_ape": 0.7090770838958299, "r2": 0.4351192645671529},
+      "qwen3-30b-a3b": {"samples": 54, "mape": 0.15150184332524222, "p95_ape": 0.36384110358419036, "r2": 0.8828931097111794},
+      "deepseek-v2-lite": {"samples": 54, "mape": 0.16863963006361699, "p95_ape": 0.3809149077396747, "r2": 0.8229027985897903}
+    },
+    "decision_gates": {
+      "overall_mape_below_10pct": false,
+      "overall_p95_below_25pct": false,
+      "prefill_mape_below_15pct": true,
+      "decode_mape_below_10pct": false,
+      "all_held_out_models_mape_below_15pct": false
+    },
+    "recommended_status": "useful expanded baseline, not production-ready default"
+  },
+  "validation": {
+    "dataset_recompute_byte_identical": true,
+    "analysis_recompute_byte_identical": true,
+    "figure_recompute_byte_identical": true,
+    "revalidation_passed": true
+  }
+}

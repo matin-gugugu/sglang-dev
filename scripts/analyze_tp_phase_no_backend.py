@@ -721,14 +721,14 @@ def main():
             "overall_p95_below_25pct": best["p95_ape"] < 0.25,
             "prefill_mape_below_15pct": prefill["mape"] < 0.15,
             "decode_mape_below_10pct": decode["mape"] < 0.10,
-            "both_held_out_models_mape_below_15pct": all(
+            "all_held_out_models_mape_below_15pct": all(
                 row["mape"] < 0.15 for row in held_out.values()
             ),
         },
         "interpretation": {
             "result": "TP and phase conditioning materially improve workload-held-out prediction without using actual backend, but the model does not pass overall tail, Decode mean, or cross-model gates.",
             "recommended_status": "useful baseline, not production-ready default",
-            "next_step": "Do not add observed backend as an input. Add more Decode/model diversity and test pre-run structural features or a deterministic dispatch proxy only if the backend-free residual remains unacceptable.",
+            "next_step": "Keep observed backend excluded. Test whether TP- and phase-conditioned PatternDemand slopes or ring-equivalent structural features reduce the expanded-dataset residual before considering any deterministic dispatch proxy.",
         },
     }
     (args.output_dir / "summary.json").write_text(
