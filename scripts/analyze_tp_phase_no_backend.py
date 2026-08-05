@@ -14,7 +14,7 @@ import numpy as np
 
 TPS = (2, 4, 8)
 PHASES = ("prefill", "decode")
-MODELS = ("qwen3-8b", "qwen3-30b-a3b")
+MODELS = ()
 PAYLOAD_LOG2_CENTERS = np.arange(12.0, 29.0, 2.0)
 RIDGE_ALPHAS = (1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0, 1000.0)
 METHODS = (
@@ -119,16 +119,19 @@ def load_rows(path):
         if dict(sorted(marginal.items())) != dict(sorted(row["payload_histogram"].items())):
             raise ValueError(f"raw-op histogram marginal mismatch: {row['workload_id']}")
 
-    if len(rows) != 90:
-        raise ValueError(f"expected 90 aggregate rows, got {len(rows)}")
     groups = defaultdict(list)
     for row in rows:
         groups[row["workload_id"]].append(row)
-    if len(groups) != 30:
-        raise ValueError(f"expected 30 workload groups, got {len(groups)}")
+    if not groups or len(rows) != len(groups) * len(TPS):
+        raise ValueError(
+            f"expected one row per TP for every workload group, got "
+            f"{len(rows)} rows/{len(groups)} groups"
+        )
     for identifier, group in groups.items():
         if {row["tp"] for row in group} != set(TPS) or len(group) != len(TPS):
             raise ValueError(f"{identifier}: incomplete or duplicate TP variants")
+    if len({row["model"] for row in rows}) < 2:
+        raise ValueError("leave-one-model-out requires at least two models")
     return rows
 
 
@@ -147,26 +150,43 @@ def build_balanced_folds(rows):
     assignment = {}
     for key, identifiers in sorted(strata.items()):
         identifiers = sorted(identifiers)
-        if key[0] == "decode":
-            if len(identifiers) != 3:
-                raise ValueError(f"{key}: expected three Decode groups")
-            slots = (0, 2, 4) if key[1] == "qwen3-30b-a3b" else (1, 3, 5)
-        else:
+        if key[0] == "prefill":
             if len(identifiers) != 6:
                 raise ValueError(f"{key}: expected six Prefill groups")
             slots = tuple(range(6))
+        elif len(identifiers) == 6:
+            slots = tuple(range(6))
+        elif len(identifiers) == 3 and len(MODELS) == 2:
+            # Preserve the original Phase 14B alternating Decode assignment.
+            slots = (
+                (0, 2, 4)
+                if key[1] == "qwen3-30b-a3b"
+                else (1, 3, 5)
+            )
+        else:
+            raise ValueError(
+                f"{key}: expected six Decode groups, or three in the "
+                "two-model Phase 14B dataset"
+            )
         assignment.update(dict(zip(identifiers, slots)))
 
-    if Counter(assignment.values()) != {fold: 5 for fold in range(6)}:
-        raise ValueError("outer folds are not balanced at five workload groups each")
+    groups_per_fold = len(representatives) // 6
+    if len(representatives) % 6 or Counter(assignment.values()) != {
+        fold: groups_per_fold for fold in range(6)
+    }:
+        raise ValueError("outer folds are not workload-balanced")
     for row in rows:
         row["fold"] = assignment[row["workload_id"]]
     for fold in range(6):
         subset = [row for row in rows if row["fold"] == fold]
-        if len(subset) != 15:
-            raise ValueError(f"fold {fold}: expected 15 TP-expanded rows")
-        if Counter(row["phase"] for row in subset) != {"prefill": 12, "decode": 3}:
-            raise ValueError(f"fold {fold}: phase balance failed")
+        if len(subset) != groups_per_fold * len(TPS):
+            raise ValueError(f"fold {fold}: TP-expanded row count failed")
+    phase_counts = {
+        fold: Counter(row["phase"] for row in rows if row["fold"] == fold)
+        for fold in range(6)
+    }
+    if len({tuple(sorted(counts.items())) for counts in phase_counts.values()}) != 1:
+        raise ValueError(f"outer-fold phase balance failed: {phase_counts}")
 
     output = []
     for identifier, fold in sorted(assignment.items()):
@@ -593,19 +613,20 @@ def make_figure(metrics, path):
         metric_lookup(metrics, "leave_one_model_out", model, PREFERRED_CANDIDATE)
         for model in MODELS
     ]
+    model_x = np.arange(len(MODELS))
     axes[2].bar(
-        np.arange(2) - 0.18,
+        model_x - 0.18,
         [100 * row["mape"] for row in held_metrics],
         0.36,
         label="MAPE",
     )
     axes[2].bar(
-        np.arange(2) + 0.18,
+        model_x + 0.18,
         [100 * row["p95_ape"] for row in held_metrics],
         0.36,
         label="P95 APE",
     )
-    axes[2].set_xticks(np.arange(2), ("Hold Qwen3-8B", "Hold Qwen3-30B"))
+    axes[2].set_xticks(model_x, [f"Hold {model}" for model in MODELS], rotation=15)
     axes[2].set_ylabel("Error (%)")
     axes[2].set_title("Leave-one-model-out")
     axes[2].legend()
@@ -615,9 +636,14 @@ def make_figure(metrics, path):
 
 
 def main():
+    global MODELS
     args = parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     rows = load_rows(args.input_csv)
+    observed_models = {row["model"] for row in rows}
+    preferred_order = ("qwen3-8b", "qwen3-30b-a3b", "deepseek-v2-lite")
+    MODELS = tuple(model for model in preferred_order if model in observed_models)
+    MODELS += tuple(sorted(observed_models - set(MODELS)))
     folds = build_balanced_folds(rows)
     workload_predictions, workload_selection = run_workload_cv(rows)
     model_predictions, model_selection = run_leave_one_model_out(rows)
@@ -682,8 +708,8 @@ def main():
         "ridge_alphas": list(RIDGE_ALPHAS),
         "workload_cv": {
             "folds": 6,
-            "test_workload_groups_per_fold": 5,
-            "test_configurations_per_fold": 15,
+            "test_workload_groups_per_fold": len({row["workload_id"] for row in rows}) // 6,
+            "test_configurations_per_fold": len(rows) // 6,
             "preferred_candidate": PREFERRED_CANDIDATE,
             "all": best,
             "prefill": prefill,

@@ -125,11 +125,27 @@ set_profile() {
     bimodal)
       OUTPUT_LENS=(8 8 16 16 16 64 64 64)
       ;;
+    uniform_b4)
+      OUTPUT_LENS=(64 64 64 64)
+      ;;
+    uniform_b16)
+      OUTPUT_LENS=(64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64)
+      ;;
+    long_tail)
+      OUTPUT_LENS=(8 8 8 8 16 32 64 128)
+      ;;
     *)
       printf 'unknown output profile: %s\n' "$1" >&2
       return 64
       ;;
   esac
+  PROFILE_BATCH_SIZE="${#OUTPUT_LENS[@]}"
+  PROFILE_OUTPUT_LEN=0
+  for output_len in "${OUTPUT_LENS[@]}"; do
+    if ((output_len > PROFILE_OUTPUT_LEN)); then
+      PROFILE_OUTPUT_LEN="$output_len"
+    fi
+  done
 }
 
 set_chunk_inputs() {
@@ -232,10 +248,10 @@ run_profiled_case() {
     validate_mode="mixed-decode"
     set_profile "$label"
     validate_args=(--output-lens "${OUTPUT_LENS[@]}")
-    # output_len=64 executes 63 Decode forwards. Profile the complete draining
+    # output_len=N executes N-1 Decode forwards. Profile the complete draining
     # batch so the measured kernel sequence and full multi-support histogram
     # align exactly without window scaling.
-    profile_window_args=(--profile-start-step 0 --profile-steps 63)
+    profile_window_args=(--profile-start-step 0 --profile-steps "$((PROFILE_OUTPUT_LEN - 1))")
   else
     phase="prefill"
     validate_mode="chunked-prefill"
@@ -324,9 +340,9 @@ run_mixed_suite() {
     for profile in "${MIXED_PROFILE_LIST[@]}"; do
       set_profile "$profile"
       run_profiled_case mixed_same_coarse "$profile" "$repeat" 1 \
-        --batch-size 8 \
+        --batch-size "$PROFILE_BATCH_SIZE" \
         --input-len 512 \
-        --output-len 64 \
+        --output-len "$PROFILE_OUTPUT_LEN" \
         --output-lens-per-request "${OUTPUT_LENS[@]}"
     done
   done
