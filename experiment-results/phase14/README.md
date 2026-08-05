@@ -146,7 +146,30 @@ per-TP 描述性校准使用了被评估 TP 的真实标签，只能用于判断
 不读取运行后 backend 的 `PatternDemand + TP + phase` 条件模型，再决定是否需要
 可在运行前推导的 backend proxy。
 
-## 9. 正式产物
+## 9. 无实际 backend 的 TP×phase 条件模型
+
+在 Phase 14 归档后，进一步复用 90 个聚合配置执行 Phase 14B 分析。模型不读取
+实际 backend、kernel name、模型身份或 Phase 2 backend curve，只使用
+PatternDemand、TP、phase 和 TP×phase。采用完整 workload 的 6 折外层留出，
+并在每个训练折内部选择 ridge alpha；同一 workload 的 TP2/4/8 始终位于同一折。
+
+| 方法 | MAPE | P95 APE | R² |
+|---|---:|---:|---:|
+| PatternDemand | 18.495% | 41.554% | 0.9408 |
+| PatternDemand + TP | 13.795% | 46.939% | 0.9100 |
+| PatternDemand + phase | 19.048% | 42.820% | 0.9318 |
+| PatternDemand + TP + phase + TP×phase | 11.819% | 38.261% | 0.9597 |
+
+TP×phase 条件把平均误差显著降低，但没有通过整体 MAPE <10% 和 P95 <25%
+门槛。Prefill/Decode MAPE 分别为 11.858%/11.664%，Decode P95 为 43.128%。
+完整留出 Qwen3-8B 和 Qwen3-30B-A3B 的 MAPE 分别为 33.169% 和 29.258%，
+说明当前模型还不能稳定跨模型泛化。
+
+backend 只用于预测后的残差诊断：跨 TP backend 不切换的 54 个配置 MAPE 为
+8.947%，发生切换的 36 个配置为 16.127%。因此该模型应作为不依赖实际 backend
+的有效基线保留，但尚不能作为生产默认模型。
+
+## 10. 正式产物
 
 ```text
 experiment-results/phase14/
@@ -156,18 +179,22 @@ experiment-results/phase14/
 ├── tp_group_size_timing_smoke/
 ├── tp_group_size_timing_ground_truth/
 ├── tp_group_size_timing_analysis/
+├── tp_phase_no_backend_analysis/
 ├── phase14_smoke_driver.log
 ├── phase14_driver.log
 ├── revalidate_phase14_smoke.log
-└── revalidate_phase14.log
+├── revalidate_phase14.log
+└── revalidate_tp_phase_no_backend.log
 ```
 
 runner 与初始分析实现提交为 `fb76599`。根 manifest 覆盖除自身以外的全部
 Phase 14 归档文件，并通过逐项 SHA-256 复验。
 
-## 10. 结论边界
+## 11. 结论边界
 
 Phase 14 只覆盖单节点 B200、Qwen3 同家族两模型、代表性 TP2/4/8 mixed/chunked
 workload。不能外推到跨节点 L2/L3、PP、PD、expert-parallel All-to-All、其他 GPU
 或未知 backend lowering。当前可以声称 logical PatternDemand 跨 TP 不变，但不能
-声称 TP2 校准的通信时间模型可直接零样本迁移到 TP4/8。
+声称 TP2 校准的通信时间模型可直接零样本迁移到 TP4/8。无实际 backend 的
+TP×phase 条件模型在已见模型的 workload 留出上有效，但尚不能声称其尾部误差可控、
+稳定跨模型泛化，或 backend effect 已经被完全消除。

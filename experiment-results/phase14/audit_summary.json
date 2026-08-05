@@ -93,6 +93,88 @@
     "known_error_markers_in_final_run": [],
     "raw_op_payload_marginalization_passed": true,
     "profiled_to_full_scale_is_one": true,
-    "gpu_processes_after_completion": 0
+    "gpu_processes_after_completion": 0,
+    "tp_phase_no_backend_revalidation_passed": true,
+    "tp_phase_no_backend_deterministic_recompute_passed": true
+  },
+  "tp_phase_no_backend_analysis": {
+    "schema_version": "tp-phase-no-backend-analysis-v1",
+    "aggregated_configurations": 90,
+    "workload_groups": 30,
+    "validation": {
+      "workload_cv_folds": 6,
+      "test_workload_groups_per_fold": 5,
+      "same_workload_tp_variants_kept_together": true,
+      "nested_alpha_selection": true,
+      "leave_one_model_out": true
+    },
+    "leakage_audit": {
+      "actual_backend_feature_used": false,
+      "backend_signature_use": "post-hoc residual diagnostics only",
+      "kernel_name_feature_used": false,
+      "model_identity_feature_used": false,
+      "phase2_cost_curve_feature_used": false,
+      "logical_raw_op_histogram_feature_used": true,
+      "raw_op_note": "raw_op is pre-run logical PatternDemand, not the observed runtime backend",
+      "outer_validation": "six balanced folds grouped by complete workload_id",
+      "same_workload_tp_variants_kept_together": true,
+      "ridge_alpha_selection": "nested within each outer training split",
+      "repeat_leakage": false
+    },
+    "preferred_candidate": "pattern_demand_plus_tp_phase",
+    "workload_cv": {
+      "all": {
+        "samples": 90,
+        "mape": 0.11818892551410003,
+        "p95_ape": 0.38260789546491625,
+        "r2": 0.9596612512062067
+      },
+      "prefill": {
+        "samples": 72,
+        "mape": 0.11857566568813185,
+        "p95_ape": 0.34285247773859245,
+        "r2": 0.9624166772067974
+      },
+      "decode": {
+        "samples": 18,
+        "mape": 0.11664196481797268,
+        "p95_ape": 0.4312776506749475,
+        "r2": 0.6053848276728289
+      }
+    },
+    "leave_one_model_out": {
+      "qwen3-8b": {
+        "samples": 45,
+        "mape": 0.3316876765580098,
+        "p95_ape": 0.6491491000049955,
+        "r2": 0.782698899333063
+      },
+      "qwen3-30b-a3b": {
+        "samples": 45,
+        "mape": 0.29257913358885457,
+        "p95_ape": 1.1654458288173888,
+        "r2": 0.8521855918081327
+      }
+    },
+    "decision_gates": {
+      "overall_mape_below_10pct": false,
+      "overall_p95_below_25pct": false,
+      "prefill_mape_below_15pct": true,
+      "decode_mape_below_10pct": false,
+      "both_held_out_models_mape_below_15pct": false
+    },
+    "recommended_status": "useful baseline, not production-ready default",
+    "backend_posthoc_only": {
+      "false": {
+        "samples": 54,
+        "mape": 0.08946711329047492,
+        "p95_ape": 0.3169843980859999
+      },
+      "true": {
+        "samples": 36,
+        "mape": 0.16127164384953765,
+        "p95_ape": 0.44080091224687157
+      }
+    }
   }
 }
