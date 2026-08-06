@@ -1,0 +1,92 @@
+{
+  "schema_version": "phase14e-decode-schedule-audit-v1",
+  "audit_date": "2026-08-06",
+  "status": "experiment_complete_schedule_hypothesis_failed",
+  "input": {
+    "source": "experiment-results/phase14c/extended_dataset_analysis/aggregated_configurations.csv",
+    "models": ["qwen3-8b", "qwen3-30b-a3b", "deepseek-v2-lite"],
+    "tensor_parallel_sizes": [2, 4, 8],
+    "aggregated_configurations": 162,
+    "workload_groups": 54,
+    "decode_configurations": 54,
+    "decode_workload_groups": 18,
+    "unique_decode_profiles": 6
+  },
+  "execution": {
+    "gpu_required": false,
+    "initial_background_runtime_seconds": 78.684634277,
+    "smoke_status": "passed",
+    "formal_status": "passed",
+    "formal_exit_code": 0
+  },
+  "feasibility": {
+    "all_rows_reconstructable": true,
+    "source_field": "configured output_lens_json",
+    "output_lens_invariant_across_tp": true,
+    "same_profile_sequence_invariant_across_models": true,
+    "decode_profile_held_out_across_all_models_per_fold": true,
+    "tp_conditioned_feature_matrix_rank": 80,
+    "schedule_feature_matrix_rank": 6,
+    "combined_feature_matrix_rank": 83,
+    "independent_rank_added": 3,
+    "production_availability_limit": "Exact completion lengths are configured in this ignore-EOS benchmark; production use requires requested limits or a pre-run length forecast."
+  },
+  "validation": {
+    "outer_folds": 6,
+    "same_workload_tp_variants_kept_together": true,
+    "one_decode_profile_held_out_per_fold": true,
+    "nested_ridge_alpha_selection": true,
+    "leave_one_model_out": true,
+    "smoke_recompute_byte_identical": true,
+    "formal_recompute_byte_identical": true,
+    "figure_recompute_byte_identical": true
+  },
+  "leakage_audit": {
+    "actual_backend_feature_used": false,
+    "backend_signature_use": "post-hoc residual diagnostics only",
+    "kernel_name_feature_used": false,
+    "model_identity_feature_used": false,
+    "target_derived_feature_used": false,
+    "phase2_cost_curve_feature_used": false,
+    "repeat_leakage": false
+  },
+  "method_comparison": {
+    "additive_tp_phase": {"features": 34, "mape": 0.12804730386975532, "p95_ape": 0.3936568880881959, "r2": 0.8960943349256768},
+    "tp_conditioned_pattern": {"features": 92, "mape": 0.12149907510878306, "p95_ape": 0.3901339750247527, "r2": 0.8952601046751575},
+    "additive_plus_schedule": {"features": 48, "mape": 0.271873551866229, "p95_ape": 1.263023732212306, "r2": 0.19452173025079478},
+    "tp_conditioned_plus_schedule": {"features": 106, "mape": 0.25254559519997827, "p95_ape": 1.2210268477993969, "r2": 0.24190176074632097},
+    "tp_conditioned_plus_schedule_tp": {"features": 134, "mape": 0.26525575980172866, "p95_ape": 1.3252252999927774, "r2": 0.18020316673206704}
+  },
+  "predeclared_candidate": {
+    "method": "tp_conditioned_plus_schedule",
+    "workload_cv": {
+      "all": {"mape": 0.25254559519997827, "p95_ape": 1.2210268477993969, "r2": 0.24190176074632097},
+      "prefill": {"mape": 0.10632683661573508, "p95_ape": 0.356459982365972, "r2": 0.9764729200016841},
+      "decode": {"mape": 0.5449831123684648, "p95_ape": 1.6754330054746194, "r2": -1.7058708205442885}
+    },
+    "relative_to_phase14d_tp_conditioned": {
+      "mape_fractional_change": 1.0785803922693562,
+      "p95_fractional_change": 2.12976291726945
+    },
+    "leave_one_model_out": {
+      "qwen3-8b": {"mape": 0.37312237416668387, "p95_ape": 0.7845928162165878},
+      "qwen3-30b-a3b": {"mape": 0.3304375615373225, "p95_ape": 0.5152622075934676},
+      "deepseek-v2-lite": {"mape": 0.6848061262892486, "p95_ape": 1.523720915459753}
+    },
+    "decision_gates": {
+      "overall_mape_below_10pct": false,
+      "overall_p95_below_25pct": false,
+      "prefill_mape_below_15pct": true,
+      "decode_mape_below_10pct": false,
+      "all_held_out_models_mape_below_15pct": false,
+      "improves_phase14d_tp_conditioned_mape": false,
+      "improves_phase14d_tp_conditioned_p95": false
+    }
+  },
+  "conclusion": {
+    "descriptive_best_method": "tp_conditioned_pattern",
+    "schedule_hypothesis_status": "failed",
+    "model_convergence_status": "failed",
+    "recommended_action": "Freeze feature engineering on the current six profiles; either accept the 12.15% boundary or collect substantially more Decode shapes."
+  }
+}

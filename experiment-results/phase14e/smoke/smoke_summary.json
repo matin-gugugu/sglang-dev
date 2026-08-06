@@ -1,0 +1,87 @@
+{
+  "schema_version": "phase14e-decode-schedule-smoke-v1",
+  "status": "passed",
+  "input_rows": 162,
+  "workload_groups": 54,
+  "feasibility_audit": {
+    "all_rows_reconstructable": true,
+    "decode_tp_expanded_rows": 54,
+    "decode_workload_groups": 18,
+    "decode_profiles": [
+      "balanced",
+      "bimodal",
+      "long_tail",
+      "staircase",
+      "uniform_b16",
+      "uniform_b4"
+    ],
+    "unique_decode_active_batch_sequences": 6,
+    "output_lens_invariant_across_tp": true,
+    "same_profile_sequence_invariant_across_models": true,
+    "decode_profile_held_out_across_all_models_per_fold": true,
+    "decode_profile_by_fold": {
+      "0": [
+        "balanced"
+      ],
+      "1": [
+        "bimodal"
+      ],
+      "2": [
+        "long_tail"
+      ],
+      "3": [
+        "staircase"
+      ],
+      "4": [
+        "uniform_b16"
+      ],
+      "5": [
+        "uniform_b4"
+      ]
+    },
+    "tp_conditioned_matrix_rank": 80,
+    "schedule_matrix_rank": 6,
+    "combined_matrix_rank": 83,
+    "availability_note": "Features use configured per-request output lengths. They are pre-run for this ignore-EOS benchmark, but production use would require requested or predicted output lengths rather than observed completion."
+  },
+  "methods": {
+    "additive_tp_phase": {
+      "features": 34,
+      "rows": 162,
+      "finite": true,
+      "fold0_predictions": 27,
+      "fold0_mape": 0.09138207233093354
+    },
+    "tp_conditioned_pattern": {
+      "features": 92,
+      "rows": 162,
+      "finite": true,
+      "fold0_predictions": 27,
+      "fold0_mape": 0.07582434451194514
+    },
+    "additive_plus_schedule": {
+      "features": 48,
+      "rows": 162,
+      "finite": true,
+      "fold0_predictions": 27,
+      "fold0_mape": 0.12104546888227961
+    },
+    "tp_conditioned_plus_schedule": {
+      "features": 106,
+      "rows": 162,
+      "finite": true,
+      "fold0_predictions": 27,
+      "fold0_mape": 0.10800674151843988
+    },
+    "tp_conditioned_plus_schedule_tp": {
+      "features": 134,
+      "rows": 162,
+      "finite": true,
+      "fold0_predictions": 27,
+      "fold0_mape": 0.11236950600126681
+    }
+  },
+  "actual_backend_feature_used": false,
+  "model_identity_feature_used": false,
+  "target_derived_feature_used": false
+}

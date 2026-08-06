@@ -1,0 +1,494 @@
+{
+  "schema_version": "phase14e-decode-schedule-analysis-v1",
+  "dataset": {
+    "source": "/sgl-workspace/sglang-src/experiment-results/phase14c/extended_dataset_analysis/aggregated_configurations.csv",
+    "aggregated_configurations": 162,
+    "workload_groups": 54,
+    "models": [
+      "qwen3-8b",
+      "qwen3-30b-a3b",
+      "deepseek-v2-lite"
+    ],
+    "tensor_parallel_sizes": [
+      2,
+      4,
+      8
+    ],
+    "phases": [
+      "prefill",
+      "decode"
+    ]
+  },
+  "feasibility_audit": {
+    "all_rows_reconstructable": true,
+    "decode_tp_expanded_rows": 54,
+    "decode_workload_groups": 18,
+    "decode_profiles": [
+      "balanced",
+      "bimodal",
+      "long_tail",
+      "staircase",
+      "uniform_b16",
+      "uniform_b4"
+    ],
+    "unique_decode_active_batch_sequences": 6,
+    "output_lens_invariant_across_tp": true,
+    "same_profile_sequence_invariant_across_models": true,
+    "decode_profile_held_out_across_all_models_per_fold": true,
+    "decode_profile_by_fold": {
+      "0": [
+        "balanced"
+      ],
+      "1": [
+        "bimodal"
+      ],
+      "2": [
+        "long_tail"
+      ],
+      "3": [
+        "staircase"
+      ],
+      "4": [
+        "uniform_b16"
+      ],
+      "5": [
+        "uniform_b4"
+      ]
+    },
+    "tp_conditioned_matrix_rank": 80,
+    "schedule_matrix_rank": 6,
+    "combined_matrix_rank": 83,
+    "availability_note": "Features use configured per-request output lengths. They are pre-run for this ignore-EOS benchmark, but production use would require requested or predicted output lengths rather than observed completion."
+  },
+  "leakage_audit": {
+    "actual_backend_feature_used": false,
+    "backend_signature_use": "post-hoc residual diagnostics only",
+    "kernel_name_feature_used": false,
+    "model_identity_feature_used": false,
+    "target_derived_feature_used": false,
+    "phase2_cost_curve_feature_used": false,
+    "schedule_source": "configured output_lens_json",
+    "same_workload_tp_variants_kept_together": true,
+    "ridge_alpha_selection": "nested within each outer training split",
+    "repeat_leakage": false
+  },
+  "feature_counts": {
+    "additive_tp_phase": 34,
+    "tp_conditioned_pattern": 92,
+    "additive_plus_schedule": 48,
+    "tp_conditioned_plus_schedule": 106,
+    "tp_conditioned_plus_schedule_tp": 134
+  },
+  "schedule_feature_names": [
+    "decode_log_initial_batch",
+    "decode_log_steps",
+    "decode_log_total_tokens",
+    "decode_mean_active_fraction",
+    "decode_active_std_fraction",
+    "decode_final_active_fraction",
+    "decode_distinct_active_levels_fraction",
+    "decode_change_rate",
+    "decode_longest_plateau_fraction",
+    "decode_completion_p25_fraction",
+    "decode_completion_p50_fraction",
+    "decode_completion_p75_fraction",
+    "decode_completion_length_cv",
+    "decode_front_to_back_log_ratio"
+  ],
+  "ridge_alphas": [
+    0.0001,
+    0.001,
+    0.01,
+    0.1,
+    1.0,
+    10.0,
+    100.0,
+    1000.0
+  ],
+  "method_comparison": {
+    "additive_tp_phase": {
+      "samples": 162,
+      "mape": 0.12804730386975532,
+      "median_ape": 0.06609878036272952,
+      "p95_ape": 0.3936568880881959,
+      "mae_us": 2944.1917117978064,
+      "rmse_us": 6289.610345435297,
+      "r2": 0.8960943349256768
+    },
+    "tp_conditioned_pattern": {
+      "samples": 162,
+      "mape": 0.12149907510878306,
+      "median_ape": 0.06153186841881163,
+      "p95_ape": 0.3901339750247527,
+      "mae_us": 2827.8149613924606,
+      "rmse_us": 6314.808652129885,
+      "r2": 0.8952601046751575
+    },
+    "additive_plus_schedule": {
+      "samples": 162,
+      "mape": 0.271873551866229,
+      "median_ape": 0.11567910337665802,
+      "p95_ape": 1.263023732212306,
+      "mae_us": 7881.110912351403,
+      "rmse_us": 17511.81021137723,
+      "r2": 0.19452173025079478
+    },
+    "tp_conditioned_plus_schedule": {
+      "samples": 162,
+      "mape": 0.25254559519997827,
+      "median_ape": 0.12248283126374103,
+      "p95_ape": 1.2210268477993969,
+      "mae_us": 7649.763135947606,
+      "rmse_us": 16988.963040739083,
+      "r2": 0.24190176074632097
+    },
+    "tp_conditioned_plus_schedule_tp": {
+      "samples": 162,
+      "mape": 0.26525575980172866,
+      "median_ape": 0.12107943124974571,
+      "p95_ape": 1.3252252999927774,
+      "mae_us": 7925.270303451252,
+      "rmse_us": 17666.773688422174,
+      "r2": 0.18020316673206704
+    }
+  },
+  "predeclared_candidate": "tp_conditioned_plus_schedule",
+  "predeclared_workload_cv": {
+    "all": {
+      "samples": 162,
+      "mape": 0.25254559519997827,
+      "median_ape": 0.12248283126374103,
+      "p95_ape": 1.2210268477993969,
+      "mae_us": 7649.763135947606,
+      "rmse_us": 16988.963040739083,
+      "r2": 0.24190176074632097
+    },
+    "prefill": {
+      "samples": 108,
+      "mape": 0.10632683661573508,
+      "median_ape": 0.057449541649570994,
+      "p95_ape": 0.356459982365972,
+      "mae_us": 649.5351867862132,
+      "rmse_us": 1142.0765657431268,
+      "r2": 0.9764729200016841
+    },
+    "decode": {
+      "samples": 54,
+      "mape": 0.5449831123684648,
+      "median_ape": 0.38476536700684816,
+      "p95_ape": 1.6754330054746194,
+      "mae_us": 21650.21903427039,
+      "rmse_us": 29381.387268724335,
+      "r2": -1.7058708205442885
+    },
+    "tp2": {
+      "samples": 54,
+      "mape": 0.24388918053824035,
+      "median_ape": 0.11619573718894709,
+      "p95_ape": 0.7929156077170736,
+      "mae_us": 6377.260304782253,
+      "rmse_us": 14592.803490636501,
+      "r2": 0.28049129630508685
+    },
+    "tp4": {
+      "samples": 54,
+      "mape": 0.25604396400978463,
+      "median_ape": 0.12920346508491043,
+      "p95_ape": 0.9384228281218149,
+      "mae_us": 7892.6099128162,
+      "rmse_us": 17431.189649640124,
+      "r2": 0.22490334042748206
+    },
+    "tp8": {
+      "samples": 54,
+      "mape": 0.25770364105190996,
+      "median_ape": 0.1356005367846611,
+      "p95_ape": 0.9160255630826758,
+      "mae_us": 8679.419190244365,
+      "rmse_us": 18683.637474558906,
+      "r2": 0.20419685917096786
+    }
+  },
+  "predeclared_by_profile": {
+    "balanced": {
+      "samples": 9,
+      "mape": 0.25411203371881813,
+      "median_ape": 0.24928859122738672,
+      "p95_ape": 0.30801276589839677,
+      "mae_us": 8666.821660214,
+      "rmse_us": 9044.33429175232,
+      "r2": 0.36150942101332173
+    },
+    "bimodal": {
+      "samples": 9,
+      "mape": 0.1083922902250456,
+      "median_ape": 0.1171546365666789,
+      "p95_ape": 0.1736270536676172,
+      "mae_us": 3965.5351422588533,
+      "rmse_us": 4582.513369618454,
+      "r2": 0.823459444856694
+    },
+    "c1024": {
+      "samples": 54,
+      "mape": 0.13988136985011188,
+      "median_ape": 0.10202416947434081,
+      "p95_ape": 0.37132691041832244,
+      "mae_us": 426.40639111331416,
+      "rmse_us": 648.6603148409092,
+      "r2": 0.943368460279386
+    },
+    "c4096": {
+      "samples": 54,
+      "mape": 0.0727723033813583,
+      "median_ape": 0.03874011515583249,
+      "p95_ape": 0.21655479707116593,
+      "mae_us": 872.6639824591122,
+      "rmse_us": 1479.1611000799478,
+      "r2": 0.9680133472491916
+    },
+    "long_tail": {
+      "samples": 9,
+      "mape": 0.4568861316220483,
+      "median_ape": 0.45555359664833,
+      "p95_ape": 0.49589937106286314,
+      "mae_us": 30159.120060671834,
+      "rmse_us": 31965.726119393035,
+      "r2": -1.2408050113863718
+    },
+    "staircase": {
+      "samples": 9,
+      "mape": 1.6383842926167305,
+      "median_ape": 1.5109104481989495,
+      "p95_ape": 2.0913823097315953,
+      "mae_us": 55730.94496488896,
+      "rmse_us": 58441.699952749565,
+      "r2": -27.027869769575666
+    },
+    "uniform_b16": {
+      "samples": 9,
+      "mape": 0.43700383779628865,
+      "median_ape": 0.48392934734599014,
+      "p95_ape": 0.5205816024766257,
+      "mae_us": 17070.777155369233,
+      "rmse_us": 17855.649790071475,
+      "r2": -0.7461593863554135
+    },
+    "uniform_b4": {
+      "samples": 9,
+      "mape": 0.37512008823185705,
+      "median_ape": 0.31587622877173926,
+      "p95_ape": 0.6256805455958396,
+      "mae_us": 14308.11522221948,
+      "rmse_us": 17908.99009748753,
+      "r2": -1.2767607472939644
+    }
+  },
+  "predeclared_leave_one_model_out": {
+    "qwen3-8b": {
+      "samples": 54,
+      "mape": 0.37312237416668387,
+      "median_ape": 0.3467442844134055,
+      "p95_ape": 0.7845928162165878,
+      "mae_us": 8231.673489529012,
+      "rmse_us": 12229.632304882141,
+      "r2": 0.45398607126753643
+    },
+    "qwen3-30b-a3b": {
+      "samples": 54,
+      "mape": 0.3304375615373225,
+      "median_ape": 0.3057167837175111,
+      "p95_ape": 0.5152622075934676,
+      "mae_us": 9651.781671252298,
+      "rmse_us": 15364.329382034817,
+      "r2": 0.6369142752182501
+    },
+    "deepseek-v2-lite": {
+      "samples": 54,
+      "mape": 0.6848061262892486,
+      "median_ape": 0.659243130884767,
+      "p95_ape": 1.523720915459753,
+      "mae_us": 5038.016270358238,
+      "rmse_us": 7118.593291022804,
+      "r2": 0.6308343518515378
+    }
+  },
+  "best_workload_cv_mape_method": "tp_conditioned_pattern",
+  "selected_candidate_note": "Descriptive ranking on common outer-CV predictions; candidate-family selection itself is not nested and is not an unbiased production score.",
+  "selected_workload_cv": {
+    "all": {
+      "samples": 162,
+      "mape": 0.12149907510878306,
+      "median_ape": 0.06153186841881163,
+      "p95_ape": 0.3901339750247527,
+      "mae_us": 2827.8149613924606,
+      "rmse_us": 6314.808652129885,
+      "r2": 0.8952601046751575
+    },
+    "prefill": {
+      "samples": 108,
+      "mape": 0.09433475775645161,
+      "median_ape": 0.044705890682352936,
+      "p95_ape": 0.3329914810129375,
+      "mae_us": 797.3380613029099,
+      "rmse_us": 1877.3946323710422,
+      "r2": 0.9364246540333335
+    },
+    "decode": {
+      "samples": 54,
+      "mape": 0.17582770981344598,
+      "median_ape": 0.09993665086271952,
+      "p95_ape": 0.6964304270594508,
+      "mae_us": 6888.768761571562,
+      "rmse_us": 10610.429007713692,
+      "r2": 0.6471189377281386
+    },
+    "tp2": {
+      "samples": 54,
+      "mape": 0.13371048552518336,
+      "median_ape": 0.06604613666834415,
+      "p95_ape": 0.4072046612430459,
+      "mae_us": 2661.8027707778388,
+      "rmse_us": 6369.119408214375,
+      "r2": 0.8629379050363489
+    },
+    "tp4": {
+      "samples": 54,
+      "mape": 0.11107845972430327,
+      "median_ape": 0.055823025471138356,
+      "p95_ape": 0.3046915290610869,
+      "mae_us": 2717.587081038533,
+      "rmse_us": 5845.311811291756,
+      "r2": 0.9128400092838773
+    },
+    "tp8": {
+      "samples": 54,
+      "mape": 0.11970828007686256,
+      "median_ape": 0.06085466381367258,
+      "p95_ape": 0.3434352696863491,
+      "mae_us": 3104.0550323610105,
+      "rmse_us": 6700.52779501163,
+      "r2": 0.8976469446997344
+    }
+  },
+  "selected_by_profile": {
+    "balanced": {
+      "samples": 9,
+      "mape": 0.028201682593805042,
+      "median_ape": 0.016305003333851355,
+      "p95_ape": 0.09210004359146956,
+      "mae_us": 814.6505408946084,
+      "rmse_us": 1110.3232330077558,
+      "r2": 0.9903772293263482
+    },
+    "bimodal": {
+      "samples": 9,
+      "mape": 0.051709837242962194,
+      "median_ape": 0.046957546645935155,
+      "p95_ape": 0.10463827421217424,
+      "mae_us": 1821.7034902522048,
+      "rmse_us": 2298.5199556327966,
+      "r2": 0.9555846014219562
+    },
+    "c1024": {
+      "samples": 54,
+      "mape": 0.10795440381462856,
+      "median_ape": 0.06022067071563861,
+      "p95_ape": 0.34866994441909854,
+      "mae_us": 388.84279636262045,
+      "rmse_us": 807.2145287664938,
+      "r2": 0.9122995841788378
+    },
+    "c4096": {
+      "samples": 54,
+      "mape": 0.08071511169827461,
+      "median_ape": 0.03582997068804474,
+      "p95_ape": 0.32029846000062406,
+      "mae_us": 1205.8333262431993,
+      "rmse_us": 2529.352865034748,
+      "r2": 0.9064687617383851
+    },
+    "long_tail": {
+      "samples": 9,
+      "mape": 0.12861200612700813,
+      "median_ape": 0.10381904228984735,
+      "p95_ape": 0.2164396254506415,
+      "mae_us": 7860.766452404258,
+      "rmse_us": 8414.138633235376,
+      "r2": 0.8447419077649262
+    },
+    "staircase": {
+      "samples": 9,
+      "mape": 0.1690748790082336,
+      "median_ape": 0.10915345989585963,
+      "p95_ape": 0.3578805886322276,
+      "mae_us": 5562.347676990156,
+      "rmse_us": 6497.261520495597,
+      "r2": 0.6535782859636923
+    },
+    "uniform_b16": {
+      "samples": 9,
+      "mape": 0.30257545748357706,
+      "median_ape": 0.23670482732417916,
+      "p95_ape": 0.6353230343195688,
+      "mae_us": 14758.016196275139,
+      "rmse_us": 19988.61738673949,
+      "r2": -1.1882557287401752
+    },
+    "uniform_b4": {
+      "samples": 9,
+      "mape": 0.3747923964250901,
+      "median_ape": 0.22227843780788953,
+      "p95_ape": 0.8551770109214197,
+      "mae_us": 10515.128212613008,
+      "rmse_us": 12506.568252710762,
+      "r2": -0.11032857745817792
+    }
+  },
+  "selected_leave_one_model_out": {
+    "qwen3-8b": {
+      "samples": 54,
+      "mape": 0.47337451258981517,
+      "median_ape": 0.546558515686504,
+      "p95_ape": 0.80224698131178,
+      "mae_us": 9073.550734695686,
+      "rmse_us": 14638.613630267706,
+      "r2": 0.21769371647333158
+    },
+    "qwen3-30b-a3b": {
+      "samples": 54,
+      "mape": 0.19353246667859564,
+      "median_ape": 0.13743519501706053,
+      "p95_ape": 0.4103247263482468,
+      "mae_us": 6041.659520239586,
+      "rmse_us": 10941.645675475014,
+      "r2": 0.8158603768548736
+    },
+    "deepseek-v2-lite": {
+      "samples": 54,
+      "mape": 0.17921024108200634,
+      "median_ape": 0.1464843110597473,
+      "p95_ape": 0.46127848894829004,
+      "mae_us": 2906.211802426326,
+      "rmse_us": 5468.892226756817,
+      "r2": 0.7821128340579779
+    }
+  },
+  "relative_to_phase14d_tp_conditioned": {
+    "predeclared_mape_fractional_change": 1.0785803922693562,
+    "predeclared_p95_fractional_change": 2.12976291726945
+  },
+  "predeclared_decision_gates": {
+    "overall_mape_below_10pct": false,
+    "overall_p95_below_25pct": false,
+    "prefill_mape_below_15pct": true,
+    "decode_mape_below_10pct": false,
+    "all_held_out_models_mape_below_15pct": false,
+    "improves_phase14d_tp_conditioned_mape": false,
+    "improves_phase14d_tp_conditioned_p95": false
+  },
+  "interpretation": {
+    "schedule_definition": "Compact statistics of the monotonically draining active-batch sequence reconstructed from configured per-request output lengths.",
+    "production_availability_limit": "Exact output lengths are configured in this ignore-EOS benchmark; a production predictor would need requested limits or a separate length forecast available before execution.",
+    "convergence_rule": "Predeclared candidate must pass overall MAPE<10%, P95<25%, Prefill MAPE<15%, Decode MAPE<10%, and every held-out-model MAPE<15%."
+  }
+}
