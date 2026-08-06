@@ -1,0 +1,29 @@
+{
+  "schema_version": "phase15-qwen-trace-pattern-v1",
+  "status": "PASS",
+  "model": "Qwen3-8B",
+  "topology": "single-node-B200-NVLink",
+  "workloads": 20,
+  "tps": [
+    2,
+    4,
+    8
+  ],
+  "phase_labels": 120,
+  "collection_mode": "histogram-only",
+  "raw_events_saved": false,
+  "trace_replay_mode": "draining_batch_a_i_zero",
+  "all_rank_histograms_identical": true,
+  "fixed_actual_output_lengths": true,
+  "analytic_gpu_histogram_checks": 120,
+  "analytic_gpu_histogram_checks_passed": 120,
+  "logical_pattern_tp_invariant": true,
+  "logical_contract": {
+    "calls": "group-level collective count",
+    "payload_bytes": "representative-rank logical input tensor bytes",
+    "qwen3_8b_calls_per_forward": 73,
+    "qwen3_8b_bf16_bytes_per_token": 8192
+  },
+  "scope_boundary": "Arrival offsets are audit-only; this phase validates heterogeneous simultaneous draining batches, not online interleaved arrivals."
+}
+manifest_files=35
