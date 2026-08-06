@@ -1,0 +1,133 @@
+{
+  "schema_version": "phase14f-backend-curve-analysis-v1",
+  "dataset": {
+    "configurations": 162,
+    "models": [
+      "deepseek-v2-lite",
+      "qwen3-30b-a3b",
+      "qwen3-8b"
+    ],
+    "tensor_parallel_sizes": [
+      2,
+      4,
+      8
+    ],
+    "support_points": 105,
+    "curve_records": 525,
+    "source_curve_files": [
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp2/all_reduce/r0/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp2/all_reduce/r1/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp2/all_reduce/r2/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp2/all_reduce/r3/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp2/all_reduce/r4/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp2/fused_allreduce_residual_rmsnorm/r0/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp2/fused_allreduce_residual_rmsnorm/r1/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp2/fused_allreduce_residual_rmsnorm/r2/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp2/fused_allreduce_residual_rmsnorm/r3/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp2/fused_allreduce_residual_rmsnorm/r4/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp4/all_reduce/r0/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp4/all_reduce/r1/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp4/all_reduce/r2/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp4/all_reduce/r3/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp4/all_reduce/r4/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp4/fused_allreduce_residual_rmsnorm/r0/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp4/fused_allreduce_residual_rmsnorm/r1/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp4/fused_allreduce_residual_rmsnorm/r2/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp4/fused_allreduce_residual_rmsnorm/r3/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp4/fused_allreduce_residual_rmsnorm/r4/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp8/all_reduce/r0/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp8/all_reduce/r1/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp8/all_reduce/r2/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp8/all_reduce/r3/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp8/all_reduce/r4/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp8/fused_allreduce_residual_rmsnorm/r0/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp8/fused_allreduce_residual_rmsnorm/r1/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp8/fused_allreduce_residual_rmsnorm/r2/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp8/fused_allreduce_residual_rmsnorm/r3/curve.jsonl",
+      "/sgl-workspace/sglang-src/experiment-results/phase14f/curve/tp8/fused_allreduce_residual_rmsnorm/r4/curve.jsonl"
+    ],
+    "curve_samples": 52500
+  },
+  "predictive_contract": {
+    "inputs": [
+      "raw_op",
+      "payload_bytes",
+      "group_size",
+      "topology"
+    ],
+    "backend_proxy": "lookup table measured before inference evaluation",
+    "observed_backend": "audit-only; never read from Phase 14C traces by the predictor",
+    "structural_formula": "sum(count(op,payload,tp) * C(op,payload,tp,L1,backend_proxy))",
+    "calibration": "one nonnegative scalar per phase fitted inside each outer training fold"
+  },
+  "selected_workload_cv": {
+    "evaluation": "workload_cv",
+    "scope": "all",
+    "method": "phase14f_op_backend_scaled",
+    "samples": 162,
+    "mape": 0.2608582529999144,
+    "median_ape": 0.1590770588842331,
+    "p95_ape": 0.6728301168904742,
+    "mae_us": 5373.588193542953,
+    "rmse_us": 10108.616888347718,
+    "r2": 0.7316045065301898
+  },
+  "selected_decode_workload_cv": {
+    "evaluation": "workload_cv",
+    "scope": "decode",
+    "method": "phase14f_op_backend_scaled",
+    "samples": 54,
+    "mape": 0.351410043045665,
+    "median_ape": 0.30424424141826023,
+    "p95_ape": 0.6276956097078636,
+    "mae_us": 14125.319976159199,
+    "rmse_us": 17393.582683555305,
+    "r2": 0.05171134176803971
+  },
+  "selected_lomo": [
+    {
+      "evaluation": "leave_one_model_out",
+      "scope": "model:deepseek-v2-lite",
+      "method": "phase14f_op_backend_scaled",
+      "samples": 54,
+      "mape": 0.24621331277198846,
+      "median_ape": 0.18137595678191487,
+      "p95_ape": 0.6633034894359181,
+      "mae_us": 3068.484030160083,
+      "rmse_us": 5360.780923409062,
+      "r2": 0.7906422515510663
+    },
+    {
+      "evaluation": "leave_one_model_out",
+      "scope": "model:qwen3-30b-a3b",
+      "method": "phase14f_op_backend_scaled",
+      "samples": 54,
+      "mape": 0.3430731885022349,
+      "median_ape": 0.2383327976667745,
+      "p95_ape": 1.0077994647625066,
+      "mae_us": 8640.209577260595,
+      "rmse_us": 14926.337135557324,
+      "r2": 0.6573202435562875
+    },
+    {
+      "evaluation": "leave_one_model_out",
+      "scope": "model:qwen3-8b",
+      "method": "phase14f_op_backend_scaled",
+      "samples": 54,
+      "mape": 0.19766242216981453,
+      "median_ape": 0.14706515950051668,
+      "p95_ape": 0.5801185782574542,
+      "mae_us": 4567.291567317042,
+      "rmse_us": 7747.491460989173,
+      "r2": 0.7808713644139603
+    }
+  ],
+  "gates": {
+    "overall_mape_below_10pct": false,
+    "overall_p95_below_25pct": false,
+    "decode_mape_below_10pct": false,
+    "every_lomo_mape_below_15pct": false
+  },
+  "all_gates_passed": false,
+  "max_repeat_median_cv": 0.5730648023387787
+}
