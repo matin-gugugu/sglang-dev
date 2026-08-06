@@ -271,7 +271,15 @@ def main():
 """
     )
     manifest = root / "manifest.sha256"
-    files = sorted(path for path in root.rglob("*") if path.is_file() and path != manifest)
+    # finalize.log is commonly written by ``... | tee finalize.log`` while this
+    # function is still running, so it cannot be part of a stable manifest.
+    files = sorted(
+        path
+        for path in root.rglob("*")
+        if path.is_file()
+        and path != manifest
+        and path.name != "finalize.log"
+    )
     manifest.write_text(
         "".join(f"{sha256(path)}  {path.relative_to(root)}\n" for path in files)
     )
