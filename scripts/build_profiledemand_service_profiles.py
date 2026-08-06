@@ -306,7 +306,9 @@ def main():
         if key != "joint_lm_4x4" and not isinstance(value, (list, dict))
     ]
     with (args.output_dir / "service_profiles.csv").open("w", newline="") as output:
-        writer = csv.DictWriter(output, fieldnames=scalar_fields + ["joint_lm_4x4_json"])
+        writer = csv.DictWriter(
+            output, fieldnames=scalar_fields + ["joint_lm_4x4_json"], lineterminator="\n"
+        )
         writer.writeheader()
         for profile in profiles:
             writer.writerow(
@@ -319,7 +321,9 @@ def main():
         for row in request_rows:
             output.write(json.dumps(row, separators=(",", ":")) + "\n")
     with (args.output_dir / "cluster_audit.csv").open("w", newline="") as output:
-        writer = csv.DictWriter(output, fieldnames=list(cluster_audit[0]))
+        writer = csv.DictWriter(
+            output, fieldnames=list(cluster_audit[0]), lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(cluster_audit)
 

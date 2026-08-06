@@ -130,7 +130,7 @@ def main():
     if len({row["model"] for row in rows}) != len(rows):
         raise ValueError("duplicate model names")
     with (args.output_dir / "model_features.csv").open("w", newline="") as output:
-        writer = csv.DictWriter(output, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(output, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     (args.output_dir / "model_features.json").write_text(json.dumps(rows, indent=2) + "\n")

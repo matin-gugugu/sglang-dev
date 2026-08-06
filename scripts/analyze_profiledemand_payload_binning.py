@@ -31,7 +31,6 @@ from analyze_phase14g_strict_ablation import (
     load_curve,
     phase14d_folds,
     read_csv,
-    write_csv,
 )
 
 
@@ -79,6 +78,15 @@ def sha256(path):
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def write_csv(path, rows):
+    if not rows:
+        raise ValueError(f"empty rows for {path}")
+    with path.open("w", newline="") as output:
+        writer = csv.DictWriter(output, fieldnames=list(rows[0]), lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 def load_all_supports(curve_root, extension_path):
