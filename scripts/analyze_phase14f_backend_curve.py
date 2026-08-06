@@ -79,7 +79,7 @@ class ExactOpCurve:
         observed_backend = defaultdict(set)
         for row in rows:
             key = (row["op"], int(row["group_size"]), int(row["payload_bytes"]))
-            grouped[key].extend(row["completion_samples_us"])
+            grouped[key].extend(row["post_rendezvous_samples_us"])
             backend_proxy[key].add(row["backend_proxy_pre_run"])
             observed_backend[key].add(row["observed_backend_audit_only"])
         self.cost = {}
@@ -156,7 +156,10 @@ def phase14d_predictions(path):
     ]
     if len(rows) != 162:
         raise ValueError(f"expected 162 Phase 14D predictions, got {len(rows)}")
-    return {row["workload_id"]: row for row in rows}
+    keyed = {(row["workload_id"], int(row["tp"])): row for row in rows}
+    if len(keyed) != 162:
+        raise ValueError("Phase 14D predictions are not unique by workload_id and TP")
+    return keyed
 
 
 def fit_phase_scales(rows, base_field):
@@ -269,7 +272,7 @@ def main():
     rows = load_dataset(args.dataset, phase2_curve, phase14f_curve)
     phase14d = phase14d_predictions(args.phase14d_predictions)
     for row in rows:
-        row["fold"] = int(phase14d[row["workload_id"]]["fold"])
+        row["fold"] = int(phase14d[(row["workload_id"], row["tp"])]["fold"])
 
     predictions = []
     predictions.extend(
@@ -285,7 +288,7 @@ def main():
         predictions.extend(add_scaled_predictions(rows, base_field, method, "fold"))
         predictions.extend(add_scaled_predictions(rows, base_field, method, "model"))
     for row in rows:
-        existing = phase14d[row["workload_id"]]
+        existing = phase14d[(row["workload_id"], row["tp"])]
         predictions.append(
             {
                 "evaluation": "workload_cv",
@@ -312,8 +315,10 @@ def main():
         by_support[key].append(row)
     for key, support_rows in sorted(by_support.items()):
         op, tp, payload = key
-        completion = [
-            sample for row in support_rows for sample in row["completion_samples_us"]
+        post_rendezvous = [
+            sample
+            for row in support_rows
+            for sample in row["post_rendezvous_samples_us"]
         ]
         intrinsic = [
             sample for row in support_rows for sample in row["intrinsic_samples_us"]
@@ -324,15 +329,25 @@ def main():
                 "group_size": tp,
                 "payload_bytes": payload,
                 "repeats": len(support_rows),
-                "pooled_samples": len(completion),
+                "pooled_samples": len(post_rendezvous),
                 "backend_proxy_pre_run": phase14f_curve.backend_proxy[key],
                 "observed_backend_audit_only": phase14f_curve.observed_backend[key],
                 "intrinsic_median_us": float(np.median(intrinsic)),
-                "completion_median_us": float(np.median(completion)),
-                "completion_p95_us": percentile(completion, 95),
+                "post_rendezvous_median_us": float(np.median(post_rendezvous)),
+                "post_rendezvous_p95_us": percentile(post_rendezvous, 95),
                 "repeat_median_cv": float(
-                    np.std([row["completion_latency_us"]["median"] for row in support_rows])
-                    / np.mean([row["completion_latency_us"]["median"] for row in support_rows])
+                    np.std(
+                        [
+                            row["post_rendezvous_latency_us"]["median"]
+                            for row in support_rows
+                        ]
+                    )
+                    / np.mean(
+                        [
+                            row["post_rendezvous_latency_us"]["median"]
+                            for row in support_rows
+                        ]
+                    )
                 ),
             }
         )
@@ -378,7 +393,9 @@ def main():
             "support_points": len(curve_summary),
             "curve_records": len(curve_records),
             "source_curve_files": [str(path) for path in source_files],
-            "curve_samples": sum(len(row["completion_samples_us"]) for row in curve_records),
+            "curve_samples": sum(
+                len(row["post_rendezvous_samples_us"]) for row in curve_records
+            ),
         },
         "predictive_contract": {
             "inputs": ["raw_op", "payload_bytes", "group_size", "topology"],

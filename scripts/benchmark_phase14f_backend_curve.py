@@ -69,14 +69,20 @@ def git_commit():
 def matching_kernel_samples(profiler):
     samples = []
     names = {}
-    for event in profiler.events():
-        if event.device_type != DeviceType.CUDA:
+    for event in profiler.profiler.kineto_results.events():
+        if event.device_type() != DeviceType.CUDA:
             continue
-        backend = classify_collective_kernel(event.name)
+        backend = classify_collective_kernel(event.name())
         if backend is None:
             continue
-        samples.append((backend, float(event.time_range.elapsed_us())))
-        names[event.name] = names.get(event.name, 0) + 1
+        samples.append(
+            (
+                backend,
+                float(event.start_ns()) / 1000.0,
+                float(event.end_ns()) / 1000.0,
+            )
+        )
+        names[event.name()] = names.get(event.name(), 0) + 1
     return samples, names
 
 
@@ -198,7 +204,7 @@ def main():
 
         if rank == 0:
             backend_sequences = [
-                [backend for backend, _ in rank_samples]
+                [backend for backend, _, _ in rank_samples]
                 for rank_samples in gathered_samples
             ]
             if any(sequence != backend_sequences[0] for sequence in backend_sequences):
@@ -211,7 +217,15 @@ def main():
                     f"{sorted(set(backend_sequences[0]))}"
                 )
             rank_durations = [
-                [duration for _, duration in rank_samples]
+                [end_us - start_us for _, start_us, end_us in rank_samples]
+                for rank_samples in gathered_samples
+            ]
+            rank_starts = [
+                [start_us for _, start_us, _ in rank_samples]
+                for rank_samples in gathered_samples
+            ]
+            rank_ends = [
+                [end_us for _, _, end_us in rank_samples]
                 for rank_samples in gathered_samples
             ]
             intrinsic = [
@@ -222,8 +236,15 @@ def main():
                 max(rank_samples[index] for rank_samples in rank_durations)
                 for index in range(args.iterations)
             ]
+            post_rendezvous = [
+                max(rank_samples[index] for rank_samples in rank_ends)
+                - max(rank_samples[index] for rank_samples in rank_starts)
+                for index in range(args.iterations)
+            ]
+            if any(value < 0 for value in post_rendezvous):
+                raise RuntimeError("negative post-rendezvous interval")
             record = {
-                "schema_version": "phase14f-backend-cost-v1",
+                "schema_version": "phase14f-backend-cost-v2",
                 "timestamp_utc": datetime.now(timezone.utc).isoformat(),
                 "repeat_id": args.repeat_id,
                 "hostname": socket.gethostname(),
@@ -240,6 +261,7 @@ def main():
                 "latency_scope": "collective-kernel-duration-across-aligned-ranks",
                 "intrinsic_latency_us": summary(intrinsic),
                 "completion_latency_us": summary(completion),
+                "post_rendezvous_latency_us": summary(post_rendezvous),
                 "rank_skew_us": summary(
                     [right - left for left, right in zip(intrinsic, completion)]
                 ),
@@ -247,6 +269,7 @@ def main():
                 "timed_iterations": args.iterations,
                 "intrinsic_samples_us": intrinsic,
                 "completion_samples_us": completion,
+                "post_rendezvous_samples_us": post_rendezvous,
                 "rank_samples_us": rank_durations,
                 "rank_kernel_name_counts": gathered_names,
                 "environment": {
@@ -267,7 +290,7 @@ def main():
                 f"repeat={args.repeat_id} tp={world_size} op={args.op} "
                 f"payload={payload_bytes} proxy={backend_proxy} "
                 f"observed={backend_sequences[0][0]} "
-                f"completion_median={record['completion_latency_us']['median']:.3f} us",
+                f"post_median={record['post_rendezvous_latency_us']['median']:.3f} us",
                 flush=True,
             )
 

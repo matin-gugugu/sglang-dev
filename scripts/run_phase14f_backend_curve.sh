@@ -127,12 +127,13 @@ if {row["payload_bytes"] for row in rows} != expected:
 if len(rows) != len(expected):
     raise SystemExit(1)
 if any(
-    row["schema_version"] != "phase14f-backend-cost-v1"
+    row["schema_version"] != "phase14f-backend-cost-v2"
     or row["op"] != op
     or row["group_size"] != tp
     or row["repeat_id"] != repeat
     or len(row["completion_samples_us"]) != iterations
     or len(row["intrinsic_samples_us"]) != iterations
+    or len(row["post_rendezvous_samples_us"]) != iterations
     for row in rows
 ):
     raise SystemExit(1)
