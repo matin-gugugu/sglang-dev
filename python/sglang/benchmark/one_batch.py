@@ -50,6 +50,7 @@ I'm going to the park
 import argparse
 import copy
 import dataclasses
+import hashlib
 import itertools
 import json
 import logging
@@ -214,8 +215,10 @@ class BenchArgs:
     warmup_each_workload: bool = False
     comm_profile: bool = False
     comm_profile_mode: str = "full-trace"
+    input_lens_per_request: Tuple[int] = ()
     output_lens_per_request: Tuple[int] = ()
     prefill_chunk_size: int = 0
+    trace_replay_plan: str = ""
 
     @staticmethod
     def add_cli_args(parser: argparse.ArgumentParser):
@@ -315,6 +318,13 @@ class BenchArgs:
             help="Store raw collective events or only the lossless aggregate histogram.",
         )
         parser.add_argument(
+            "--input-lens-per-request",
+            type=int,
+            nargs="+",
+            default=BenchArgs.input_lens_per_request,
+            help="Per-request input lengths for a heterogeneous draining batch.",
+        )
+        parser.add_argument(
             "--output-lens-per-request",
             type=int,
             nargs="+",
@@ -326,6 +336,16 @@ class BenchArgs:
             type=int,
             default=BenchArgs.prefill_chunk_size,
             help="Controlled prefill chunk size for boundary experiments; 0 disables chunking.",
+        )
+        parser.add_argument(
+            "--trace-replay-plan",
+            type=str,
+            default=BenchArgs.trace_replay_plan,
+            help=(
+                "JSONL workload plan containing workload_id, input_lens_per_request, "
+                "and output_lens_per_request. The model is loaded once and all plans "
+                "are replayed as heterogeneous draining batches."
+            ),
         )
 
     @classmethod
@@ -762,7 +782,13 @@ def latency_test_run_once(
     output_lens_per_request=None,
     prefill_chunk_size=0,
     full_input_ids=None,
+    input_lens_per_request=None,
 ):
+    effective_input_lens = (
+        list(input_lens_per_request)
+        if input_lens_per_request
+        else [input_len] * batch_size
+    )
     effective_output_lens = (
         list(output_lens_per_request)
         if output_lens_per_request
@@ -771,6 +797,14 @@ def latency_test_run_once(
     if len(effective_output_lens) != batch_size:
         raise ValueError(
             "output_lens_per_request must contain exactly one value per request"
+        )
+    if len(effective_input_lens) != batch_size:
+        raise ValueError(
+            "input_lens_per_request must contain exactly one value per request"
+        )
+    if min(effective_input_lens) < 1 or max(effective_input_lens) != input_len:
+        raise ValueError(
+            "Per-request input lengths must be positive and max must equal input_len"
         )
     if min(effective_output_lens) < 1 or max(effective_output_lens) != output_len:
         raise ValueError(
@@ -790,6 +824,7 @@ def latency_test_run_once(
         "run_name": run_name,
         "batch_size": batch_size,
         "input_len": input_len,
+        "input_lens_per_request": effective_input_lens,
         "output_len": output_len,
         "output_lens_per_request": effective_output_lens,
     }
@@ -819,6 +854,10 @@ def latency_test_run_once(
 
     if prefill_chunk_size < 0:
         raise ValueError("prefill_chunk_size must be non-negative")
+    if prefill_chunk_size > 0 and len(set(effective_input_lens)) != 1:
+        raise ValueError(
+            "Chunked prefill does not yet support heterogeneous per-request input lengths"
+        )
     if prefill_chunk_size > 0 and full_input_ids is None:
         raise ValueError("full_input_ids are required for chunked prefill")
 
@@ -884,7 +923,7 @@ def latency_test_run_once(
         )
 
     tot_latency += prefill_latency
-    throughput = input_len * batch_size / prefill_latency
+    throughput = sum(effective_input_lens) / prefill_latency
     rank_print(
         f"Prefill. latency: {prefill_latency:6.5f} s, throughput: {throughput:9.2f} token/s"
     )
@@ -989,7 +1028,7 @@ def latency_test_run_once(
         measurement_results["median_decode_throughput"] = med_decode_throughput
 
     measurement_results["decode_step_records"] = decode_step_records
-    total_tokens = input_len * batch_size + sum(effective_output_lens)
+    total_tokens = sum(effective_input_lens) + sum(effective_output_lens)
     throughput = total_tokens / tot_latency
     rank_print(
         f"Total. latency: {tot_latency:6.3f} s, throughput: {throughput:9.2f} token/s"
@@ -1111,13 +1150,83 @@ def latency_test(
             reqs = prepare_synthetic_inputs_for_latency_test(bs, il, bs_aligned_inputs)
         return reqs, full_input_ids
 
-    # Run the sweep
+    trace_plans = []
+    if bench_args.trace_replay_plan:
+        plan_path = os.path.abspath(bench_args.trace_replay_plan)
+        with open(plan_path) as source:
+            trace_plans = [json.loads(line) for line in source if line.strip()]
+        if not trace_plans:
+            raise ValueError(f"trace replay plan is empty: {plan_path}")
+        rank_print(f"Loaded {len(trace_plans)} trace replay workloads from {plan_path}")
+
+    if trace_plans:
+        workload_specs = []
+        for plan in trace_plans:
+            input_lens = tuple(int(value) for value in plan["input_lens_per_request"])
+            output_lens = tuple(int(value) for value in plan["output_lens_per_request"])
+            if not input_lens or len(input_lens) != len(output_lens):
+                raise ValueError(
+                    f"invalid trace plan lengths for {plan.get('workload_id')}"
+                )
+            workload_specs.append(
+                {
+                    "batch_size": len(input_lens),
+                    "input_len": max(input_lens),
+                    "output_len": max(output_lens),
+                    "input_lens": input_lens,
+                    "output_lens": output_lens,
+                    "plan": plan,
+                }
+            )
+    else:
+        workload_specs = [
+            {
+                "batch_size": bs,
+                "input_len": il,
+                "output_len": ol,
+                "input_lens": (
+                    tuple(bench_args.input_lens_per_request)
+                    if bench_args.input_lens_per_request
+                    else tuple([il] * bs)
+                ),
+                "output_lens": (
+                    tuple(bench_args.output_lens_per_request)
+                    if bench_args.output_lens_per_request
+                    else tuple([ol] * bs)
+                ),
+                "plan": None,
+            }
+            for bs, il, ol in itertools.product(
+                bench_args.batch_size, bench_args.input_len, bench_args.output_len
+            )
+        ]
+
+    # Run the sweep or the fixed trace-derived workload plan.
     result_list = []
-    for bs, il, ol in itertools.product(
-        bench_args.batch_size, bench_args.input_len, bench_args.output_len
-    ):
+    for spec in workload_specs:
+        bs = spec["batch_size"]
+        il = spec["input_len"]
+        ol = spec["output_len"]
+        effective_input_lens = spec["input_lens"]
+        effective_output_lens = spec["output_lens"]
+        plan = spec["plan"]
         bs_aligned_inputs = []
-        if custom_inputs:
+        if plan is not None:
+            seed = int(
+                hashlib.sha256(plan["workload_id"].encode()).hexdigest()[:8], 16
+            )
+            rng = np.random.default_rng(seed)
+            bs_aligned_inputs = [
+                rng.integers(0, 10000, length, dtype=np.int32)
+                for length in effective_input_lens
+            ]
+        elif bench_args.input_lens_per_request:
+            rng = np.random.default_rng(0)
+            bs_aligned_inputs = [
+                rng.integers(0, 10000, length, dtype=np.int32)
+                for length in effective_input_lens
+            ]
+        elif custom_inputs:
             if custom_input_len == bs:
                 bs_aligned_inputs = custom_inputs
             elif custom_input_len > bs:
@@ -1140,14 +1249,18 @@ def latency_test(
 
         if bench_args.warmup_each_workload:
             warmup_output_lens = tuple(
-                min(32, length) for length in bench_args.output_lens_per_request
+                min(32, length) for length in effective_output_lens
             )
             rank_print(
                 f"Warmup workload: batch_size={bs}, input_len={il}, "
                 f"output_len={min(32, ol)}"
             )
             latency_test_run_once(
-                run_name=bench_args.run_name,
+                run_name=(
+                    f"{bench_args.run_name}:{plan['workload_id']}"
+                    if plan is not None
+                    else bench_args.run_name
+                ),
                 model_runner=model_runner,
                 rank_print=rank_print,
                 reqs=reqs,
@@ -1167,6 +1280,7 @@ def latency_test(
                 output_lens_per_request=warmup_output_lens,
                 prefill_chunk_size=bench_args.prefill_chunk_size,
                 full_input_ids=full_input_ids,
+                input_lens_per_request=effective_input_lens,
             )
             reqs, full_input_ids = prepare_workload_inputs(
                 bs, il, bs_aligned_inputs
@@ -1181,7 +1295,11 @@ def latency_test(
             else bench_args.profile_prefix
         )
         ret = latency_test_run_once(
-            bench_args.run_name,
+            (
+                f"{bench_args.run_name}:{plan['workload_id']}"
+                if plan is not None
+                else bench_args.run_name
+            ),
             model_runner,
             rank_print,
             reqs,
@@ -1199,15 +1317,18 @@ def latency_test(
             bench_args.profile_steps,
             bench_args.comm_profile,
             bench_args.comm_profile_mode,
-            bench_args.output_lens_per_request,
+            effective_output_lens,
             bench_args.prefill_chunk_size,
             full_input_ids,
+            effective_input_lens,
         )
         if ret is not None:
             ret["same_shape_workload_warmup"] = bench_args.warmup_each_workload
             ret["workload_warmup_output_len"] = (
                 min(32, ol) if bench_args.warmup_each_workload else None
             )
+            if plan is not None:
+                ret["trace_replay_plan"] = plan
             result_list.append(ret)
 
     # Write results in jsonlines format on rank 0.
