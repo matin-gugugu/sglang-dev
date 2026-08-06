@@ -1,0 +1,70 @@
+{
+  "schema_version": "profiledemand-h0-validation-v1",
+  "canonical_op": "all_reduce",
+  "formula": {
+    "calls_per_forward": "2 * num_hidden_layers + 1",
+    "payload_bytes": "active_tokens * hidden_size * dtype_bytes",
+    "prefill_active_tokens": "batch_size * tokens_in_current_prefill_chunk",
+    "decode_active_batch": "A(t) = sum_i 1(actual_output_len_i > t), t=1,...,max(M)-1; the first token is sampled by prefill"
+  },
+  "rows": 162,
+  "scopes": {
+    "all": {
+      "samples": 162,
+      "exact_matches": 162,
+      "calls_wape": 0.0,
+      "logical_bytes_wape": 0.0,
+      "mean_histogram_l1": 0.0
+    },
+    "prefill": {
+      "samples": 108,
+      "exact_matches": 108,
+      "calls_wape": 0.0,
+      "logical_bytes_wape": 0.0,
+      "mean_histogram_l1": 0.0
+    },
+    "decode": {
+      "samples": 54,
+      "exact_matches": 54,
+      "calls_wape": 0.0,
+      "logical_bytes_wape": 0.0,
+      "mean_histogram_l1": 0.0
+    },
+    "deepseek-v2-lite": {
+      "samples": 54,
+      "exact_matches": 54,
+      "calls_wape": 0.0,
+      "logical_bytes_wape": 0.0,
+      "mean_histogram_l1": 0.0
+    },
+    "qwen3-30b-a3b": {
+      "samples": 54,
+      "exact_matches": 54,
+      "calls_wape": 0.0,
+      "logical_bytes_wape": 0.0,
+      "mean_histogram_l1": 0.0
+    },
+    "qwen3-8b": {
+      "samples": 54,
+      "exact_matches": 54,
+      "calls_wape": 0.0,
+      "logical_bytes_wape": 0.0,
+      "mean_histogram_l1": 0.0
+    }
+  },
+  "logical_histogram_tp_invariant": true,
+  "raw_op_totals_audit_only": {
+    "deepseek-v2-lite": {
+      "all_reduce": 75570
+    },
+    "qwen3-30b-a3b": {
+      "all_reduce": 5313,
+      "fused_allreduce_residual_rmsnorm": 127965
+    },
+    "qwen3-8b": {
+      "all_reduce": 100302
+    }
+  },
+  "dataset_sha256": "ae99cf7246f99b1af4ae1cb65c01df4de374c0187988662c48cab6c22ddec8e7",
+  "model_features_sha256": "ed11867cb5c2e9246c54485449db992aa2cb55de494b3cbc888ec5f6c42db7b7"
+}
