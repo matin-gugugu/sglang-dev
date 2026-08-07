@@ -206,7 +206,10 @@ def run_server_cell(
             "PYTHONPATH": str(repo_root / "python"),
             "SGLANG_PP_COMM_PROFILE_DIR": str(profile_dir),
             "SGLANG_PP_COMM_PROFILE_RUN_ID": run_id,
-            "SGLANG_PP_COMM_PROFILE_FLUSH_INTERVAL": "32",
+            # SGLang workers are terminated after each server cell and do not
+            # necessarily execute Python atexit handlers.  Persist every event
+            # so the final short chunk/decode tail cannot remain only in RAM.
+            "SGLANG_PP_COMM_PROFILE_FLUSH_INTERVAL": "1",
         }
     )
     command = [
