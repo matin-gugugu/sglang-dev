@@ -561,6 +561,95 @@ def contrast_summary(rows):
     return result
 
 
+def strategy_selection(combined):
+    grouped = defaultdict(dict)
+    for row in combined:
+        key = (
+            row["evaluation"],
+            row["curve_id"],
+            row["representation"],
+            row["model"],
+            int(row["tp"]),
+            row["profile_id"],
+        )
+        grouped[key][row["strategy"]] = row
+    strategy_order = {"latency": 0, "balanced": 1, "throughput": 2}
+    result = []
+    for key, strategies in sorted(grouped.items()):
+        if set(strategies) != set(strategy_order):
+            raise ValueError(f"incomplete strategy choice {key}")
+        oracle_choice = min(
+            strategies,
+            key=lambda name: (
+                float(strategies[name]["oracle_cost_us_per_1000"]),
+                strategy_order[name],
+            ),
+        )
+        estimated_choice = min(
+            strategies,
+            key=lambda name: (
+                float(strategies[name]["estimated_cost_us_per_1000"]),
+                strategy_order[name],
+            ),
+        )
+        oracle_best = float(strategies[oracle_choice]["oracle_cost_us_per_1000"])
+        chosen_oracle = float(strategies[estimated_choice]["oracle_cost_us_per_1000"])
+        source = strategies[estimated_choice]
+        result.append(
+            {
+                "evaluation": key[0],
+                "curve_id": key[1],
+                "topology": source["topology"],
+                "scenario": source["scenario"],
+                "representation": key[2],
+                "model": key[3],
+                "tp": key[4],
+                "profile_id": key[5],
+                "oracle_strategy": oracle_choice,
+                "estimated_strategy": estimated_choice,
+                "selection_correct": oracle_choice == estimated_choice,
+                "oracle_best_cost_us_per_1000": oracle_best,
+                "chosen_oracle_cost_us_per_1000": chosen_oracle,
+                "regret": (chosen_oracle - oracle_best) / max(oracle_best, 1e-12),
+            }
+        )
+    return result
+
+
+def strategy_selection_summary(rows):
+    grouped = defaultdict(list)
+    for row in rows:
+        grouped[(row["evaluation"], row["curve_id"], row["representation"])].append(row)
+    result = []
+    for (evaluation, curve_id, representation), values in sorted(grouped.items()):
+        regrets = np.asarray([float(row["regret"]) for row in values])
+        oracle_counts = defaultdict(int)
+        estimated_counts = defaultdict(int)
+        for row in values:
+            oracle_counts[row["oracle_strategy"]] += 1
+            estimated_counts[row["estimated_strategy"]] += 1
+        source = values[0]
+        result.append(
+            {
+                "evaluation": evaluation,
+                "curve_id": curve_id,
+                "topology": source["topology"],
+                "scenario": source["scenario"],
+                "representation": representation,
+                "cases": len(values),
+                "selection_accuracy": float(
+                    np.mean([bool(row["selection_correct"]) for row in values])
+                ),
+                "mean_regret": float(np.mean(regrets)),
+                "p95_regret": float(np.percentile(regrets, 95)),
+                "max_regret": float(np.max(regrets)),
+                "oracle_choice_counts_json": json.dumps(dict(oracle_counts), sort_keys=True, separators=(",", ":")),
+                "estimated_choice_counts_json": json.dumps(dict(estimated_counts), sort_keys=True, separators=(",", ":")),
+            }
+        )
+    return result
+
+
 def main():
     args = parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -577,6 +666,8 @@ def main():
     metric_rows = metrics(all_costs)
     contrast_rows = strategy_contrasts(combined)
     contrast_summary_rows = contrast_summary(contrast_rows)
+    selection_rows = strategy_selection(combined)
+    selection_summary_rows = strategy_selection_summary(selection_rows)
 
     write_csv(
         args.output_dir / "curve_scenarios.csv",
@@ -604,6 +695,8 @@ def main():
     write_csv(args.output_dir / "cost_metrics.csv", metric_rows)
     write_gzip_csv(args.output_dir / "strategy_contrasts.csv.gz", contrast_rows)
     write_csv(args.output_dir / "strategy_contrast_summary.csv", contrast_summary_rows)
+    write_gzip_csv(args.output_dir / "strategy_selection.csv.gz", selection_rows)
+    write_csv(args.output_dir / "strategy_selection_summary.csv", selection_summary_rows)
 
     metric_lookup = {
         (row["evaluation"], row["curve_id"], row["phase"], row["representation"]): row
@@ -637,6 +730,10 @@ def main():
     contrast_lookup = {
         (row["curve_id"], row["representation"]): row for row in contrast_summary_rows
     }
+    selection_lookup = {
+        (row["evaluation"], row["curve_id"], row["representation"]): row
+        for row in selection_summary_rows
+    }
     summary = {
         "schema_version": "phase17-parameterized-topology-v1",
         "status": "PASS",
@@ -659,6 +756,13 @@ def main():
         "headline_traffic_segment_holdout_combined": headline,
         "latency_vs_throughput_exact_oracle": {
             curve_id: contrast_lookup[(curve_id, "exact_payload_oracle")]
+            for curve_id in headline_curves
+        },
+        "communication_only_strategy_selection": {
+            curve_id: {
+                representation: selection_lookup[("traffic_segment_holdout", curve_id, representation)]
+                for representation in headline_representations
+            }
             for curve_id in headline_curves
         },
         "source_hashes": {
@@ -691,6 +795,17 @@ def main():
             f"{row['median_bytes_ratio_latency_over_throughput']:.3f} | "
             f"{row['median_cost_ratio_latency_over_throughput']:.3f} |"
         )
+    selection_table = [
+        "| curve | representation | accuracy | mean regret | P95 regret |",
+        "|---|---|---:|---:|---:|",
+    ]
+    for curve_id in headline_curves:
+        for representation in headline_representations:
+            row = selection_lookup[("traffic_segment_holdout", curve_id, representation)]
+            selection_table.append(
+                f"| {curve_id} | {representation} | {100 * row['selection_accuracy']:.2f}% | "
+                f"{100 * row['mean_regret']:.2f}% | {100 * row['p95_regret']:.2f}% |"
+            )
     readme = f"""# Phase 17：L2/L3 参数化连续代价与 ProfileDemand 传播
 
 本实验严格分离需求与代价：Phase 16 的 1296 条标签/留出预测提供消息货物清单；L1
@@ -721,6 +836,14 @@ rank 的 network-level ring proxy，尚未重建 hierarchical NCCL。额外的
 高 RTT 拓扑会放大“小 batch、多次启动”的代价，这正是消息直方图对拓扑感知调度的
 价值。
 
+## 仅以通信成本选择 batching 策略
+
+{chr(10).join(selection_table)}
+
+该表只在 latency/balanced/throughput 三种配置中选择通信成本最低者，并以精确 payload
+直方图为 oracle。它用于检验通信表征是否会导致策略排序错误，不等同于完整在线调度；
+完整目标还必须加入排队时延、计算时间、显存和吞吐约束。
+
 ## 证据边界
 
 - 这里可以报告不同参数场景下的结构成本、表征误差和决策敏感性；
@@ -740,6 +863,7 @@ rank 的 network-level ring proxy，尚未重建 hierarchical NCCL。额外的
         "nine_curve_profiles": len(curves) == 9,
         "curve_support_1755": len(support) == 9 * 3 * 65,
         "all_costs_finite": all(math.isfinite(float(row["estimated_cost_us_per_1000"])) for row in all_costs),
+        "strategy_selection_rows_complete": len(selection_rows) == len(EVALUATIONS) * len(curves) * 7 * 3 * 3 * 24,
         "oracle_zero_error": all(float(row["absolute_percentage_error"]) == 0.0 for row in all_costs if row["representation"] == "exact_payload_oracle"),
         "l2_l3_marked_parameterized": all(curve["curve_kind"] == "parameterized_sensitivity" for curve in curves if curve["curve_id"] != "l1_measured"),
     }
