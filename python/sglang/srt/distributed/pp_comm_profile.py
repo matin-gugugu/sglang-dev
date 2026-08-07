@@ -54,9 +54,9 @@ def _flush_interval() -> int:
 
 def _phase_and_batch_shape(
     batch: Any,
-) -> tuple[str, Optional[int], Optional[int], Optional[int]]:
+) -> tuple[str, Optional[int], Optional[int], Optional[int], Optional[str]]:
     if batch is None:
-        return "unknown", None, None, None
+        return "unknown", None, None, None, None
 
     mode = getattr(batch, "forward_mode", None)
     mode_name = getattr(mode, "name", "unknown").lower()
@@ -91,7 +91,18 @@ def _phase_and_batch_shape(
     forward_iter = getattr(batch, "forward_iter", None)
     if forward_iter is not None:
         forward_iter = int(forward_iter)
-    return phase, active_batch_size, active_tokens, forward_iter
+
+    # A benchmark can submit batched request IDs as
+    # ``<workload_id>::req<N>``.  Keeping only their common workload prefix
+    # separates many configurations in one long-lived PP server without
+    # saving individual request IDs or raw events.
+    workload_ids = {
+        str(req.rid).rsplit("::req", 1)[0]
+        for req in (reqs or [])
+        if getattr(req, "rid", None) is not None and "::req" in str(req.rid)
+    }
+    workload_id = next(iter(workload_ids)) if len(workload_ids) == 1 else None
+    return phase, active_batch_size, active_tokens, forward_iter, workload_id
 
 
 def record_send(
@@ -111,9 +122,13 @@ def record_send(
     if not is_enabled():
         return
 
-    phase, active_batch_size, active_tokens, forward_iter = _phase_and_batch_shape(
-        batch
-    )
+    (
+        phase,
+        active_batch_size,
+        active_tokens,
+        forward_iter,
+        workload_id,
+    ) = _phase_and_batch_shape(batch)
     dst_rank = (int(pp_rank) + 1) % int(pp_size)
 
     global _events_total, _events_since_flush, _identity, _registered_atexit
@@ -144,6 +159,7 @@ def record_send(
                 transport,
                 active_batch_size,
                 active_tokens,
+                workload_id,
             )
             row = _histograms.get(key)
             if row is None:
@@ -163,6 +179,7 @@ def record_send(
                     "transport": transport,
                     "active_batch_size": active_batch_size,
                     "active_tokens": active_tokens,
+                    "workload_id": workload_id,
                     "count": 0,
                     "first_forward_iter": forward_iter,
                     "last_forward_iter": forward_iter,
@@ -204,6 +221,7 @@ def flush() -> None:
             key=lambda row: (
                 row["phase"],
                 row["msg_type"],
+                row["workload_id"] or "",
                 row["src_pp_rank"],
                 row["payload_bytes"],
                 row["tensor_name"],

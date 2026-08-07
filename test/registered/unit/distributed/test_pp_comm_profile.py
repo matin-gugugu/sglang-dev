@@ -31,7 +31,10 @@ class TestPPCommProfile(CustomTestCase):
             module = reload(pp_comm_profile)
             batch = SimpleNamespace(
                 forward_mode=SimpleNamespace(name="DECODE"),
-                reqs=[object(), object(), object()],
+                reqs=[
+                    SimpleNamespace(rid=f"decode-b3-m32::req{index}")
+                    for index in range(3)
+                ],
                 input_ids=torch.ones(3, dtype=torch.int64),
                 forward_iter=7,
             )
@@ -62,6 +65,7 @@ class TestPPCommProfile(CustomTestCase):
             self.assertEqual(row["boundary"], "pp1->pp2")
             self.assertEqual(row["active_batch_size"], 3)
             self.assertEqual(row["active_tokens"], 3)
+            self.assertEqual(row["workload_id"], "decode-b3-m32")
             self.assertEqual(row["payload_bytes"], 24)
             self.assertEqual(row["count"], 2)
             self.assertEqual(row["logical_bytes"], 48)
