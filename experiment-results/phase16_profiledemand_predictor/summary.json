@@ -1,0 +1,316 @@
+{
+  "schema_version": "profiledemand-v1-evaluation",
+  "status": "PASS",
+  "input_contract": "steady traffic profile + numeric execution strategy + generalizable model structure + candidate TP + phase",
+  "output_contract": "canonical group-level 12-bin calls and representative-rank logical bytes per 1000 requests",
+  "labels": 1296,
+  "models": [
+    "deepseek-v2-lite",
+    "qwen3-30b-a3b",
+    "qwen3-8b"
+  ],
+  "profiles": 24,
+  "strategies": [
+    "balanced",
+    "latency",
+    "throughput"
+  ],
+  "tp_sizes": [
+    2,
+    4,
+    8
+  ],
+  "methods": [
+    "model_id_direct",
+    "structure_direct",
+    "h0",
+    "h0_residual"
+  ],
+  "evaluation_regimes": {
+    "traffic_segment_holdout": [
+      "burstgpt_1",
+      "burstgpt_2",
+      "burstgpt_3",
+      "mooncake_conversation",
+      "mooncake_synthetic",
+      "mooncake_toolagent"
+    ],
+    "model_holdout": [
+      "deepseek-v2-lite",
+      "qwen3-30b-a3b",
+      "qwen3-8b"
+    ],
+    "strategy_holdout": [
+      "balanced",
+      "latency",
+      "throughput"
+    ],
+    "tp_holdout": [
+      "tp2",
+      "tp4",
+      "tp8"
+    ]
+  },
+  "trained_outer_folds": 15,
+  "primary_traffic_segment_holdout": {
+    "h0:all": {
+      "samples": 1296,
+      "calls_vector_wape": 0.29458020141845775,
+      "bytes_vector_wape": 0.28426596362328066,
+      "mean_histogram_l1": 0.3149108891593794,
+      "l1_structural_cost_mape": 0.09201046122959908,
+      "l1_structural_cost_p95_ape": 0.30397709787779204
+    },
+    "h0:decode": {
+      "samples": 648,
+      "calls_vector_wape": 0.29181592103796317,
+      "bytes_vector_wape": 0.26957389245620195,
+      "mean_histogram_l1": 0.30011183114471834,
+      "l1_structural_cost_mape": 0.14083154115684224,
+      "l1_structural_cost_p95_ape": 0.3980327094452419
+    },
+    "h0:prefill": {
+      "samples": 648,
+      "calls_vector_wape": 0.5574556574923547,
+      "bytes_vector_wape": 0.2846430864320434,
+      "mean_histogram_l1": 0.3297099471740405,
+      "l1_structural_cost_mape": 0.04318938130235592,
+      "l1_structural_cost_p95_ape": 0.11103099271399097
+    },
+    "h0_residual:all": {
+      "samples": 1296,
+      "calls_vector_wape": 0.32490418516518854,
+      "bytes_vector_wape": 0.2908779475852685,
+      "mean_histogram_l1": 0.3094430658197915,
+      "l1_structural_cost_mape": 0.11336644930413836,
+      "l1_structural_cost_p95_ape": 0.3065459485018067
+    },
+    "h0_residual:decode": {
+      "samples": 648,
+      "calls_vector_wape": 0.3221887942276174,
+      "bytes_vector_wape": 0.2728773616421794,
+      "mean_histogram_l1": 0.28505455622985343,
+      "l1_structural_cost_mape": 0.1635095551283845,
+      "l1_structural_cost_p95_ape": 0.38234003665352334
+    },
+    "h0_residual:prefill": {
+      "samples": 648,
+      "calls_vector_wape": 0.5831303897751668,
+      "bytes_vector_wape": 0.29133999486594353,
+      "mean_histogram_l1": 0.3338315754097296,
+      "l1_structural_cost_mape": 0.06322334347989221,
+      "l1_structural_cost_p95_ape": 0.13635999497799392
+    },
+    "model_id_direct:all": {
+      "samples": 1296,
+      "calls_vector_wape": 1.6260930800762592,
+      "bytes_vector_wape": 1.3514198839980067,
+      "mean_histogram_l1": 0.9210974891087856,
+      "l1_structural_cost_mape": 0.8300098153726144,
+      "l1_structural_cost_p95_ape": 3.2544958457718245
+    },
+    "model_id_direct:decode": {
+      "samples": 648,
+      "calls_vector_wape": 1.6213951756157676,
+      "bytes_vector_wape": 1.1616810455943563,
+      "mean_histogram_l1": 0.7361396337320771,
+      "l1_structural_cost_mape": 1.0410062132670905,
+      "l1_structural_cost_p95_ape": 3.897569346530603
+    },
+    "model_id_direct:prefill": {
+      "samples": 648,
+      "calls_vector_wape": 2.0728508642567482,
+      "bytes_vector_wape": 1.3562901873647983,
+      "mean_histogram_l1": 1.106055344485494,
+      "l1_structural_cost_mape": 0.6190134174781382,
+      "l1_structural_cost_p95_ape": 1.6254405685636772
+    },
+    "structure_direct:all": {
+      "samples": 1296,
+      "calls_vector_wape": 0.7507167543008338,
+      "bytes_vector_wape": 1.316028318207404,
+      "mean_histogram_l1": 0.8900997882526732,
+      "l1_structural_cost_mape": 0.5363475323996977,
+      "l1_structural_cost_p95_ape": 1.5666119207146825
+    },
+    "structure_direct:decode": {
+      "samples": 648,
+      "calls_vector_wape": 0.7446217902273978,
+      "bytes_vector_wape": 1.4489451786318177,
+      "mean_histogram_l1": 0.7011112278372393,
+      "l1_structural_cost_mape": 0.5249040792525703,
+      "l1_structural_cost_p95_ape": 1.8635332058172125
+    },
+    "structure_direct:prefill": {
+      "samples": 648,
+      "calls_vector_wape": 1.330331062554123,
+      "bytes_vector_wape": 1.3126165473845468,
+      "mean_histogram_l1": 1.079088348668107,
+      "l1_structural_cost_mape": 0.5477909855468249,
+      "l1_structural_cost_p95_ape": 1.4979455927769874
+    }
+  },
+  "headline_all_scope": {
+    "traffic_segment_holdout": {
+      "h0": {
+        "calls_vector_wape": 0.29458020141845775,
+        "bytes_vector_wape": 0.28426596362328066,
+        "total_calls_mape": 0.09184095202585028,
+        "total_bytes_mape": 0.05359925407702146,
+        "mean_log_payload_emd": 0.016898277727666323,
+        "l1_structural_cost_mape": 0.09201046122959908,
+        "l1_structural_cost_p95_ape": 0.30397709787779204
+      },
+      "h0_residual": {
+        "calls_vector_wape": 0.32490418516518854,
+        "bytes_vector_wape": 0.2908779475852685,
+        "total_calls_mape": 0.1256921002673661,
+        "total_bytes_mape": 0.0763776295164979,
+        "mean_log_payload_emd": 0.01641391632333108,
+        "l1_structural_cost_mape": 0.11336644930413836,
+        "l1_structural_cost_p95_ape": 0.3065459485018067
+      },
+      "model_id_direct": {
+        "calls_vector_wape": 1.6260930800762592,
+        "bytes_vector_wape": 1.3514198839980067,
+        "total_calls_mape": 1.168644338602751,
+        "total_bytes_mape": 0.7848257969187634,
+        "mean_log_payload_emd": 0.05326779201960602,
+        "l1_structural_cost_mape": 0.8300098153726144,
+        "l1_structural_cost_p95_ape": 3.2544958457718245
+      },
+      "structure_direct": {
+        "calls_vector_wape": 0.7507167543008338,
+        "bytes_vector_wape": 1.316028318207404,
+        "total_calls_mape": 0.559882514197468,
+        "total_bytes_mape": 0.9101827594544937,
+        "mean_log_payload_emd": 0.051709671638112006,
+        "l1_structural_cost_mape": 0.5363475323996977,
+        "l1_structural_cost_p95_ape": 1.5666119207146825
+      }
+    },
+    "model_holdout": {
+      "h0": {
+        "calls_vector_wape": 0.29458020141845775,
+        "bytes_vector_wape": 0.28426596362328066,
+        "total_calls_mape": 0.09184095202585028,
+        "total_bytes_mape": 0.053599254077021465,
+        "mean_log_payload_emd": 0.016898277727666323,
+        "l1_structural_cost_mape": 0.09201046122959908,
+        "l1_structural_cost_p95_ape": 0.30397709787779204
+      },
+      "h0_residual": {
+        "calls_vector_wape": 0.30984971121716837,
+        "bytes_vector_wape": 0.27927913843698565,
+        "total_calls_mape": 0.10045071045757879,
+        "total_bytes_mape": 0.0528912457634509,
+        "mean_log_payload_emd": 0.016630030673089685,
+        "l1_structural_cost_mape": 0.08709386559122645,
+        "l1_structural_cost_p95_ape": 0.27706350572377986
+      },
+      "model_id_direct": {
+        "calls_vector_wape": 0.6752696147033694,
+        "bytes_vector_wape": 1.0908131744391336,
+        "total_calls_mape": 0.3847226394603848,
+        "total_bytes_mape": 0.7451273069637809,
+        "mean_log_payload_emd": 0.04271162203028568,
+        "l1_structural_cost_mape": 0.4828802232954876,
+        "l1_structural_cost_p95_ape": 1.4027690067216894
+      },
+      "structure_direct": {
+        "calls_vector_wape": 1.8756796475796973,
+        "bytes_vector_wape": 1.8271316924616334,
+        "total_calls_mape": 1.3197822731051128,
+        "total_bytes_mape": 1.7442363343715819,
+        "mean_log_payload_emd": 0.06145023707397029,
+        "l1_structural_cost_mape": 1.2337467078877171,
+        "l1_structural_cost_p95_ape": 3.2523366579788062
+      }
+    },
+    "strategy_holdout": {
+      "h0": {
+        "calls_vector_wape": 0.29458020141845775,
+        "bytes_vector_wape": 0.28426596362328066,
+        "total_calls_mape": 0.09184095202585028,
+        "total_bytes_mape": 0.053599254077021465,
+        "mean_log_payload_emd": 0.016898277727666323,
+        "l1_structural_cost_mape": 0.09201046122959908,
+        "l1_structural_cost_p95_ape": 0.30397709787779204
+      },
+      "h0_residual": {
+        "calls_vector_wape": 0.3100876560297387,
+        "bytes_vector_wape": 0.2842003757093012,
+        "total_calls_mape": 0.09216234495497004,
+        "total_bytes_mape": 0.04428962525909407,
+        "mean_log_payload_emd": 0.01678682580636732,
+        "l1_structural_cost_mape": 0.08050210938390293,
+        "l1_structural_cost_p95_ape": 0.2758945550428814
+      },
+      "model_id_direct": {
+        "calls_vector_wape": 0.8157705070796087,
+        "bytes_vector_wape": 1.4668325399019742,
+        "total_calls_mape": 0.4794552386378715,
+        "total_bytes_mape": 0.4107214442633419,
+        "mean_log_payload_emd": 0.05120264572669932,
+        "l1_structural_cost_mape": 0.435499635088609,
+        "l1_structural_cost_p95_ape": 1.313170256490456
+      },
+      "structure_direct": {
+        "calls_vector_wape": 0.9896455693716515,
+        "bytes_vector_wape": 1.4008163664117164,
+        "total_calls_mape": 1.2058497156463288,
+        "total_bytes_mape": 0.41380077788448894,
+        "mean_log_payload_emd": 0.05441347677881392,
+        "l1_structural_cost_mape": 0.6081580373708172,
+        "l1_structural_cost_p95_ape": 2.1864777079328563
+      }
+    },
+    "tp_holdout": {
+      "h0": {
+        "calls_vector_wape": 0.29458020141845775,
+        "bytes_vector_wape": 0.28426596362328066,
+        "total_calls_mape": 0.09184095202585028,
+        "total_bytes_mape": 0.053599254077021465,
+        "mean_log_payload_emd": 0.016898277727666323,
+        "l1_structural_cost_mape": 0.09201046122959908,
+        "l1_structural_cost_p95_ape": 0.30397709787779204
+      },
+      "h0_residual": {
+        "calls_vector_wape": 0.27146094820153627,
+        "bytes_vector_wape": 0.26245659824141443,
+        "total_calls_mape": 0.0846112178890431,
+        "total_bytes_mape": 0.04511325559690623,
+        "mean_log_payload_emd": 0.01578575792755516,
+        "l1_structural_cost_mape": 0.07547169291097482,
+        "l1_structural_cost_p95_ape": 0.25314033982393136
+      },
+      "model_id_direct": {
+        "calls_vector_wape": 0.4693139840807147,
+        "bytes_vector_wape": 0.3969416397834547,
+        "total_calls_mape": 0.30292698851063693,
+        "total_bytes_mape": 0.2941631735372028,
+        "mean_log_payload_emd": 0.025975381183025333,
+        "l1_structural_cost_mape": 0.2676478608006136,
+        "l1_structural_cost_p95_ape": 0.6817568081176255
+      },
+      "structure_direct": {
+        "calls_vector_wape": 0.46753868971208756,
+        "bytes_vector_wape": 0.40590067403810615,
+        "total_calls_mape": 0.30373883137228486,
+        "total_bytes_mape": 0.23246446561659992,
+        "mean_log_payload_emd": 0.026432342841688643,
+        "l1_structural_cost_mape": 0.24737718180678936,
+        "l1_structural_cost_p95_ape": 0.6495994655091867
+      }
+    }
+  },
+  "final_checkpoint_best_epoch": 5,
+  "important_boundary": "arrival statistics are input features, but current GPU labels are draining microbatches; online arrival-driven batching is not yet identified",
+  "l1_metric_boundary": "L1 propagation is structural cost from the predicted canonical histogram and measured all_reduce curve, not a new end-to-end GPU timing label",
+  "source_hashes": {
+    "labels": "e3366a6b8d47d23ca8602dd43b952a91dc3966d6c6b3ce807474bd596e4a5bbd",
+    "profiles": "096bd6978dbe59f0cbdc323571ee9b217a98366a16d19fdf68da51bd48f8e295",
+    "model_features": "ed11867cb5c2e9246c54485449db992aa2cb55de494b3cbc888ec5f6c42db7b7",
+    "plan_summary": "842e8524ee0609c0293abf0bbc3313944b6dc3ca96c8b5d3e500884a2dc0ada3"
+  }
+}
