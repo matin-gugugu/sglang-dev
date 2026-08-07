@@ -1,0 +1,678 @@
+{
+  "summary": {
+    "schema_version": "phase17-parameterized-topology-v1",
+    "status": "PASS",
+    "physical_truth_boundary": {
+      "L1": "measured B200 single-node post-rendezvous curve",
+      "L2_L3": "parameterized sensitivity only; no physical timing truth and no L2/L3 MAPE claim"
+    },
+    "demand_labels": 1296,
+    "service_cases": 216,
+    "curve_profiles": 9,
+    "curve_support_rows": 1755,
+    "phase_cost_rows": 163296,
+    "combined_cost_rows": 81648,
+    "rank_mapping_proxy": {
+      "L1": "all ranks on one node",
+      "L2_L3": "two nodes, ranks evenly split; network-level ring proxy, not hierarchical NCCL reconstruction"
+    },
+    "formula": "launch_us + 2*(p-1)*round_us + [2*(p-1)/p]*payload/BW_eff(payload); transition stress uses min(low-latency regime, high-bandwidth regime)",
+    "effective_bandwidth": "BW_max * (1-exp(-payload/saturation_bytes))",
+    "headline_traffic_segment_holdout_combined": {
+      "l1_measured": {
+        "total_bytes_data_only": {
+          "mape": 0.8481875765691362,
+          "p95_ape": 0.9770887939582267,
+          "signed_bias": -0.8314244117486815
+        },
+        "onebin_calls_bytes": {
+          "mape": 0.015019362572046988,
+          "p95_ape": 0.060971516929981165,
+          "signed_bias": 0.008883813971801496
+        },
+        "threebin_calls_bytes": {
+          "mape": 0.014891174708687985,
+          "p95_ape": 0.061364906448514896,
+          "signed_bias": 0.009176719284575516
+        },
+        "twelvebin_exact": {
+          "mape": 0.002994355285514949,
+          "p95_ape": 0.010874284522258304,
+          "signed_bias": 0.0027189568374072605
+        },
+        "h0_predicted_12bin": {
+          "mape": 0.12180227081219112,
+          "p95_ape": 0.37497099805000494,
+          "signed_bias": -0.009551042349282295
+        },
+        "residual_predicted_12bin": {
+          "mape": 0.14597910358621588,
+          "p95_ape": 0.3511355400174998,
+          "signed_bias": 0.024025246844069825
+        }
+      },
+      "l2_nominal": {
+        "total_bytes_data_only": {
+          "mape": 0.8502971620340852,
+          "p95_ape": 0.9808544957023154,
+          "signed_bias": -0.8532001845721466
+        },
+        "onebin_calls_bytes": {
+          "mape": 9.412570488059264e-05,
+          "p95_ape": 0.0006314546758547937,
+          "signed_bias": -6.314462178409756e-05
+        },
+        "threebin_calls_bytes": {
+          "mape": 3.5142972898563974e-05,
+          "p95_ape": 0.00018990576014720696,
+          "signed_bias": -1.8564805608894255e-05
+        },
+        "twelvebin_exact": {
+          "mape": 3.2957827604579395e-06,
+          "p95_ape": 1.2939605657198816e-05,
+          "signed_bias": -1.5751356815629272e-06
+        },
+        "h0_predicted_12bin": {
+          "mape": 0.13402740378024106,
+          "p95_ape": 0.46119894486935287,
+          "signed_bias": -0.01238759243324712
+        },
+        "residual_predicted_12bin": {
+          "mape": 0.15620868573816826,
+          "p95_ape": 0.42834115769073877,
+          "signed_bias": 0.027931556633019213
+        }
+      },
+      "l3_nominal": {
+        "total_bytes_data_only": {
+          "mape": 0.9271771693247456,
+          "p95_ape": 0.9919592910192311,
+          "signed_bias": -0.9338087116302635
+        },
+        "onebin_calls_bytes": {
+          "mape": 0.0001801585694137606,
+          "p95_ape": 0.0010484180964112915,
+          "signed_bias": -0.00019299472102747155
+        },
+        "threebin_calls_bytes": {
+          "mape": 3.614392187010671e-05,
+          "p95_ape": 0.00018716472507367306,
+          "signed_bias": -3.613792760835329e-05
+        },
+        "twelvebin_exact": {
+          "mape": 1.3111172321037897e-05,
+          "p95_ape": 6.999428508226211e-05,
+          "signed_bias": -1.5130743626296107e-05
+        },
+        "h0_predicted_12bin": {
+          "mape": 0.1423109658799534,
+          "p95_ape": 0.4634965363941704,
+          "signed_bias": -0.013750064429688891
+        },
+        "residual_predicted_12bin": {
+          "mape": 0.16418773418758817,
+          "p95_ape": 0.4300513398878513,
+          "signed_bias": 0.03180593272630407
+        }
+      },
+      "l2_protocol_transition_stress": {
+        "total_bytes_data_only": {
+          "mape": 0.8853289310037704,
+          "p95_ape": 0.9858866005416898,
+          "signed_bias": -0.8872654450819271
+        },
+        "onebin_calls_bytes": {
+          "mape": 0.00035596394169101677,
+          "p95_ape": 0.0015825040589299716,
+          "signed_bias": -0.00021966808576613547
+        },
+        "threebin_calls_bytes": {
+          "mape": 0.00014886059413344007,
+          "p95_ape": 0.0005093296598095469,
+          "signed_bias": -5.147294504144151e-05
+        },
+        "twelvebin_exact": {
+          "mape": 3.756981773266487e-05,
+          "p95_ape": 0.00016050541738808495,
+          "signed_bias": -3.0865086907531956e-05
+        },
+        "h0_predicted_12bin": {
+          "mape": 0.1336783251046272,
+          "p95_ape": 0.44106818473745285,
+          "signed_bias": -0.012315516825522102
+        },
+        "residual_predicted_12bin": {
+          "mape": 0.155881749539332,
+          "p95_ape": 0.40963607472559244,
+          "signed_bias": 0.029260641738889853
+        }
+      },
+      "l3_protocol_transition_stress": {
+        "total_bytes_data_only": {
+          "mape": 0.9329622487723986,
+          "p95_ape": 0.992684673070576,
+          "signed_bias": -0.938871894875957
+        },
+        "onebin_calls_bytes": {
+          "mape": 0.0003091646107155191,
+          "p95_ape": 0.0011776191956013662,
+          "signed_bias": -0.0001323010886132499
+        },
+        "threebin_calls_bytes": {
+          "mape": 0.00013627794391508623,
+          "p95_ape": 0.0005279252080643409,
+          "signed_bias": -6.395068336022885e-05
+        },
+        "twelvebin_exact": {
+          "mape": 3.8033827425351325e-05,
+          "p95_ape": 0.00013354900973229017,
+          "signed_bias": -2.8755291468773902e-05
+        },
+        "h0_predicted_12bin": {
+          "mape": 0.14036264973530468,
+          "p95_ape": 0.4536812169011183,
+          "signed_bias": -0.013273033011752795
+        },
+        "residual_predicted_12bin": {
+          "mape": 0.1622362710653453,
+          "p95_ape": 0.42101835464071624,
+          "signed_bias": 0.032026342642479215
+        }
+      }
+    },
+    "latency_vs_throughput_exact_oracle": {
+      "l1_measured": {
+        "curve_id": "l1_measured",
+        "representation": "exact_payload_oracle",
+        "samples": 216,
+        "median_calls_ratio_latency_over_throughput": 3.8203125,
+        "median_bytes_ratio_latency_over_throughput": 1.0,
+        "median_cost_ratio_latency_over_throughput": 2.784663100386476,
+        "p95_cost_ratio_latency_over_throughput": 4.505396299784739
+      },
+      "l2_nominal": {
+        "curve_id": "l2_nominal",
+        "representation": "exact_payload_oracle",
+        "samples": 216,
+        "median_calls_ratio_latency_over_throughput": 3.8203125,
+        "median_bytes_ratio_latency_over_throughput": 1.0,
+        "median_cost_ratio_latency_over_throughput": 2.9892591000940985,
+        "p95_cost_ratio_latency_over_throughput": 5.0498873251879
+      },
+      "l3_nominal": {
+        "curve_id": "l3_nominal",
+        "representation": "exact_payload_oracle",
+        "samples": 216,
+        "median_calls_ratio_latency_over_throughput": 3.8203125,
+        "median_bytes_ratio_latency_over_throughput": 1.0,
+        "median_cost_ratio_latency_over_throughput": 3.383429420314979,
+        "p95_cost_ratio_latency_over_throughput": 6.378226525850855
+      },
+      "l2_protocol_transition_stress": {
+        "curve_id": "l2_protocol_transition_stress",
+        "representation": "exact_payload_oracle",
+        "samples": 216,
+        "median_calls_ratio_latency_over_throughput": 3.8203125,
+        "median_bytes_ratio_latency_over_throughput": 1.0,
+        "median_cost_ratio_latency_over_throughput": 3.0744420446527574,
+        "p95_cost_ratio_latency_over_throughput": 5.622694600652091
+      },
+      "l3_protocol_transition_stress": {
+        "curve_id": "l3_protocol_transition_stress",
+        "representation": "exact_payload_oracle",
+        "samples": 216,
+        "median_calls_ratio_latency_over_throughput": 3.8203125,
+        "median_bytes_ratio_latency_over_throughput": 1.0,
+        "median_cost_ratio_latency_over_throughput": 3.3949358162440633,
+        "p95_cost_ratio_latency_over_throughput": 6.3893077212041645
+      }
+    },
+    "communication_only_strategy_selection": {
+      "l1_measured": {
+        "total_bytes_data_only": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l1_measured",
+          "topology": "L1_single_node_B200_NVLink_measured",
+          "scenario": "measured",
+          "representation": "total_bytes_data_only",
+          "cases": 216,
+          "selection_accuracy": 0.0,
+          "mean_regret": 1.8638179196940072,
+          "p95_regret": 3.50539629978474,
+          "max_regret": 4.260344966557159,
+          "oracle_choice_counts_json": "{\"balanced\":1,\"throughput\":215}",
+          "estimated_choice_counts_json": "{\"latency\":216}"
+        },
+        "onebin_calls_bytes": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l1_measured",
+          "topology": "L1_single_node_B200_NVLink_measured",
+          "scenario": "measured",
+          "representation": "onebin_calls_bytes",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"balanced\":1,\"throughput\":215}",
+          "estimated_choice_counts_json": "{\"balanced\":1,\"throughput\":215}"
+        },
+        "threebin_calls_bytes": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l1_measured",
+          "topology": "L1_single_node_B200_NVLink_measured",
+          "scenario": "measured",
+          "representation": "threebin_calls_bytes",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"balanced\":1,\"throughput\":215}",
+          "estimated_choice_counts_json": "{\"balanced\":1,\"throughput\":215}"
+        },
+        "twelvebin_exact": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l1_measured",
+          "topology": "L1_single_node_B200_NVLink_measured",
+          "scenario": "measured",
+          "representation": "twelvebin_exact",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"balanced\":1,\"throughput\":215}",
+          "estimated_choice_counts_json": "{\"balanced\":1,\"throughput\":215}"
+        },
+        "h0_predicted_12bin": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l1_measured",
+          "topology": "L1_single_node_B200_NVLink_measured",
+          "scenario": "measured",
+          "representation": "h0_predicted_12bin",
+          "cases": 216,
+          "selection_accuracy": 0.9953703703703703,
+          "mean_regret": 1.411580243997184e-05,
+          "p95_regret": 0.0,
+          "max_regret": 0.0030490133270339175,
+          "oracle_choice_counts_json": "{\"balanced\":1,\"throughput\":215}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "residual_predicted_12bin": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l1_measured",
+          "topology": "L1_single_node_B200_NVLink_measured",
+          "scenario": "measured",
+          "representation": "residual_predicted_12bin",
+          "cases": 216,
+          "selection_accuracy": 0.9953703703703703,
+          "mean_regret": 1.411580243997184e-05,
+          "p95_regret": 0.0,
+          "max_regret": 0.0030490133270339175,
+          "oracle_choice_counts_json": "{\"balanced\":1,\"throughput\":215}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        }
+      },
+      "l2_nominal": {
+        "total_bytes_data_only": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l2_nominal",
+          "topology": "L2_same_rack_two_node_proxy",
+          "scenario": "nominal",
+          "representation": "total_bytes_data_only",
+          "cases": 216,
+          "selection_accuracy": 0.0,
+          "mean_regret": 2.086301469128595,
+          "p95_regret": 4.0498873251879,
+          "max_regret": 5.110651606813516,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"latency\":216}"
+        },
+        "onebin_calls_bytes": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l2_nominal",
+          "topology": "L2_same_rack_two_node_proxy",
+          "scenario": "nominal",
+          "representation": "onebin_calls_bytes",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "threebin_calls_bytes": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l2_nominal",
+          "topology": "L2_same_rack_two_node_proxy",
+          "scenario": "nominal",
+          "representation": "threebin_calls_bytes",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "twelvebin_exact": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l2_nominal",
+          "topology": "L2_same_rack_two_node_proxy",
+          "scenario": "nominal",
+          "representation": "twelvebin_exact",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "h0_predicted_12bin": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l2_nominal",
+          "topology": "L2_same_rack_two_node_proxy",
+          "scenario": "nominal",
+          "representation": "h0_predicted_12bin",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "residual_predicted_12bin": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l2_nominal",
+          "topology": "L2_same_rack_two_node_proxy",
+          "scenario": "nominal",
+          "representation": "residual_predicted_12bin",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        }
+      },
+      "l3_nominal": {
+        "total_bytes_data_only": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l3_nominal",
+          "topology": "L3_cross_rack_two_node_proxy",
+          "scenario": "nominal",
+          "representation": "total_bytes_data_only",
+          "cases": 216,
+          "selection_accuracy": 0.0,
+          "mean_regret": 2.532193711016899,
+          "p95_regret": 5.378226525850855,
+          "max_regret": 6.076978244104965,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"latency\":216}"
+        },
+        "onebin_calls_bytes": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l3_nominal",
+          "topology": "L3_cross_rack_two_node_proxy",
+          "scenario": "nominal",
+          "representation": "onebin_calls_bytes",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "threebin_calls_bytes": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l3_nominal",
+          "topology": "L3_cross_rack_two_node_proxy",
+          "scenario": "nominal",
+          "representation": "threebin_calls_bytes",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "twelvebin_exact": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l3_nominal",
+          "topology": "L3_cross_rack_two_node_proxy",
+          "scenario": "nominal",
+          "representation": "twelvebin_exact",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "h0_predicted_12bin": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l3_nominal",
+          "topology": "L3_cross_rack_two_node_proxy",
+          "scenario": "nominal",
+          "representation": "h0_predicted_12bin",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "residual_predicted_12bin": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l3_nominal",
+          "topology": "L3_cross_rack_two_node_proxy",
+          "scenario": "nominal",
+          "representation": "residual_predicted_12bin",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        }
+      },
+      "l2_protocol_transition_stress": {
+        "total_bytes_data_only": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l2_protocol_transition_stress",
+          "topology": "L2_same_rack_two_node_proxy",
+          "scenario": "protocol_transition_stress",
+          "representation": "total_bytes_data_only",
+          "cases": 216,
+          "selection_accuracy": 0.0,
+          "mean_regret": 2.223502620342244,
+          "p95_regret": 4.622694600652091,
+          "max_regret": 5.3316675939292,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"latency\":216}"
+        },
+        "onebin_calls_bytes": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l2_protocol_transition_stress",
+          "topology": "L2_same_rack_two_node_proxy",
+          "scenario": "protocol_transition_stress",
+          "representation": "onebin_calls_bytes",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "threebin_calls_bytes": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l2_protocol_transition_stress",
+          "topology": "L2_same_rack_two_node_proxy",
+          "scenario": "protocol_transition_stress",
+          "representation": "threebin_calls_bytes",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "twelvebin_exact": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l2_protocol_transition_stress",
+          "topology": "L2_same_rack_two_node_proxy",
+          "scenario": "protocol_transition_stress",
+          "representation": "twelvebin_exact",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "h0_predicted_12bin": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l2_protocol_transition_stress",
+          "topology": "L2_same_rack_two_node_proxy",
+          "scenario": "protocol_transition_stress",
+          "representation": "h0_predicted_12bin",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "residual_predicted_12bin": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l2_protocol_transition_stress",
+          "topology": "L2_same_rack_two_node_proxy",
+          "scenario": "protocol_transition_stress",
+          "representation": "residual_predicted_12bin",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        }
+      },
+      "l3_protocol_transition_stress": {
+        "total_bytes_data_only": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l3_protocol_transition_stress",
+          "topology": "L3_cross_rack_two_node_proxy",
+          "scenario": "protocol_transition_stress",
+          "representation": "total_bytes_data_only",
+          "cases": 216,
+          "selection_accuracy": 0.0,
+          "mean_regret": 2.541462757966317,
+          "p95_regret": 5.389307721204164,
+          "max_regret": 6.08659797975037,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"latency\":216}"
+        },
+        "onebin_calls_bytes": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l3_protocol_transition_stress",
+          "topology": "L3_cross_rack_two_node_proxy",
+          "scenario": "protocol_transition_stress",
+          "representation": "onebin_calls_bytes",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "threebin_calls_bytes": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l3_protocol_transition_stress",
+          "topology": "L3_cross_rack_two_node_proxy",
+          "scenario": "protocol_transition_stress",
+          "representation": "threebin_calls_bytes",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "twelvebin_exact": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l3_protocol_transition_stress",
+          "topology": "L3_cross_rack_two_node_proxy",
+          "scenario": "protocol_transition_stress",
+          "representation": "twelvebin_exact",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "h0_predicted_12bin": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l3_protocol_transition_stress",
+          "topology": "L3_cross_rack_two_node_proxy",
+          "scenario": "protocol_transition_stress",
+          "representation": "h0_predicted_12bin",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        },
+        "residual_predicted_12bin": {
+          "evaluation": "traffic_segment_holdout",
+          "curve_id": "l3_protocol_transition_stress",
+          "topology": "L3_cross_rack_two_node_proxy",
+          "scenario": "protocol_transition_stress",
+          "representation": "residual_predicted_12bin",
+          "cases": 216,
+          "selection_accuracy": 1.0,
+          "mean_regret": 0.0,
+          "p95_regret": 0.0,
+          "max_regret": 0.0,
+          "oracle_choice_counts_json": "{\"throughput\":216}",
+          "estimated_choice_counts_json": "{\"throughput\":216}"
+        }
+      }
+    },
+    "source_hashes": {
+      "labels": "e3366a6b8d47d23ca8602dd43b952a91dc3966d6c6b3ce807474bd596e4a5bbd",
+      "predictions": "acfbd8852982e9754ded3f9ddfab01de3779b5962d8a30fc41d508c7c4ec5497",
+      "l1_extension": "1402faa5b9a49ae06f8b6699f63f21cea94f936c57f34ad57bd7f27833ef80fd"
+    }
+  },
+  "checks": {
+    "labels_1296": true,
+    "selected_prediction_vectors_5184": true,
+    "nine_curve_profiles": true,
+    "curve_support_1755": true,
+    "all_costs_finite": true,
+    "strategy_selection_rows_complete": true,
+    "oracle_zero_error": true,
+    "l2_l3_marked_parameterized": true
+  }
+}
