@@ -84,6 +84,36 @@ PARAMETER_SCENARIOS = (
         "bandwidth_gbps": 25.0,
         "saturation_mib": 8.0,
     },
+    {
+        "curve_id": "l2_protocol_transition_stress",
+        "topology": "L2_same_rack_two_node_proxy",
+        "scenario": "protocol_transition_stress",
+        "launch_us": 3.0,
+        "round_us": 2.0,
+        "bandwidth_gbps": 25.0,
+        "saturation_mib": 0.25,
+        "alternate_regime": {
+            "launch_us": 20.0,
+            "round_us": 5.0,
+            "bandwidth_gbps": 200.0,
+            "saturation_mib": 4.0,
+        },
+    },
+    {
+        "curve_id": "l3_protocol_transition_stress",
+        "topology": "L3_cross_rack_two_node_proxy",
+        "scenario": "protocol_transition_stress",
+        "launch_us": 10.0,
+        "round_us": 8.0,
+        "bandwidth_gbps": 12.5,
+        "saturation_mib": 0.5,
+        "alternate_regime": {
+            "launch_us": 50.0,
+            "round_us": 15.0,
+            "bandwidth_gbps": 100.0,
+            "saturation_mib": 8.0,
+        },
+    },
 )
 
 
@@ -228,13 +258,24 @@ def measured_interpolate(points, payload):
     return max(float(np.interp(math.log2(payload), xs, ys)), 1e-9)
 
 
-def parameterized_cost_us(payload, tp, scenario):
+def single_regime_cost_us(payload, tp, scenario):
     payload = float(np.clip(payload, MIN_PAYLOAD, MAX_PAYLOAD))
     saturation_bytes = scenario["saturation_mib"] * 1024 * 1024
     utilization = max(1.0 - math.exp(-payload / saturation_bytes), 1e-6)
     effective_bandwidth = scenario["bandwidth_gbps"] * 1e9 * utilization
     data_us = ring_alpha(tp) * payload / effective_bandwidth * 1e6
     return scenario["launch_us"] + ring_beta(tp) * scenario["round_us"] + data_us
+
+
+def parameterized_cost_us(payload, tp, scenario):
+    primary = single_regime_cost_us(payload, tp, scenario)
+    if "alternate_regime" not in scenario:
+        return primary
+    # The faster of a low-latency and a high-bandwidth regime creates a
+    # continuous curve with an algorithm crossover. This is only a stress model
+    # for nonlinearity, not a claim about a particular NCCL threshold.
+    alternate = single_regime_cost_us(payload, tp, scenario["alternate_regime"])
+    return min(primary, alternate)
 
 
 def curve_profiles(l1_points):
@@ -258,7 +299,10 @@ def curve_cost(curve, tp, payload, l1_points):
 
 def asymptotic_bandwidth(curve, tp, l1_points):
     if curve["curve_id"] != "l1_measured":
-        return curve["bandwidth_gbps"] * 1e9
+        candidates = [curve["bandwidth_gbps"]]
+        if "alternate_regime" in curve:
+            candidates.append(curve["alternate_regime"]["bandwidth_gbps"])
+        return max(candidates) * 1e9
     payload = float(l1_points[tp][-1][0])
     latency_s = float(l1_points[tp][-1][1]) * 1e-6
     return ring_alpha(tp) * payload / latency_s
@@ -329,6 +373,9 @@ def build_curve_support(curves, l1_points):
                         "round_us_parameter": curve.get("round_us", "measured"),
                         "bandwidth_gbps_parameter": curve.get("bandwidth_gbps", "measured"),
                         "saturation_mib_parameter": curve.get("saturation_mib", "measured"),
+                        "alternate_regime_json": json.dumps(
+                            curve.get("alternate_regime", {}), separators=(",", ":")
+                        ),
                         "rank_mapping": "single_node_all_ranks" if curve["curve_id"] == "l1_measured" else "two_nodes_even_split_network_proxy",
                     }
                 )
@@ -543,6 +590,9 @@ def main():
                 "round_us": curve.get("round_us", "measured_curve"),
                 "bandwidth_gbps": curve.get("bandwidth_gbps", "measured_curve"),
                 "saturation_mib": curve.get("saturation_mib", "measured_curve"),
+                "alternate_regime_json": json.dumps(
+                    curve.get("alternate_regime", {}), separators=(",", ":")
+                ),
                 "rank_mapping": "single_node_all_ranks" if curve["curve_id"] == "l1_measured" else "two_nodes_even_split_network_proxy",
                 "evidence_boundary": "measured" if curve["curve_id"] == "l1_measured" else "hypothetical_parameter_sensitivity_not_physical_truth",
             }
@@ -559,7 +609,13 @@ def main():
         (row["evaluation"], row["curve_id"], row["phase"], row["representation"]): row
         for row in metric_rows
     }
-    headline_curves = ("l1_measured", "l2_nominal", "l3_nominal")
+    headline_curves = (
+        "l1_measured",
+        "l2_nominal",
+        "l3_nominal",
+        "l2_protocol_transition_stress",
+        "l3_protocol_transition_stress",
+    )
     headline_representations = (
         "total_bytes_data_only",
         "onebin_calls_bytes",
@@ -598,7 +654,7 @@ def main():
             "L1": "all ranks on one node",
             "L2_L3": "two nodes, ranks evenly split; network-level ring proxy, not hierarchical NCCL reconstruction",
         },
-        "formula": "launch_us + 2*(p-1)*round_us + [2*(p-1)/p]*payload/BW_eff(payload)",
+        "formula": "launch_us + 2*(p-1)*round_us + [2*(p-1)/p]*payload/BW_eff(payload); transition stress uses min(low-latency regime, high-bandwidth regime)",
         "effective_bandwidth": "BW_max * (1-exp(-payload/saturation_bytes))",
         "headline_traffic_segment_holdout_combined": headline,
         "latency_vs_throughput_exact_oracle": {
@@ -646,7 +702,9 @@ def main():
 
 `launch + 2(p-1)×round + [2(p-1)/p]×payload/BW_eff(payload)`，其中
 `BW_eff=BW_max×(1-exp(-payload/saturation))`。L2/L3 rank mapping 简化为两节点均分
-rank 的 network-level ring proxy，尚未重建 hierarchical NCCL。
+rank 的 network-level ring proxy，尚未重建 hierarchical NCCL。额外的
+`protocol_transition_stress` 使用低时延/低带宽与高启动/高带宽两条子曲线的较小值，
+只用于检验算法切换非线性何时使消息尺度分布不可省略。
 
 ## 成本表征误差：traffic-segment holdout，Prefill+Decode
 
@@ -666,6 +724,8 @@ rank 的 network-level ring proxy，尚未重建 hierarchical NCCL。
 ## 证据边界
 
 - 这里可以报告不同参数场景下的结构成本、表征误差和决策敏感性；
+- 若 nominal alpha–beta 下单桶已足够而 transition stress 下直方图才有优势，应如实报告
+  “直方图价值取决于代价曲线非线性”，不能只保留有利场景；
 - 不可以报告真实 L2/L3 通信时间准确率；
 - placement 前还需加入显存可行性、计算时间和资源可用性，否则只最小化通信可能得到
   平凡选择；
@@ -677,8 +737,8 @@ rank 的 network-level ring proxy，尚未重建 hierarchical NCCL。
     checks = {
         "labels_1296": len(labels) == 1296,
         "selected_prediction_vectors_5184": len(predictions) == 5184,
-        "seven_curve_profiles": len(curves) == 7,
-        "curve_support_1365": len(support) == 7 * 3 * 65,
+        "nine_curve_profiles": len(curves) == 9,
+        "curve_support_1755": len(support) == 9 * 3 * 65,
         "all_costs_finite": all(math.isfinite(float(row["estimated_cost_us_per_1000"])) for row in all_costs),
         "oracle_zero_error": all(float(row["absolute_percentage_error"]) == 0.0 for row in all_costs if row["representation"] == "exact_payload_oracle"),
         "l2_l3_marked_parameterized": all(curve["curve_kind"] == "parameterized_sensitivity" for curve in curves if curve["curve_id"] != "l1_measured"),
