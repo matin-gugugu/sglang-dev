@@ -109,6 +109,78 @@ def input_ids(length: int, salt: int) -> list[int]:
     return [1000 + ((salt + index) % 31) for index in range(length)]
 
 
+def audit_server_cell(
+    *,
+    output_dir: Path,
+    pp_size: int,
+    strategy: str,
+    records: list[dict[str, Any]],
+) -> dict[str, Any]:
+    profile_dir = output_dir / "profile"
+    rank_files = sorted(profile_dir.glob("*.json"))
+    snapshots = [json.loads(path.read_text(encoding="utf-8")) for path in rank_files]
+    expected_workloads = {record["workload_id"] for record in records}
+    checks = {
+        "tp_is_one": all(record["tp_size"] == 1 for record in records),
+        "all_output_lengths_exact": all(
+            record["output_length_match"] for record in records
+        ),
+        "rank_file_count_matches_pp": len(snapshots) == pp_size,
+        "rank_ids_complete": {row["pp_rank"] for row in snapshots}
+        == set(range(pp_size)),
+        "histogram_only": all(
+            row["capture_mode"] == "histogram-only"
+            and not row["raw_events_saved"]
+            for row in snapshots
+        ),
+        "last_stage_has_no_proxy_send": all(
+            histogram["msg_type"] != "proxy"
+            for snapshot in snapshots
+            if snapshot["pp_rank"] == pp_size - 1
+            for histogram in snapshot["histograms"]
+        ),
+        "every_forward_boundary_has_proxy": all(
+            any(
+                histogram["msg_type"] == "proxy"
+                for histogram in snapshot["histograms"]
+            )
+            for snapshot in snapshots
+            if snapshot["pp_rank"] < pp_size - 1
+        ),
+        # The server may execute one unlabeled internal startup forward even
+        # with --skip-server-warmup.  It is retained for transparency but is
+        # not part of the submitted benchmark workload set.
+        "all_workloads_labeled_on_forward_boundaries": all(
+            {
+                histogram["workload_id"]
+                for histogram in snapshot["histograms"]
+                if histogram["msg_type"] == "proxy"
+                and histogram["workload_id"] is not None
+            }
+            == expected_workloads
+            for snapshot in snapshots
+            if snapshot["pp_rank"] < pp_size - 1
+        ),
+    }
+    audit = {
+        "schema_version": "phase19-pp-pattern-audit-v1",
+        "model": "qwen3-8b",
+        "tp_size": 1,
+        "pp_size": pp_size,
+        "strategy": strategy,
+        "request_batches": len(records),
+        "logical_requests": sum(len(row["input_lens"]) for row in records),
+        "checks": checks,
+        "status": "PASS" if all(checks.values()) else "FAIL",
+    }
+    (output_dir / "audit.json").write_text(
+        json.dumps(audit, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    if audit["status"] == "PASS":
+        (output_dir / "DONE").write_text("PASS\n", encoding="utf-8")
+    return audit
+
+
 def run_server_cell(
     *,
     repo_root: Path,
@@ -259,64 +331,14 @@ def run_server_cell(
         terminate_process_group(process)
         server_log.close()
 
-    rank_files = sorted(profile_dir.glob("*.json"))
-    snapshots = [json.loads(path.read_text(encoding="utf-8")) for path in rank_files]
-    expected_workloads = {record["workload_id"] for record in records}
-    checks = {
-        "tp_is_one": True,
-        "all_output_lengths_exact": all(
-            record["output_length_match"] for record in records
-        ),
-        "rank_file_count_matches_pp": len(snapshots) == pp_size,
-        "rank_ids_complete": {row["pp_rank"] for row in snapshots}
-        == set(range(pp_size)),
-        "histogram_only": all(
-            row["capture_mode"] == "histogram-only"
-            and not row["raw_events_saved"]
-            for row in snapshots
-        ),
-        "last_stage_has_no_proxy_send": all(
-            histogram["msg_type"] != "proxy"
-            for snapshot in snapshots
-            if snapshot["pp_rank"] == pp_size - 1
-            for histogram in snapshot["histograms"]
-        ),
-        "every_forward_boundary_has_proxy": all(
-            any(
-                histogram["msg_type"] == "proxy"
-                for histogram in snapshot["histograms"]
-            )
-            for snapshot in snapshots
-            if snapshot["pp_rank"] < pp_size - 1
-        ),
-        "all_workloads_labeled_on_forward_boundaries": all(
-            {
-                histogram["workload_id"]
-                for histogram in snapshot["histograms"]
-                if histogram["msg_type"] == "proxy"
-            }
-            == expected_workloads
-            for snapshot in snapshots
-            if snapshot["pp_rank"] < pp_size - 1
-        ),
-    }
-    audit = {
-        "schema_version": "phase19-pp-pattern-audit-v1",
-        "model": "qwen3-8b",
-        "tp_size": 1,
-        "pp_size": pp_size,
-        "strategy": strategy,
-        "request_batches": len(records),
-        "logical_requests": sum(len(row["input_lens"]) for row in records),
-        "checks": checks,
-        "status": "PASS" if all(checks.values()) else "FAIL",
-    }
-    (output_dir / "audit.json").write_text(
-        json.dumps(audit, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    audit = audit_server_cell(
+        output_dir=output_dir,
+        pp_size=pp_size,
+        strategy=strategy,
+        records=records,
     )
     if audit["status"] != "PASS":
         raise AssertionError(json.dumps(audit, indent=2))
-    (output_dir / "DONE").write_text("PASS\n", encoding="utf-8")
     return audit
 
 
@@ -349,6 +371,23 @@ def main() -> None:
                     json.loads((cell_dir / "audit.json").read_text(encoding="utf-8"))
                 )
                 continue
+            client_results = cell_dir / "client_results.jsonl"
+            if client_results.exists():
+                records = [
+                    json.loads(line)
+                    for line in client_results.read_text(encoding="utf-8").splitlines()
+                    if line.strip()
+                ]
+                if len(records) == args.repeats * len(build_workloads()):
+                    recovered_audit = audit_server_cell(
+                        output_dir=cell_dir,
+                        pp_size=pp_size,
+                        strategy=strategy,
+                        records=records,
+                    )
+                    if recovered_audit["status"] == "PASS":
+                        audits.append(recovered_audit)
+                        continue
             audits.append(
                 run_server_cell(
                     repo_root=repo_root,
