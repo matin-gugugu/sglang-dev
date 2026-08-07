@@ -16,6 +16,7 @@ from tqdm import tqdm
 from sglang.srt.disaggregation.base.conn import KVPoll
 from sglang.srt.disaggregation.utils import poll_and_all_reduce_attn_cp_tp_group
 from sglang.srt.distributed.parallel_state import P2PWork
+from sglang.srt.distributed.pp_comm_profile import record_send as record_pp_send
 from sglang.srt.environ import envs
 from sglang.srt.layers.dp_attention import (
     get_attention_dp_rank,
@@ -159,6 +160,7 @@ class SchedulerPPMixin:
                                 result.pp_hidden_states_proxy_tensors.tensors,
                                 async_send=True,
                                 msg_type="proxy",
+                                profile_batch=self.cur_batch,
                             )
 
                 self.pp_outputs = next_pp_outputs
@@ -333,6 +335,7 @@ class SchedulerPPMixin:
                             result.pp_hidden_states_proxy_tensors.tensors,
                             async_send=True,
                             msg_type="proxy",
+                            profile_batch=self.cur_batch,
                         )
 
                 self.pp_outputs = next_pp_outputs
@@ -516,6 +519,7 @@ class SchedulerPPMixin:
                             result.pp_hidden_states_proxy_tensors.tensors,
                             async_send=True,
                             msg_type="proxy",
+                            profile_batch=self.cur_batch,
                         )
 
                 self.pp_outputs = next_pp_outputs
@@ -993,6 +997,7 @@ class SchedulerPPMixin:
         tensor_dict: Dict[str, torch.Tensor],
         async_send: bool = True,
         msg_type: str = "default",
+        profile_batch: Optional[ScheduleBatch] = None,
     ):
         # Warn once if using default untyped messages
         if msg_type == "default":
@@ -1000,6 +1005,13 @@ class SchedulerPPMixin:
                 "PP send: using default untyped message. "
                 "Consider adding msg_type='proxy' or 'output' to avoid recv conflicts."
             )
+        record_pp_send(
+            tensor_dict,
+            msg_type=msg_type,
+            pp_rank=self.ps.pp_rank,
+            pp_size=self.ps.pp_size,
+            batch=profile_batch,
+        )
         tensor_dict["__msg_type__"] = msg_type
         p2p_work = []
         p2p_work.extend(
