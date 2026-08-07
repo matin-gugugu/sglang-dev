@@ -388,7 +388,9 @@ def write_gzip_csv(path: Path, rows):
 def manifest(output_dir: Path):
     lines = []
     for path in sorted(output_dir.iterdir()):
-        if path.name in {"manifest.sha256", "DONE"} or not path.is_file():
+        # run.log is the outer stdout redirection target and may still be
+        # buffered while this process is writing the manifest.
+        if path.name in {"manifest.sha256", "DONE", "run.log"} or not path.is_file():
             continue
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         lines.append(f"{digest}  {path.name}")
@@ -507,8 +509,30 @@ def main():
             f"{100 * row['selection_accuracy']:.2f}% | {100 * row['mean_regret']:.3f}% | "
             f"{100 * row['p95_regret']:.3f}% | {100 * row['mean_rank_pair_agreement']:.2f}% |"
         )
+    lookup = {
+        (row["curve_id"], row["objective"], row["representation"]): row
+        for row in headline
+    }
+    l1_total_bytes = lookup[
+        ("l1_measured", "latency", "total_bytes_data_only")
+    ]
+    l1_h0 = lookup[("l1_measured", "latency", "h0_predicted_12bin")]
     readme.extend(
         [
+            "",
+            "## 自动解读",
+            "",
+            f"- L1 latency目标下，total-bytes选择准确率为"
+            f"{100 * l1_total_bytes['selection_accuracy']:.2f}%，但平均regret仅"
+            f"{100 * l1_total_bytes['mean_regret']:.3f}%；",
+            f"- 同口径H0预测12桶的选择准确率为"
+            f"{100 * l1_h0['selection_accuracy']:.2f}%，平均regret为"
+            f"{100 * l1_h0['mean_regret']:.3f}%；",
+            "- 与Phase17的communication-only结果相比，加入真实非通信墙钟后，当前候选"
+            "排序主要由计算/运行时部分主导；通信表征仍改善排序，但端到端收益不能由通信"
+            "侧regret直接替代；",
+            "- 参数化L2/L3中选择差异依旧很小，说明若要形成更强的完整调度证据，需要真实"
+            "高RTT链路、online queue/SLO约束或更接近决策边界的候选对照。",
             "",
             "## 证据边界",
             "",
