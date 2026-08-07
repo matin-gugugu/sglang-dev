@@ -296,6 +296,15 @@ def target_decode(encoded):
     return vectors[0], vectors[1]
 
 
+def bounded_residual(target, base):
+    """Keep the learned term a calibration, never a replacement for H0."""
+    residual = np.asarray(target - base, dtype=np.float32)
+    bounds = np.full(residual.shape[-1], 2.0, dtype=np.float32)
+    bounds[0] = math.log(2.0)
+    bounds[BIN_COUNT + 1] = math.log(2.0)
+    return np.clip(residual, -bounds, bounds)
+
+
 def make_features(rows, profiles, models, strategies, use_model_id):
     model_names = sorted(models)
     columns, names = [], []
@@ -376,7 +385,10 @@ def fit_network(features, targets, fit, validation, args, seed):
     target_mean = targets[fit].mean(axis=0)
     target_std = targets[fit].std(axis=0)
     target_std[target_std < 1e-6] = 1.0
-    x = ((features - feature_mean) / feature_std).astype(np.float32)
+    # The evaluation intentionally includes unseen model structures.  Bounded
+    # standardization prevents an MLP from turning an out-of-domain feature into
+    # an unphysical exponential target while still exposing accuracy loss.
+    x = np.clip((features - feature_mean) / feature_std, -6.0, 6.0).astype(np.float32)
     y = ((targets - target_mean) / target_std).astype(np.float32)
     seed_all(seed)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -419,7 +431,11 @@ def fit_network(features, targets, fit, validation, args, seed):
     model.eval()
     with torch.no_grad():
         prediction = model(torch.from_numpy(x).to(device)).cpu().numpy()
-    prediction = prediction * target_std + target_mean
+    prediction = np.clip(prediction, -6.0, 6.0) * target_std + target_mean
+    target_min = targets[fit].min(axis=0)
+    target_max = targets[fit].max(axis=0)
+    margin = np.maximum((target_max - target_min) * 0.10, 1e-4)
+    prediction = np.clip(prediction, target_min - margin, target_max + margin)
     checkpoint = {
         "model_state": {key: value.cpu() for key, value in model.state_dict().items()},
         "feature_mean": feature_mean,
@@ -572,7 +588,7 @@ def main():
         h0_bytes.append(logical_bytes)
     h0_calls, h0_bytes = np.stack(h0_calls), np.stack(h0_bytes)
     h0_encoded = np.stack([target_encode(calls, logical_bytes) for calls, logical_bytes in zip(h0_calls, h0_bytes)])
-    residual = encoded - h0_encoded
+    residual = bounded_residual(encoded, h0_encoded)
     model_id_features, model_id_names = make_features(rows, profiles, models, strategies, use_model_id=True)
     structure_features, structure_names = make_features(rows, profiles, models, strategies, use_model_id=False)
 
@@ -638,7 +654,7 @@ def main():
             "schema_version": "profiledemand-v1-h0-residual",
             "feature_names": structure_names,
             "bin_edges_bytes": BIN_EDGES.tolist(),
-            "target_encoding": "log-total-plus-log-smoothed-shares for calls and logical bytes; network predicts residual to H0",
+            "target_encoding": "log-total-plus-log-smoothed-shares for calls and logical bytes; bounded network residual calibrates H0",
             "model_feature_names": list(MODEL_NUMERICS),
             "profile_feature_names": list(PROFILE_SCALARS) + [f"joint_lm_{index}" for index in range(16)],
             "label_sha256": sha256(args.labels),
@@ -699,7 +715,9 @@ L1/EMD，以及预测直方图乘 B200 L1 连续 AllReduce 曲线后的结构代
 
 H0 只从 4×4 长度联合分布和均值合成 32 个伪请求，不读取 GPU replay 的 32 条真实长度
 或顺序；residual 因而学习分桶内形态和 batching 边界，而不是重复精确公式。正式 checkpoint
-为 `formal_h0_residual_model.pt`。
+为 `formal_h0_residual_model.pt`。总量 residual 被限制在两倍以内、分布 logit residual
+被限制在 ±2；整模型留出时也对标准化输入和输出做训练域裁剪，保证 DNN 只能校正 H0，
+不能在未见结构上产生无物理意义的指数外推。
 
 边界：当前到达率/突发特征虽进入输入，但 GPU 标签仍是同时进入的 draining microbatch，
 不能把结果表述为 online arrival-aware batching 已完成。L1 传播也是结构代价评估，不是新增
