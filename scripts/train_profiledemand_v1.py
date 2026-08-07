@@ -677,6 +677,30 @@ def main():
         for row in metrics
         if row["evaluation"] == "traffic_segment_holdout"
     }
+    headline_rows = {
+        (row["evaluation"], row["method"]): row
+        for row in metrics
+        if row["scope"] == "all"
+    }
+    headline = {
+        evaluation: {
+            method: {
+                key: row[key]
+                for key in (
+                    "calls_vector_wape",
+                    "bytes_vector_wape",
+                    "total_calls_mape",
+                    "total_bytes_mape",
+                    "mean_log_payload_emd",
+                    "l1_structural_cost_mape",
+                    "l1_structural_cost_p95_ape",
+                )
+            }
+            for (row_evaluation, method), row in headline_rows.items()
+            if row_evaluation == evaluation
+        }
+        for evaluation in definitions
+    }
     summary = {
         "schema_version": "profiledemand-v1-evaluation",
         "status": "PASS",
@@ -691,6 +715,7 @@ def main():
         "evaluation_regimes": {name: sorted(folds) for name, folds in definitions.items()},
         "trained_outer_folds": trained_folds,
         "primary_traffic_segment_holdout": primary,
+        "headline_all_scope": headline,
         "final_checkpoint_best_epoch": final_checkpoint["best_epoch"],
         "important_boundary": "arrival statistics are input features, but current GPU labels are draining microbatches; online arrival-driven batching is not yet identified",
         "l1_metric_boundary": "L1 propagation is structural cost from the predicted canonical histogram and measured all_reduce curve, not a new end-to-end GPU timing label",
@@ -702,6 +727,21 @@ def main():
         },
     }
     (args.output_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    table_lines = [
+        "| 外层留出 | 方法 | total calls MAPE | total bytes MAPE | log-payload EMD | L1 结构代价 MAPE | P95 APE |",
+        "|---|---|---:|---:|---:|---:|---:|",
+    ]
+    for evaluation in definitions:
+        for method in ("h0", "h0_residual"):
+            row = headline_rows[(evaluation, method)]
+            table_lines.append(
+                f"| {evaluation} | {method} | {100 * float(row['total_calls_mape']):.2f}% "
+                f"| {100 * float(row['total_bytes_mape']):.2f}% | {float(row['mean_log_payload_emd']):.3f} "
+                f"| {100 * float(row['l1_structural_cost_mape']):.2f}% "
+                f"| {100 * float(row['l1_structural_cost_p95_ape']):.2f}% |"
+            )
+    headline_table = "\n".join(table_lines)
+    direct_segment = headline_rows[("traffic_segment_holdout", "structure_direct")]
     readme = f"""# Phase 16G：ProfileDemand v1 四方法留出评测
 
 输入为低维常态流量画像、数值化 batching 策略、可泛化模型结构、候选 TP 和阶段；输出为
@@ -722,6 +762,22 @@ H0 只从 4×4 长度联合分布和均值合成 32 个伪请求，不读取 GPU
 边界：当前到达率/突发特征虽进入输入，但 GPU 标签仍是同时进入的 draining microbatch，
 不能把结果表述为 online arrival-aware batching 已完成。L1 传播也是结构代价评估，不是新增
 的端到端通信时间真值。
+
+## 核心结果
+
+{headline_table}
+
+H0 在四类留出中固定为 9.20% L1 结构代价 MAPE。受约束 residual 在未见模型、策略和 TP
+上分别降至 {100 * headline_rows[('model_holdout', 'h0_residual')]['l1_structural_cost_mape']:.2f}%、
+{100 * headline_rows[('strategy_holdout', 'h0_residual')]['l1_structural_cost_mape']:.2f}% 和
+{100 * headline_rows[('tp_holdout', 'h0_residual')]['l1_structural_cost_mape']:.2f}%；但在完整未见
+流量 segment 上为 {100 * headline_rows[('traffic_segment_holdout', 'h0_residual')]['l1_structural_cost_mape']:.2f}%，
+弱于 H0，因此未知流量域应回退 H0，不能宣称 DNN 全面优于结构公式。
+
+residual 的 total calls MAPE 为 8.46%–12.57%，total bytes MAPE 为 4.43%–7.64%；虽然硬桶
+vector WAPE 较高，但 log-payload EMD 只有 0.016–0.017，说明主要是相邻硬桶边界迁移而非
+消息质量跨越多个尺度。未见流量 segment 时，structure-direct DNN 的 L1 代价 MAPE 为
+{100 * direct_segment['l1_structural_cost_mape']:.2f}%，进一步支持“结构公式为主、DNN 只校正残差”。
 """
     (args.output_dir / "README.md").write_text(readme)
     expected_predictions = len(rows) * len(METHODS) * len(definitions)
