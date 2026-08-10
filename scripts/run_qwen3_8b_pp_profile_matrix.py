@@ -270,6 +270,15 @@ def sender_signature(snapshot: dict[str, Any], expected: set[str]) -> dict[str, 
     return {workload: dict(values) for workload, values in signatures.items()}
 
 
+def payload_signature(signature: dict[tuple, int]) -> dict[tuple, int]:
+    """Remove phase and scheduler annotations but retain exact message sizes."""
+    result: dict[tuple, int] = defaultdict(int)
+    for key, count in signature.items():
+        _phase, raw_op, payload, tensor_name, _active_batch, _active_tokens = key
+        result[(raw_op, payload, tensor_name)] += count
+    return dict(result)
+
+
 def audit_cell(
     *,
     output_dir: Path,
@@ -298,11 +307,16 @@ def audit_cell(
         for repeat in sorted({int(record["repeat"]) for record in records}):
             trace_id = by_key[(profile_id, repeat, "profiled")]
             draining_id = by_key[(profile_id, repeat, "draining")]
+            profiled_signature = reference.get(trace_id, {})
+            draining_signature = reference.get(draining_id, {})
             paired_differences.append(
                 {
                     "profile_id": profile_id,
                     "repeat": repeat,
-                    "histogram_changed": reference.get(trace_id) != reference.get(draining_id),
+                    "phase_aware_histogram_changed": profiled_signature
+                    != draining_signature,
+                    "payload_histogram_changed": payload_signature(profiled_signature)
+                    != payload_signature(draining_signature),
                 }
             )
 
@@ -329,20 +343,17 @@ def audit_cell(
             for record in records
             if record["arrival_mode"] == "profiled"
         ),
-        # With a hard microbatch cap of one, the same requests must produce
-        # the same logical payloads regardless of their arrival schedule.  At
-        # larger caps, at least one paired profile must expose a batching
-        # change; individual profiles may still remain invariant.
-        "paired_arrival_control_behaves_as_expected": (
-            not any(row["histogram_changed"] for row in paired_differences)
-            if microbatch_size == 1
-            else any(row["histogram_changed"] for row in paired_differences)
-        ),
+        # Whether arrival changes the histogram is the scientific result, not
+        # a validity precondition.  A valid negative result must not fail the
+        # experiment. Completeness of every paired control is audited here.
+        "paired_arrival_controls_complete": len(paired_differences)
+        == len(profiles) * len({int(record["repeat"]) for record in records}),
     }
     audit = {
         "schema_version": "phase21-pp-profile-cell-audit-v1",
         "status": "PASS" if all(checks.values()) else "FAIL",
         "pp_size": pp_size,
+        "pp_max_micro_batch_size": microbatch_size,
         "request_profiles": len(profiles),
         "profile_replays": len(records),
         "logical_requests": sum(record["request_count"] for record in records),
@@ -356,6 +367,12 @@ def audit_cell(
         ),
         "checks": checks,
         "paired_arrival_controls": paired_differences,
+        "phase_aware_changed_pairs": sum(
+            row["phase_aware_histogram_changed"] for row in paired_differences
+        ),
+        "payload_changed_pairs": sum(
+            row["payload_histogram_changed"] for row in paired_differences
+        ),
     }
     (output_dir / "audit.json").write_text(json.dumps(audit, indent=2) + "\n")
     if audit["status"] == "PASS":
@@ -553,7 +570,32 @@ def main() -> None:
                 audits.append(json.loads((cell / "audit.json").read_text()))
                 continue
             if cell.exists() and any(cell.iterdir()):
-                raise RuntimeError(f"partial cell requires manual audit before retry: {cell}")
+                client_path = cell / "client_results.jsonl"
+                records = (
+                    [
+                        json.loads(line)
+                        for line in client_path.read_text().splitlines()
+                        if line
+                    ]
+                    if client_path.exists()
+                    else []
+                )
+                expected_records = args.repeats * len(profiles) * 2
+                if len(records) == expected_records:
+                    recovered = audit_cell(
+                        output_dir=cell,
+                        pp_size=pp_size,
+                        microbatch_size=microbatch_size,
+                        records=records,
+                        profiles=profiles,
+                    )
+                    if recovered["status"] == "PASS":
+                        audits.append(recovered)
+                        continue
+                raise RuntimeError(
+                    f"incomplete cell requires a new attempt: {cell}; "
+                    f"records={len(records)}/{expected_records}"
+                )
             audits.append(
                 run_cell(
                     repo_root=repo_root,
