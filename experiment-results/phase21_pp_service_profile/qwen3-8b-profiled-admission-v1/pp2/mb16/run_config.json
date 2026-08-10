@@ -1,0 +1,41 @@
+{
+  "schema_version": "phase21-pp-profile-cell-v1",
+  "model": "qwen3-8b",
+  "model_path": "/media/ssd1/Qwen3-8B",
+  "tp_size": 1,
+  "pp_size": 2,
+  "strategy": "mb16",
+  "pp_max_micro_batch_size": 16,
+  "chunked_prefill_size": 4096,
+  "profiles": [
+    "profile_02_burstgpt_1_c1"
+  ],
+  "arrival_modes": [
+    "profiled"
+  ],
+  "repeats": 1,
+  "command": [
+    "/usr/bin/python3",
+    "-m",
+    "sglang.launch_server",
+    "--model-path",
+    "/media/ssd1/Qwen3-8B",
+    "--tp-size",
+    "1",
+    "--pp-size",
+    "2",
+    "--pp-max-micro-batch-size",
+    "16",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "31402",
+    "--disable-cuda-graph",
+    "--disable-radix-cache",
+    "--skip-server-warmup",
+    "--mem-fraction-static",
+    "0.75",
+    "--chunked-prefill-size",
+    "4096"
+  ]
+}
