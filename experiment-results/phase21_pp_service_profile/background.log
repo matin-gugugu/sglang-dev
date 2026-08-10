@@ -1,0 +1,192 @@
+nohup: ignoring input
+{
+  "schema_version": "phase21-pp-profile-matrix-v1",
+  "status": "PASS",
+  "model": "qwen3-8b",
+  "tp_size": 1,
+  "pp_sizes": [
+    2
+  ],
+  "strategies": {
+    "mb1": 1,
+    "mb4": 4,
+    "mb16": 16
+  },
+  "profiles": [
+    "profile_02_burstgpt_1_c1"
+  ],
+  "arrival_modes": [
+    "profiled",
+    "draining"
+  ],
+  "repeats": 1,
+  "cells": [
+    {
+      "schema_version": "phase21-pp-profile-cell-audit-v1",
+      "status": "PASS",
+      "pp_size": 2,
+      "request_profiles": 1,
+      "profile_replays": 2,
+      "logical_requests": 64,
+      "phases_observed": [
+        "decode",
+        "prefill"
+      ],
+      "checks": {
+        "all_output_lengths_exact": true,
+        "rank_file_count_matches_pp": true,
+        "rank_ids_complete": true,
+        "histogram_only": true,
+        "last_stage_has_no_proxy_send": true,
+        "all_expected_workloads_labeled": true,
+        "forward_boundaries_identical": true,
+        "arrival_schedule_applied": true,
+        "paired_arrival_control_behaves_as_expected": true
+      },
+      "paired_arrival_controls": [
+        {
+          "profile_id": "profile_02_burstgpt_1_c1",
+          "repeat": 0,
+          "histogram_changed": false
+        }
+      ]
+    },
+    {
+      "schema_version": "phase21-pp-profile-cell-audit-v1",
+      "status": "PASS",
+      "pp_size": 2,
+      "request_profiles": 1,
+      "profile_replays": 2,
+      "logical_requests": 64,
+      "phases_observed": [
+        "decode",
+        "prefill"
+      ],
+      "checks": {
+        "all_output_lengths_exact": true,
+        "rank_file_count_matches_pp": true,
+        "rank_ids_complete": true,
+        "histogram_only": true,
+        "last_stage_has_no_proxy_send": true,
+        "all_expected_workloads_labeled": true,
+        "forward_boundaries_identical": true,
+        "arrival_schedule_applied": true,
+        "paired_arrival_control_behaves_as_expected": true
+      },
+      "paired_arrival_controls": [
+        {
+          "profile_id": "profile_02_burstgpt_1_c1",
+          "repeat": 0,
+          "histogram_changed": true
+        }
+      ]
+    },
+    {
+      "schema_version": "phase21-pp-profile-cell-audit-v1",
+      "status": "PASS",
+      "pp_size": 2,
+      "request_profiles": 1,
+      "profile_replays": 2,
+      "logical_requests": 64,
+      "phases_observed": [
+        "decode",
+        "prefill"
+      ],
+      "checks": {
+        "all_output_lengths_exact": true,
+        "rank_file_count_matches_pp": true,
+        "rank_ids_complete": true,
+        "histogram_only": true,
+        "last_stage_has_no_proxy_send": true,
+        "all_expected_workloads_labeled": true,
+        "forward_boundaries_identical": true,
+        "arrival_schedule_applied": true,
+        "paired_arrival_control_behaves_as_expected": true
+      },
+      "paired_arrival_controls": [
+        {
+          "profile_id": "profile_02_burstgpt_1_c1",
+          "repeat": 0,
+          "histogram_changed": true
+        }
+      ]
+    }
+  ]
+}
+Traceback (most recent call last):
+  File "/sgl-workspace/sglang-src/scripts/run_qwen3_8b_pp_profile_matrix.py", line 593, in <module>
+    main()
+  File "/sgl-workspace/sglang-src/scripts/run_qwen3_8b_pp_profile_matrix.py", line 558, in main
+    run_cell(
+  File "/sgl-workspace/sglang-src/scripts/run_qwen3_8b_pp_profile_matrix.py", line 504, in run_cell
+    raise AssertionError(json.dumps(audit, indent=2))
+AssertionError: {
+  "schema_version": "phase21-pp-profile-cell-audit-v1",
+  "status": "FAIL",
+  "pp_size": 2,
+  "request_profiles": 3,
+  "profile_replays": 18,
+  "logical_requests": 576,
+  "phases_observed": [
+    "decode",
+    "prefill"
+  ],
+  "checks": {
+    "all_output_lengths_exact": true,
+    "rank_file_count_matches_pp": true,
+    "rank_ids_complete": true,
+    "histogram_only": true,
+    "last_stage_has_no_proxy_send": true,
+    "all_expected_workloads_labeled": true,
+    "forward_boundaries_identical": true,
+    "arrival_schedule_applied": true,
+    "paired_arrival_control_behaves_as_expected": false
+  },
+  "paired_arrival_controls": [
+    {
+      "profile_id": "profile_02_burstgpt_1_c1",
+      "repeat": 0,
+      "histogram_changed": false
+    },
+    {
+      "profile_id": "profile_02_burstgpt_1_c1",
+      "repeat": 1,
+      "histogram_changed": false
+    },
+    {
+      "profile_id": "profile_02_burstgpt_1_c1",
+      "repeat": 2,
+      "histogram_changed": false
+    },
+    {
+      "profile_id": "profile_10_burstgpt_2_c4",
+      "repeat": 0,
+      "histogram_changed": false
+    },
+    {
+      "profile_id": "profile_10_burstgpt_2_c4",
+      "repeat": 1,
+      "histogram_changed": false
+    },
+    {
+      "profile_id": "profile_10_burstgpt_2_c4",
+      "repeat": 2,
+      "histogram_changed": false
+    },
+    {
+      "profile_id": "profile_24_mooncake_synthetic_c0",
+      "repeat": 0,
+      "histogram_changed": true
+    },
+    {
+      "profile_id": "profile_24_mooncake_synthetic_c0",
+      "repeat": 1,
+      "histogram_changed": true
+    },
+    {
+      "profile_id": "profile_24_mooncake_synthetic_c0",
+      "repeat": 2,
+      "histogram_changed": true
+    }
+  ]
+}
