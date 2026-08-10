@@ -286,6 +286,7 @@ def audit_cell(
     microbatch_size: int,
     records: list[dict[str, Any]],
     profiles: tuple[str, ...],
+    arrival_modes: tuple[str, ...],
 ) -> dict[str, Any]:
     snapshots = [
         json.loads(path.read_text())
@@ -303,22 +304,24 @@ def audit_cell(
         for record in records
     }
     reference = signatures[0] if signatures else {}
-    for profile_id in profiles:
-        for repeat in sorted({int(record["repeat"]) for record in records}):
-            trace_id = by_key[(profile_id, repeat, "profiled")]
-            draining_id = by_key[(profile_id, repeat, "draining")]
-            profiled_signature = reference.get(trace_id, {})
-            draining_signature = reference.get(draining_id, {})
-            paired_differences.append(
-                {
-                    "profile_id": profile_id,
-                    "repeat": repeat,
-                    "phase_aware_histogram_changed": profiled_signature
-                    != draining_signature,
-                    "payload_histogram_changed": payload_signature(profiled_signature)
-                    != payload_signature(draining_signature),
-                }
-            )
+    paired_controls_applicable = set(arrival_modes) == {"profiled", "draining"}
+    if paired_controls_applicable:
+        for profile_id in profiles:
+            for repeat in sorted({int(record["repeat"]) for record in records}):
+                trace_id = by_key[(profile_id, repeat, "profiled")]
+                draining_id = by_key[(profile_id, repeat, "draining")]
+                profiled_signature = reference.get(trace_id, {})
+                draining_signature = reference.get(draining_id, {})
+                paired_differences.append(
+                    {
+                        "profile_id": profile_id,
+                        "repeat": repeat,
+                        "phase_aware_histogram_changed": profiled_signature
+                        != draining_signature,
+                        "payload_histogram_changed": payload_signature(profiled_signature)
+                        != payload_signature(draining_signature),
+                    }
+                )
 
     checks = {
         "all_output_lengths_exact": all(record["all_output_lengths_exact"] for record in records),
@@ -346,7 +349,8 @@ def audit_cell(
         # Whether arrival changes the histogram is the scientific result, not
         # a validity precondition.  A valid negative result must not fail the
         # experiment. Completeness of every paired control is audited here.
-        "paired_arrival_controls_complete": len(paired_differences)
+        "paired_arrival_controls_complete": not paired_controls_applicable
+        or len(paired_differences)
         == len(profiles) * len({int(record["repeat"]) for record in records}),
     }
     audit = {
@@ -354,6 +358,8 @@ def audit_cell(
         "status": "PASS" if all(checks.values()) else "FAIL",
         "pp_size": pp_size,
         "pp_max_micro_batch_size": microbatch_size,
+        "arrival_modes": list(arrival_modes),
+        "paired_arrival_controls_applicable": paired_controls_applicable,
         "request_profiles": len(profiles),
         "profile_replays": len(records),
         "logical_requests": sum(record["request_count"] for record in records),
@@ -390,6 +396,7 @@ def run_cell(
     microbatch_size: int,
     profile_requests: dict[str, list[dict[str, int]]],
     profile_metadata: dict[str, dict[str, Any]],
+    arrival_modes: tuple[str, ...],
     repeats: int,
     port: int,
     startup_timeout: float,
@@ -446,7 +453,7 @@ def run_cell(
                 "pp_max_micro_batch_size": microbatch_size,
                 "chunked_prefill_size": 4096,
                 "profiles": list(profile_requests),
-                "arrival_modes": ["profiled", "draining"],
+                "arrival_modes": list(arrival_modes),
                 "repeats": repeats,
                 "command": command,
             },
@@ -475,7 +482,7 @@ def run_cell(
                     profiled_requests, arrival_audit = apply_profiled_arrivals(
                         requests, profile_metadata[profile_id]
                     )
-                    for arrival_mode in ("profiled", "draining"):
+                    for arrival_mode in arrival_modes:
                         workload_id = (
                             f"qwen3-8b/pp{pp_size}/{strategy}/{profile_id}/"
                             f"{arrival_mode}/r{repeat}"
@@ -516,6 +523,7 @@ def run_cell(
         microbatch_size=microbatch_size,
         records=records,
         profiles=tuple(profile_requests),
+        arrival_modes=arrival_modes,
     )
     if audit["status"] != "PASS":
         raise AssertionError(json.dumps(audit, indent=2))
@@ -541,6 +549,17 @@ def parse_args() -> argparse.Namespace:
         default=Path("experiment-results/phase21_pp_service_profile/qwen3-8b-smoke-v1"),
     )
     p.add_argument("--profiles", nargs="+", default=list(DEFAULT_SMOKE_PROFILES))
+    p.add_argument(
+        "--all-profiles",
+        action="store_true",
+        help="Use every profile in service_profiles.csv; overrides --profiles.",
+    )
+    p.add_argument(
+        "--arrival-modes",
+        nargs="+",
+        choices=("profiled", "draining"),
+        default=["profiled", "draining"],
+    )
     p.add_argument("--pp-sizes", nargs="+", type=int, default=[2, 4, 8])
     p.add_argument("--repeats", type=int, default=3)
     p.add_argument("--startup-timeout", type=float, default=1200)
@@ -558,7 +577,12 @@ def main() -> None:
         else repo_root / args.service_profiles
     )
     output_root = args.output_root if args.output_root.is_absolute() else repo_root / args.output_root
-    profiles = tuple(args.profiles)
+    if args.all_profiles:
+        with service_profiles.open() as source:
+            profiles = tuple(row["profile_id"] for row in csv.DictReader(source))
+    else:
+        profiles = tuple(args.profiles)
+    arrival_modes = tuple(dict.fromkeys(args.arrival_modes))
     requests = load_profile_requests(plan, profiles)
     profile_metadata = load_profile_metadata(service_profiles, profiles)
     strategies = {"mb1": 1, "mb4": 4, "mb16": 16}
@@ -580,7 +604,7 @@ def main() -> None:
                     if client_path.exists()
                     else []
                 )
-                expected_records = args.repeats * len(profiles) * 2
+                expected_records = args.repeats * len(profiles) * len(arrival_modes)
                 if len(records) == expected_records:
                     recovered = audit_cell(
                         output_dir=cell,
@@ -588,6 +612,7 @@ def main() -> None:
                         microbatch_size=microbatch_size,
                         records=records,
                         profiles=profiles,
+                        arrival_modes=arrival_modes,
                     )
                     if recovered["status"] == "PASS":
                         audits.append(recovered)
@@ -606,6 +631,7 @@ def main() -> None:
                     microbatch_size=microbatch_size,
                     profile_requests=requests,
                     profile_metadata=profile_metadata,
+                    arrival_modes=arrival_modes,
                     repeats=args.repeats,
                     port=args.port_base + pp_index * 10 + strategy_index,
                     startup_timeout=args.startup_timeout,
@@ -620,7 +646,7 @@ def main() -> None:
         "pp_sizes": args.pp_sizes,
         "strategies": strategies,
         "profiles": list(profiles),
-        "arrival_modes": ["profiled", "draining"],
+        "arrival_modes": list(arrival_modes),
         "repeats": args.repeats,
         "cells": audits,
     }
