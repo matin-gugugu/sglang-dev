@@ -1,0 +1,46 @@
+{
+  "schema_version": "phase21-pp-profile-cell-v1",
+  "model": "qwen3-8b",
+  "model_path": "/media/ssd1/Qwen3-8B",
+  "tp_size": 1,
+  "pp_size": 8,
+  "strategy": "mb4",
+  "pp_max_micro_batch_size": 4,
+  "chunked_prefill_size": 4096,
+  "profiles": [
+    "profile_02_burstgpt_1_c1",
+    "profile_08_burstgpt_2_c2",
+    "profile_10_burstgpt_2_c4",
+    "profile_16_mooncake_conversation_c0",
+    "profile_20_mooncake_toolagent_c0",
+    "profile_24_mooncake_synthetic_c0"
+  ],
+  "arrival_modes": [
+    "profiled"
+  ],
+  "repeats": 2,
+  "command": [
+    "/usr/bin/python3",
+    "-m",
+    "sglang.launch_server",
+    "--model-path",
+    "/media/ssd1/Qwen3-8B",
+    "--tp-size",
+    "1",
+    "--pp-size",
+    "8",
+    "--pp-max-micro-batch-size",
+    "4",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "31801",
+    "--disable-cuda-graph",
+    "--disable-radix-cache",
+    "--skip-server-warmup",
+    "--mem-fraction-static",
+    "0.75",
+    "--chunked-prefill-size",
+    "4096"
+  ]
+}

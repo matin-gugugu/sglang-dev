@@ -1,0 +1,31 @@
+{
+  "schema_version": "phase21b-pure-pp-h0-v1",
+  "status": "PASS",
+  "model": "qwen3-8b",
+  "input_contract": "compressed steady service profile + model structure + PP size + PP microbatch/chunk policy",
+  "output_contract": "canonical per-boundary and pipeline-wide PP payload histogram, calls and logical bytes",
+  "formula": {
+    "payload_bytes_per_proxy_tensor": "active_tokens * hidden_size * dtype_bytes",
+    "calls_per_forward_per_boundary": 2,
+    "pipeline_boundary_multiplier": "pp_size - 1",
+    "canonical_arrival_mode": "draining"
+  },
+  "model_structure": {
+    "hidden_size": 4096,
+    "dtype_bytes": 2,
+    "proxy_tensor_count": 2,
+    "chunk_tokens": 4096
+  },
+  "profiles": 24,
+  "samples": 432,
+  "schedule_summary_rows": 432,
+  "schedule_events_represented": 364020,
+  "checks": {
+    "profiles_24": true,
+    "phase_samples_432": true,
+    "only_profile_inputs": true,
+    "positive_calls_and_bytes": true
+  },
+  "profiles_sha256": "096bd6978dbe59f0cbdc323571ee9b217a98366a16d19fdf68da51bd48f8e295",
+  "boundary": "H0 deliberately reconstructs a canonical draining schedule from the compressed image. Exact request order, arrival offsets and GPU-observed microbatch boundaries are label-only information learned as a bounded residual."
+}

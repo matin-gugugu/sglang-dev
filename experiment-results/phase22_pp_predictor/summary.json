@@ -1,0 +1,74 @@
+{
+  "schema_version": "phase22-pure-pp-predictor-summary-v1",
+  "status": "PASS_WITH_LIMITATION",
+  "completed_artifacts": {
+    "offline_windows": 216,
+    "offline_phase_labels": 432,
+    "online_windows": 108,
+    "online_phase_labels": 216,
+    "profiles_online": 6,
+    "pp_sizes": [
+      2,
+      4,
+      8
+    ],
+    "microbatch_sizes": [
+      1,
+      4,
+      16
+    ]
+  },
+  "online_repeat_stability": {
+    "groups": 108,
+    "exact_histogram_groups": 34,
+    "exact_histogram_rate": 0.3148148148148148,
+    "mean_pair_calls_delta": 0.07077757123021518,
+    "p95_pair_calls_delta": 0.30796529174188714,
+    "mean_pair_bytes_delta": 0.0,
+    "p95_pair_bytes_delta": 0.0
+  },
+  "online_h0_residual": {
+    "profile_holdout": {
+      "dataset": "profiled_online",
+      "evaluation": "profile_holdout",
+      "method": "h0_residual",
+      "samples": 216,
+      "calls_mape": 0.4487161881171236,
+      "calls_p95_ape": 1.3983577216462213,
+      "bytes_mape": 0.027848988976246127,
+      "bytes_p95_ape": 0.06177034133282341,
+      "histogram_l1": 0.9054667784494699,
+      "log_payload_emd": 0.059583625860759735
+    },
+    "strategy_holdout": {
+      "dataset": "profiled_online",
+      "evaluation": "strategy_holdout",
+      "method": "h0_residual",
+      "samples": 216,
+      "calls_mape": 0.44624246144790775,
+      "calls_p95_ape": 1.5470725085313446,
+      "bytes_mape": 0.014177175670036582,
+      "bytes_p95_ape": 0.042955094495968384,
+      "histogram_l1": 0.8797885822792535,
+      "log_payload_emd": 0.05548483187196221
+    },
+    "pp_holdout": {
+      "dataset": "profiled_online",
+      "evaluation": "pp_holdout",
+      "method": "h0_residual",
+      "samples": 216,
+      "calls_mape": 0.5383477750075797,
+      "calls_p95_ape": 1.9586907332432002,
+      "bytes_mape": 0.02168182748088456,
+      "bytes_p95_ape": 0.05417372881355932,
+      "histogram_l1": 0.8176086000541297,
+      "log_payload_emd": 0.05153693873535659
+    }
+  },
+  "convergence": {
+    "online_bytes_mape_below_10pct": true,
+    "online_calls_mape_below_10pct": false,
+    "online_histogram_l1_below_0_2": false
+  },
+  "conclusion": "The structured PP formula predicts logical byte volume accurately, but the current compressed image and two online repeats do not identify calls or the payload distribution accurately enough. The predictor is not ready for a scheduling default; the next experiment must enrich the compact length/survival image and estimate the expected online histogram over more repeat realizations rather than adding a larger black-box DNN."
+}
