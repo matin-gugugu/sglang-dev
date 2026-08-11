@@ -1,0 +1,218 @@
+{
+  "aggregate_rows": 330,
+  "checks": {
+    "all_histograms_positive": true,
+    "all_metrics_finite": true,
+    "decomposition_rows_1296": true,
+    "full_request_counts_match_profiles": true,
+    "h32_matches_all_72_phase16_strategy_plans": true,
+    "histogram_label_rows_4320": true,
+    "model_structure_matches_qwen3_8b_contract": true,
+    "per_case_metric_rows_5184": true,
+    "profiles_24": true,
+    "raw_source_hashes_match_manifest": true,
+    "stored_h128_matches_regenerated_phase16_sampling": true
+  },
+  "conclusion_boundary": {
+    "can_conclude": "representative-size convergence relative to full-window fixed-draining structural labels",
+    "cannot_conclude": [
+      "PP physical communication-time accuracy because no PP P2P curve is measured",
+      "online arrival-aware expected histograms",
+      "multi-model PP generalization",
+      "prediction from compact profiles without a separate holdout evaluation"
+    ]
+  },
+  "convergence_decisions": {
+    "pp": {
+      "by_sample": {
+        "h128": {
+          "bytes_mape": 0.020109930724746657,
+          "bytes_wape": 0.013722145855558844,
+          "calls_mape": 0.0470352553344142,
+          "calls_wape": 0.02673892753944815,
+          "common_reference_cost_mape": 0.03562945317757811,
+          "histogram_tv": 0.07787975833549986,
+          "meets_all": false,
+          "normalized_log_payload_emd": 0.003869153735739437,
+          "p95_calls_ape": 0.22807234886025762
+        },
+        "h32": {
+          "bytes_mape": 0.05817734946363696,
+          "bytes_wape": 0.04782837027794168,
+          "calls_mape": 0.08381432748067305,
+          "calls_wape": 0.04275508414529558,
+          "common_reference_cost_mape": 0.06630104709742003,
+          "histogram_tv": 0.09217925720539505,
+          "meets_all": false,
+          "normalized_log_payload_emd": 0.0052443526647147415,
+          "p95_calls_ape": 0.2713692196531791
+        },
+        "h64": {
+          "bytes_mape": 0.027810913952374196,
+          "bytes_wape": 0.02273069555332652,
+          "calls_mape": 0.0461746141047938,
+          "calls_wape": 0.027595223380189896,
+          "common_reference_cost_mape": 0.03270923777052872,
+          "histogram_tv": 0.08335422615109132,
+          "meets_all": false,
+          "normalized_log_payload_emd": 0.004123260638543892,
+          "p95_calls_ape": 0.15395592485549142
+        }
+      },
+      "minimum_sample_meeting_all_preregistered_thresholds": null
+    },
+    "tp": {
+      "by_sample": {
+        "h128": {
+          "bytes_mape": 0.020109930724746653,
+          "bytes_wape": 0.01372214585555885,
+          "calls_mape": 0.07567149498087138,
+          "calls_wape": 0.05265894659716126,
+          "common_reference_cost_mape": 0.04894986161949621,
+          "histogram_tv": 0.20559930490804434,
+          "meets_all": false,
+          "normalized_log_payload_emd": 0.008388967091651992,
+          "p95_calls_ape": 0.27685546875
+        },
+        "h32": {
+          "bytes_mape": 0.058177349463636986,
+          "bytes_wape": 0.04782837027794172,
+          "calls_mape": 0.11483734132619634,
+          "calls_wape": 0.07981958384210582,
+          "common_reference_cost_mape": 0.06956369863340568,
+          "histogram_tv": 0.27506383309222465,
+          "meets_all": false,
+          "normalized_log_payload_emd": 0.012062195456011877,
+          "p95_calls_ape": 0.39350058932480225
+        },
+        "h64": {
+          "bytes_mape": 0.0278109139523742,
+          "bytes_wape": 0.022730695553326522,
+          "calls_mape": 0.06501256631292358,
+          "calls_wape": 0.046487780574918085,
+          "common_reference_cost_mape": 0.038774879656800786,
+          "histogram_tv": 0.23237324214447147,
+          "meets_all": false,
+          "normalized_log_payload_emd": 0.009626725777627984,
+          "p95_calls_ape": 0.16435986159169547
+        }
+      },
+      "minimum_sample_meeting_all_preregistered_thresholds": null
+    }
+  },
+  "cost_contract": {
+    "common_reference": {
+      "bandwidth_gbps": 100.0,
+      "formula": "launch_us + payload_bytes / bandwidth_bytes_per_second * 1e6",
+      "kind": "parameterized convergence reference, not physical PP measurement",
+      "launch_us": 5.0
+    },
+    "pp_physical_curve_available": false,
+    "tp_additional_curve": "measured B200 L1 AllReduce post-rendezvous curve with Phase 15 160-512 MiB extension"
+  },
+  "decomposition_metric_rows": 1296,
+  "fixed_policies": {
+    "arrival_semantics": "fixed-draining; simultaneous within each canonical workload",
+    "pp_chunk_tokens": 4096,
+    "pp_max_micro_batch_sizes": [
+      1,
+      4,
+      16
+    ],
+    "pp_sizes": [
+      2,
+      4,
+      8
+    ],
+    "tp": {
+      "balanced": {
+        "max_batch_size": 8,
+        "max_prefill_tokens": 32768
+      },
+      "latency": {
+        "max_batch_size": 4,
+        "max_prefill_tokens": 8192
+      },
+      "throughput": {
+        "max_batch_size": 16,
+        "max_prefill_tokens": 65536
+      }
+    }
+  },
+  "input_windows": {
+    "full_request_counts_match_profiles": true,
+    "h32_matches_all_phase16_strategy_replay_plans": true,
+    "h32_plan_comparisons": 72,
+    "phase16_plan_sha256": "a665926e57d62d0b8ee7383ca61a12ed0c733bd7813b064dd8d2ef8baf824146",
+    "profiles_sha256": "096bd6978dbe59f0cbdc323571ee9b217a98366a16d19fdf68da51bd48f8e295",
+    "profiles_with_at_least_128_requests": 17,
+    "raw_manifest_sha256": "5e565e09c2b332a6007ab09166fcb2b92c631224e533bf8b1622dbab986169f1",
+    "raw_source_hashes": {
+      "BurstGPT_without_fails_1.csv": "a4d068a7113ec0290e74063a1b3447dc6001a30e4298eb313581b71006dda1f4",
+      "BurstGPT_without_fails_2.csv": "56193aa9b2bb26128ded43d2d29a960df6bf5af062bcfc9b005f3fcaa4e6e501",
+      "BurstGPT_without_fails_3.csv": "3326259f9efb11845bc5ef85fa97e6f691050b0974621c91ef22acd566c43a40",
+      "conversation_trace.jsonl": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df",
+      "synthetic_trace.jsonl": "bd070915a98fc0ed264d7cfef2ce746002eb3076a695ec31ba2674c0111ec131",
+      "toolagent_trace.jsonl": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    "representatives_sha256": "10b1e5a8f741af47dc8b7e09e34491644de3ed82547103c53b861551b2045679",
+    "stored_h128_matches_regenerated_phase16_sampling": true,
+    "total_full_requests": 18285
+  },
+  "label_rows": 4320,
+  "model": "qwen3-8b",
+  "model_contract": {
+    "architecture_audit_only": "Qwen3ForCausalLM",
+    "canonical_op_mask_all_reduce": 1,
+    "config_path": "/media/ssd1/Qwen3-8B/config.json",
+    "config_sha256": "f7c4eadfbbf522470667b797a3c89be2524832d2d599797248dc304fff447c30",
+    "dense_intermediate_ratio": 3.0,
+    "dtype_bytes": 2,
+    "estimated_moe_layers": 0,
+    "experts_per_token": 0,
+    "first_dense_layers": 0,
+    "head_dim": 128.0,
+    "hidden_size": 4096,
+    "is_moe": 0,
+    "kv_head_ratio": 0.25,
+    "logical_collectives_per_forward_prior": 73,
+    "model": "qwen3-8b",
+    "model_type_audit_only": "qwen3",
+    "moe_intermediate_ratio": 0.0,
+    "moe_layer_frequency": 0,
+    "num_attention_heads": 32,
+    "num_experts": 0,
+    "num_hidden_layers": 36,
+    "num_shared_experts": 0,
+    "payload_bytes_per_active_token_prior": 8192,
+    "raw_op_template_audit_only": "all_reduce:2L+1"
+  },
+  "normalization_requests": 1000,
+  "objective": "Compare exact representative H32/H64/H128 and compact-profile H32 with full-window fixed-draining TP/PP H0 labels, all normalized per 1000 requests.",
+  "per_case_metric_rows": 5184,
+  "pp_error_decomposition": {
+    "compact32_vs_exact_h32_calls_mape": 0.10393377732226962,
+    "compact32_vs_hfull_calls_mape": 0.0814344926849505,
+    "comparison_is_non_additive": true,
+    "exact_h128_vs_hfull_calls_mape": 0.0470352553344142,
+    "exact_h32_vs_hfull_calls_mape": 0.08381432748067305,
+    "exact_h64_vs_hfull_calls_mape": 0.0461746141047938,
+    "full_window_teacher_recommended": true,
+    "inference": "both finite-sample and compact-profile reconstruction errors are material; compact32 differs from exact H32 more than exact H32 differs from Hfull, but partial cancellation against Hfull makes the two components non-additive"
+  },
+  "preregistered_convergence_thresholds": {
+    "bytes_mape": 0.05,
+    "bytes_wape": 0.05,
+    "calls_mape": 0.05,
+    "calls_wape": 0.05,
+    "common_reference_cost_mape": 0.05,
+    "histogram_tv": 0.05,
+    "normalized_log_payload_emd": 0.02,
+    "p95_bytes_ape": 0.15,
+    "p95_calls_ape": 0.15,
+    "p95_common_reference_cost_ape": 0.15
+  },
+  "schema_version": "phase24-representative-request-convergence-v1",
+  "status": "PASS",
+  "teacher_contract": "Hfull uses complete capped request lengths in original order under fixed-draining; complete request lists are offline label-only inputs."
+}
