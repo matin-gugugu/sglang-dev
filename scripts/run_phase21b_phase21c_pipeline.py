@@ -106,6 +106,33 @@ def main() -> None:
             repo_root,
             log,
         )
+        online_root = repo_root / "experiment-results/phase21c_pp_online_residual"
+        run(
+            [
+                sys.executable,
+                "scripts/finalize_phase21c_pp_online.py",
+                "--output-dir",
+                str(online_root / "qwen3-8b-labels-v1"),
+            ],
+            repo_root,
+            log,
+        )
+        run(
+            [
+                sys.executable,
+                "scripts/train_phase21b_pp_predictor.py",
+                "--labels",
+                str(online_root / "qwen3-8b-labels-v1/labels.csv"),
+                "--h0",
+                str(pipeline_root / "h0-v1/h0_samples.csv"),
+                "--output-dir",
+                str(repo_root / "experiment-results/phase22_pp_predictor/qwen3-8b-online-v1"),
+                "--dataset-mode",
+                "profiled_online",
+            ],
+            repo_root,
+            log,
+        )
         (pipeline_root / "PIPELINE_DONE").write_text("PASS\n")
         log.write("PASS\n")
         log.flush()

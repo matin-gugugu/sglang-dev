@@ -84,6 +84,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--patience", type=int, default=20)
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--seed", type=int, default=20260811)
+    parser.add_argument(
+        "--dataset-mode",
+        choices=("canonical_draining", "profiled_online"),
+        default="canonical_draining",
+    )
     return parser.parse_args()
 
 
@@ -254,8 +259,10 @@ def main() -> None:
     labels = read_csv(args.labels)
     h0_by_id = {row["sample_id"]: row for row in read_csv(args.h0)}
     profiles = {row["profile_id"]: row for row in read_csv(args.profiles)}
-    if len(labels) != 432 or set(row["sample_id"] for row in labels) != set(h0_by_id):
-        raise ValueError("expected exactly aligned 432-row label and H0 tables")
+    h0_keys = [row.get("h0_sample_id", row["sample_id"]) for row in labels]
+    missing_h0 = sorted(set(h0_keys) - set(h0_by_id))
+    if missing_h0:
+        raise ValueError(f"labels reference missing H0 samples: {missing_h0[:5]}")
 
     actual_calls = np.stack(
         [
@@ -276,7 +283,9 @@ def main() -> None:
         [
             np.asarray(
                 json.loads(
-                    h0_by_id[row["sample_id"]]["calls_by_12bin_per_1000_json"]
+                    h0_by_id[row.get("h0_sample_id", row["sample_id"])][
+                        "calls_by_12bin_per_1000_json"
+                    ]
                 ),
                 dtype=np.float64,
             )
@@ -287,7 +296,7 @@ def main() -> None:
         [
             np.asarray(
                 json.loads(
-                    h0_by_id[row["sample_id"]][
+                    h0_by_id[row.get("h0_sample_id", row["sample_id"])][
                         "logical_bytes_by_12bin_per_1000_json"
                     ]
                 ),
@@ -443,10 +452,12 @@ def main() -> None:
             name: sorted(folds) for name, folds in definitions.items()
         },
         "trained_outer_folds": trained_folds,
+        "dataset_mode": args.dataset_mode,
         "headline": headline,
         "boundary": (
-            "This checkpoint closes one-model canonical draining PP demand. "
-            "Arrival-aware calibration and leave-one-model-out are separate additions."
+            "This is a one-model PP checkpoint. Canonical draining labels close the "
+            "structural base; profiled-online labels calibrate arrival-driven batching. "
+            "Leave-one-model-out remains a separate three-model addition."
         ),
     }
     (args.output_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
