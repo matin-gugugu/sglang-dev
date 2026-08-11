@@ -561,6 +561,14 @@ def parse_args() -> argparse.Namespace:
         default=["profiled", "draining"],
     )
     p.add_argument("--pp-sizes", nargs="+", type=int, default=[2, 4, 8])
+    p.add_argument(
+        "--microbatch-sizes",
+        nargs="+",
+        type=int,
+        choices=(1, 4, 16),
+        default=[1, 4, 16],
+        help="Run only the selected pp_max_micro_batch_size cells.",
+    )
     p.add_argument("--repeats", type=int, default=3)
     p.add_argument("--startup-timeout", type=float, default=1200)
     p.add_argument("--port-base", type=int, default=31300)
@@ -585,7 +593,10 @@ def main() -> None:
     arrival_modes = tuple(dict.fromkeys(args.arrival_modes))
     requests = load_profile_requests(plan, profiles)
     profile_metadata = load_profile_metadata(service_profiles, profiles)
-    strategies = {"mb1": 1, "mb4": 4, "mb16": 16}
+    strategies = {
+        f"mb{microbatch_size}": microbatch_size
+        for microbatch_size in dict.fromkeys(args.microbatch_sizes)
+    }
     audits = []
     for pp_index, pp_size in enumerate(args.pp_sizes):
         for strategy_index, (strategy, microbatch_size) in enumerate(strategies.items()):
