@@ -192,7 +192,10 @@ def run_server_cell(
     repeats: int,
     port: int,
     startup_timeout: float,
+    workloads: list[Workload] | None = None,
+    fixed_request_content: bool = False,
 ) -> dict[str, Any]:
+    workloads = build_workloads() if workloads is None else workloads
     output_dir.mkdir(parents=True, exist_ok=True)
     profile_dir = output_dir / "profile"
     profile_dir.mkdir(parents=True, exist_ok=True)
@@ -275,7 +278,7 @@ def run_server_cell(
         wait_for_server(base_url, process, startup_timeout)
         with client_log_path.open("w", encoding="utf-8") as client_log:
             for repeat in range(repeats):
-                for workload_index, workload in enumerate(build_workloads()):
+                for workload_index, workload in enumerate(workloads):
                     workload_id = (
                         f"qwen3-8b/pp{pp_size}/{strategy}/{workload.name}/r{repeat}"
                     )
@@ -288,7 +291,7 @@ def run_server_cell(
                         "input_ids": [
                             input_ids(
                                 length,
-                                salt=repeat * 1000
+                                salt=(0 if fixed_request_content else repeat * 1000)
                                 + workload_index * 100
                                 + request_index,
                             )
@@ -353,6 +356,20 @@ def parse_args() -> argparse.Namespace:
         default="experiment-results/phase19_pp_pattern/qwen3-8b",
     )
     parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--pp-sizes", type=int, nargs="+", default=[2, 4, 8])
+    parser.add_argument(
+        "--microbatch-sizes", type=int, nargs="+", default=[1, 4, 16]
+    )
+    parser.add_argument(
+        "--workloads",
+        nargs="+",
+        help="Run only the named controlled workloads (default: all).",
+    )
+    parser.add_argument(
+        "--fixed-request-content",
+        action="store_true",
+        help="Keep input token IDs identical across repetitions, not only lengths.",
+    )
     parser.add_argument("--startup-timeout", type=float, default=1200)
     parser.add_argument("--port-base", type=int, default=31100)
     return parser.parse_args()
@@ -362,9 +379,30 @@ def main() -> None:
     args = parse_args()
     repo_root = Path(__file__).resolve().parents[1]
     output_root = (repo_root / args.output_root).resolve()
-    strategies = {"mb1": 1, "mb4": 4, "mb16": 16}
+    all_workloads = build_workloads()
+    if args.workloads:
+        requested = set(args.workloads)
+        workloads = [row for row in all_workloads if row.name in requested]
+        missing = requested - {row.name for row in workloads}
+        if missing:
+            raise ValueError(f"unknown workloads: {sorted(missing)}")
+    else:
+        workloads = all_workloads
+    all_strategies = {"mb1": 1, "mb4": 4, "mb16": 16}
+    invalid_microbatches = set(args.microbatch_sizes) - set(all_strategies.values())
+    if invalid_microbatches:
+        raise ValueError(
+            f"unsupported microbatch sizes: {sorted(invalid_microbatches)}"
+        )
+    strategies = {
+        name: size
+        for name, size in all_strategies.items()
+        if size in set(args.microbatch_sizes)
+    }
     audits = []
-    for pp_index, pp_size in enumerate((2, 4, 8)):
+    for pp_index, pp_size in enumerate(args.pp_sizes):
+        if pp_size not in (2, 4, 8):
+            raise ValueError(f"unsupported PP size: {pp_size}")
         for strategy_index, (strategy, microbatch_size) in enumerate(
             strategies.items()
         ):
@@ -381,7 +419,7 @@ def main() -> None:
                     for line in client_results.read_text(encoding="utf-8").splitlines()
                     if line.strip()
                 ]
-                if len(records) == args.repeats * len(build_workloads()):
+                if len(records) == args.repeats * len(workloads):
                     recovered_audit = audit_server_cell(
                         output_dir=cell_dir,
                         pp_size=pp_size,
@@ -402,6 +440,8 @@ def main() -> None:
                     repeats=args.repeats,
                     port=args.port_base + pp_index * 10 + strategy_index,
                     startup_timeout=args.startup_timeout,
+                    workloads=workloads,
+                    fixed_request_content=args.fixed_request_content,
                 )
             )
 
@@ -409,10 +449,12 @@ def main() -> None:
         "schema_version": "phase19-pp-pattern-matrix-v1",
         "model": "qwen3-8b",
         "tp_size": 1,
-        "pp_sizes": [2, 4, 8],
+        "pp_sizes": args.pp_sizes,
         "strategies": strategies,
         "repeats": args.repeats,
-        "workloads_per_repeat": len(build_workloads()),
+        "workloads": [row.name for row in workloads],
+        "workloads_per_repeat": len(workloads),
+        "fixed_request_content": args.fixed_request_content,
         "cells": audits,
         "status": "PASS" if all(row["status"] == "PASS" for row in audits) else "FAIL",
     }
