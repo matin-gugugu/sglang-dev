@@ -60,7 +60,13 @@ def allocate_counts(probabilities: np.ndarray, total: int) -> np.ndarray:
     probabilities /= probabilities.sum()
     raw = probabilities * total
     result = np.floor(raw).astype(int)
-    for index in np.argsort(-(raw - result))[: total - int(result.sum())]:
+    # Explicit index tie-breaking keeps the canonical reconstruction identical
+    # across NumPy versions and machines.
+    order = sorted(
+        range(len(raw)),
+        key=lambda index: (-(float(raw[index]) - int(result[index])), index),
+    )
+    for index in order[: total - int(result.sum())]:
         result[index] += 1
     return result
 
