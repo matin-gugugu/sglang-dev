@@ -437,6 +437,7 @@ def main() -> None:
                             ),
                             "profile_id": profile["profile_id"],
                             "role": profile["phase27_role"],
+                            "phase27_role": profile["phase27_role"],
                             "source": profile["source"],
                             "segment": profile["segment"],
                             "window_id": profile["window_id"],
