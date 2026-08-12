@@ -278,6 +278,13 @@ def main() -> None:
         for row in aggregates
         if row["parallelism"] == "pp" and row["phase"] == "total" and row["policy"] == "all"
     )
+    pp_policy_totals = {
+        row["policy"]: row
+        for row in aggregates
+        if row["parallelism"] == "pp"
+        and row["phase"] == "total"
+        and row["policy"] != "all"
+    }
     summary = {
         "schema_version": "phase25-full-window-gpu-smoke-analysis-v1",
         "status": "COMPLETE_MEASURED_PP_MISMATCH",
@@ -296,6 +303,7 @@ def main() -> None:
             "teacher_mismatch_cells": len(pp_audits) - pp_exact,
             "phase_labels": 18,
             "total_metrics": pp_total,
+            "total_metrics_by_policy": pp_policy_totals,
         },
         "interpretation": (
             "Full-window TP aggregation is exact for the sentinel. PP logical bytes are "
@@ -305,11 +313,31 @@ def main() -> None:
         "promotion_gate": "BLOCKED_BY_PP_MB_GT_1_SCHEDULER_MISMATCH",
     }
     (args.output_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    policy_lines = []
+    for policy in ("mb1", "mb4", "mb16"):
+        row = pp_policy_totals[policy]
+        policy_lines.append(
+            "| {policy} | {exact}/{cases} | {calls:.2%} | {bytes:.2%} | {tv:.4f} | "
+            "{emd:.4f} | {cost:.2%} |".format(
+                policy=policy.upper(),
+                exact=row["exact_histograms"],
+                cases=row["cases"],
+                calls=row["calls_wape"],
+                bytes=row["bytes_wape"],
+                tv=row["mean_calls_histogram_tv"],
+                emd=row["mean_normalized_log_payload_emd"],
+                cost=row["common_reference_cost_mape"],
+            )
+        )
     (args.output_dir / "README.md").write_text(
         "# Phase 25 GPU smoke：完整窗口 teacher 审计\n\n"
         "42 个真实请求的完整 fixed-draining 窗口已完成 TP2 和 9 个 PP cell 的 GPU 审计。"
         f"TP 精确通过；PP {pp_exact}/9 个 cell 与静态 teacher 精确一致。"
         "所有 PP cell 的采集完整性和 sender boundary 一致性通过。\n\n"
+        "| PP policy | 精确cell | calls WAPE | bytes WAPE | hist TV | norm EMD | cost MAPE |\n"
+        "|---|---:|---:|---:|---:|---:|---:|\n"
+        + "\n".join(policy_lines)
+        + "\n\n"
         "MB>1 的 logical bytes 守恒但 calls/直方图不一致，说明误差来自真实 scheduler 的"
         "离散 microbatch 拆分/合并，而不是请求规模抽样。当前 provisional PP 标签不能晋升为"
         "训练真值；下一步应恢复 fixed-draining scheduler 语义或生成 GPU/full-scheduler teacher。\n"
