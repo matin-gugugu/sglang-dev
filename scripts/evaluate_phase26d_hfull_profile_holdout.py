@@ -346,6 +346,70 @@ def comparison_rows(headline: dict) -> list[dict]:
     return rows
 
 
+def first_version_candidate(metrics: list[dict]) -> list[dict]:
+    policies = {
+        "tp": ("latency", "balanced", "throughput"),
+        "pp": ("mb1", "mb4", "mb16"),
+    }
+    decision_rows = []
+    for parallelism, parallel_policies in policies.items():
+        for policy in parallel_policies:
+            by_method = {
+                method: next(
+                    row
+                    for row in metrics
+                    if row["evaluation_scope"] == ALL_TEST_SCOPE
+                    and row["parallelism"] == parallelism
+                    and row["method"] == method
+                    and row["phase"] == "total"
+                    and row["policy"] == policy
+                )
+                for method in ("h0", "h0_bounded_residual", "direct")
+            }
+            h0 = by_method["h0"]
+            residual = by_method["h0_bounded_residual"]
+            wins = sum(
+                residual[field] < h0[field]
+                for field in (
+                    "calls_mape",
+                    "mean_histogram_tv",
+                    "common_reference_cost_mape",
+                )
+            )
+            cost_relative_change = (
+                residual["common_reference_cost_mape"]
+                - h0["common_reference_cost_mape"]
+            ) / max(h0["common_reference_cost_mape"], 1e-12)
+            selected = (
+                "h0_bounded_residual"
+                if wins >= 2 and cost_relative_change <= 0.10
+                else "h0"
+            )
+            selected_row = by_method[selected]
+            decision_rows.append(
+                {
+                    "parallelism": parallelism,
+                    "policy": policy,
+                    "candidate_method": selected,
+                    "decision_rule": "residual wins at least 2 of calls MAPE, TV, cost MAPE and cost regression <=10%; otherwise H0",
+                    "residual_metric_wins_of_3": wins,
+                    "residual_cost_relative_change": cost_relative_change,
+                    "candidate_calls_mape": selected_row["calls_mape"],
+                    "candidate_calls_wape": selected_row["calls_wape"],
+                    "candidate_bytes_mape": selected_row["bytes_mape"],
+                    "candidate_histogram_tv": selected_row["mean_histogram_tv"],
+                    "candidate_normalized_log_payload_emd": selected_row[
+                        "mean_normalized_log_payload_emd"
+                    ],
+                    "candidate_common_reference_cost_mape": selected_row[
+                        "common_reference_cost_mape"
+                    ],
+                    "selection_boundary": "post-holdout first-version candidate; validate on new profiles before reporting an unbiased hybrid score",
+                }
+            )
+    return decision_rows
+
+
 def plot_calls_mape(path: Path, headline: dict) -> None:
     import matplotlib.pyplot as plt
 
@@ -437,6 +501,21 @@ Synthetic只有1个画像，保留为外部极端哨兵，不能单独支撑统�
 Temporal、External及全部测试画像，并同时看calls、bytes、TV、EMD和cost，而不是只挑一个
 改善数字。
 
+## 首版候选决策
+
+- TP：latency/balanced/throughput全部保留H0；bounded residual在Temporal近似持平，但在
+  External的calls、bytes与cost显著退化；
+- PP MB1：保留H0；全部测试画像calls MAPE 8.77%、common cost MAPE 3.03%，residual反而退化；
+- PP MB4：把bounded residual作为待复验候选；calls MAPE 42.09%降到33.19%、TV 0.2253
+  降到0.2167，但cost MAPE从9.93%小幅升到10.26%；
+- PP MB16：把bounded residual作为待复验候选；calls MAPE 160.46%降到125.36%、TV
+  0.5298降到0.4797、cost MAPE 16.47%降到13.65%。绝对误差仍很高，不能视为已解决；
+- Direct在TP/PP都拒绝。
+
+上述TP/PP策略选择是在本轮holdout结果后形成的首版候选，不能再把同一批测试画像上的组合
+成绩当作无偏测试分数；必须用新增画像复验。PP MB4/MB16的绝对calls误差表明下一阶段应增强
+compact画像中的scheduler-sensitive离散统计，而不是更换Hfull teacher。
+
 ## 口径
 
 - calls/bytes均按每1000请求归一化；
@@ -450,6 +529,7 @@ Temporal、External及全部测试画像，并同时看calls、bytes、TV、EMD�
 - `analysis/test_predictions.csv.gz`：逐配置、逐phase/total预测；
 - `analysis/test_metrics.csv`：按测试域、并行、方法、phase和policy聚合；
 - `analysis/residual_vs_h0.csv`：bounded residual相对H0的逐指标变化；
+- `analysis/first_version_candidate.csv`：透明规则生成的策略级首版候选；
 - `figures/test_domain_calls_mape.png`：三测试域TP/PP calls MAPE；
 - `contract.json`、`summary.json`、`audit_summary.json`、`logs/evaluation.log`、`DONE`
   和`manifest.sha256`。
@@ -499,9 +579,11 @@ def main() -> None:
     metrics = aggregate_records(records)
     headline = headline_lookup(metrics)
     comparisons = comparison_rows(headline)
+    candidate_rows = first_version_candidate(metrics)
     write_csv_gz(args.output_dir / "analysis/test_predictions.csv.gz", records)
     write_csv(args.output_dir / "analysis/test_metrics.csv", metrics)
     write_csv(args.output_dir / "analysis/residual_vs_h0.csv", comparisons)
+    write_csv(args.output_dir / "analysis/first_version_candidate.csv", candidate_rows)
     plot_calls_mape(args.output_dir / "figures/test_domain_calls_mape.png", headline)
 
     test_profiles = {
@@ -524,6 +606,18 @@ def main() -> None:
         "prediction_records_4536": len(records) == 4536,
         "headline_scopes_complete": set(headline)
         == {ALL_TEST_SCOPE, "temporal_test", "external_test", "external_synthetic"},
+        "candidate_decisions_6": len(candidate_rows) == 6,
+        "candidate_tp_all_h0": all(
+            row["candidate_method"] == "h0"
+            for row in candidate_rows
+            if row["parallelism"] == "tp"
+        ),
+        "candidate_pp_policy_split": {
+            row["policy"]: row["candidate_method"]
+            for row in candidate_rows
+            if row["parallelism"] == "pp"
+        }
+        == {"mb1": "h0", "mb4": "h0_bounded_residual", "mb16": "h0_bounded_residual"},
         "all_metrics_finite": all(
             math.isfinite(float(row[field]))
             for row in metrics
@@ -600,21 +694,25 @@ def main() -> None:
             "prediction_records": len(records),
             "metric_rows": len(metrics),
             "comparison_rows": len(comparisons),
+            "candidate_rows": len(candidate_rows),
         },
         "test_profile_split_counts": dict(split_profiles),
         "checkpoint_hashes": checkpoint_hashes,
         "test_headline": headline,
         "residual_relative_outcome": residual_outcome,
+        "first_version_candidate": candidate_rows,
         "checks": checks,
         "can_conclude": [
             "the frozen Phase 26C models were evaluated without train/validation profile leakage",
             "TP and PP generalization can be compared across temporal, external, and synthetic holdouts",
             "H0, direct, and bounded residual can be selected or rejected using untouched-profile evidence",
+            "TP should retain H0; PP MB1 should retain H0; PP MB4/MB16 residuals are candidates that still require new-profile confirmation",
         ],
         "cannot_conclude": [
             "one external synthetic profile represents a population distribution",
             "the result applies to online arrival-aware scheduling or another PP scheduler contract",
             "the common parameterized cost is physical PP communication time",
+            "PP MB4/MB16 accuracy is solved; their absolute holdout calls errors remain large",
         ],
         "next_step": "use the holdout evidence to freeze the first-version TP/PP predictor choice; if PP remains weak, enrich compact scheduler-sensitive profile features without changing Hfull teacher",
     }
