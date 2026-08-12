@@ -658,7 +658,8 @@ has overall calls WAPE {aggregate['calls_wape']:.2%}, mean histogram TV
 {aggregate['mean_normalized_log_payload_emd']:.4f}, and reference-cost MAPE
 {aggregate['common_reference_cost_mape']:.2%}. Logical bytes remain conserved.
 
-- MB1: calls WAPE {policy['mb1']['calls_wape']:.2%}; the old formula is exact.
+- MB1: calls WAPE {policy['mb1']['calls_wape']:.2%}; it is exact on the
+  no-cross-chunk smoke, but not generally on full windows with long prompts.
 - MB4: calls WAPE {policy['mb4']['calls_wape']:.2%}.
 - MB16: calls WAPE {policy['mb16']['calls_wape']:.2%}.
 
@@ -731,10 +732,12 @@ def main() -> None:
         "all_label_statuses_validated": all(
             row["label_status"] == LABEL_STATUS for row in phase_rows + boundary_rows
         ),
-        "mb1_old_formula_exact": next(
-            row for row in policy_aggregates if row["policy"] == "mb1"
-        )["exact_histograms"]
-        == 72,
+        "mb1_gpu_smoke_exact_3_of_3": all(
+            row["exact"] for row in smoke_rows if row["microbatch"] == 1
+        )
+        and sum(row["microbatch"] == 1 for row in smoke_rows) == 3,
+        "old_formula_correction_detected": overall_aggregate["exact_histograms"]
+        < overall_aggregate["cases"],
         "logical_bytes_conserved_old_vs_new": math.isclose(
             overall_aggregate["bytes_wape"], 0.0, rel_tol=0, abs_tol=1e-12
         ),
@@ -786,6 +789,7 @@ def main() -> None:
             "the recovered simulator exactly reproduces all nine saved Phase 25 PP smoke histograms",
             "PP size is a scheduler input because it changes the number of independent running lanes",
             "logical-byte mass was never the failing component; the correction changes forward-call grouping and payload distribution",
+            "MB1 is exact for the no-cross-chunk smoke but can still require correction for full windows containing long prompts whose chunks migrate across lanes",
             "the scheduler-faithful full-window labels can replace the Phase 25A provisional static PP labels for the scoped contract",
         ],
         "cannot_conclude": [
