@@ -219,6 +219,7 @@ def main() -> None:
         teacher_rows.extend(read_csv_gz(args.teacher_root / "labels" / name))
     teacher = {
         (
+            row["model"],
             row["parallelism"],
             int(row["parallel_size"]),
             row["profile_id"],
@@ -235,6 +236,7 @@ def main() -> None:
     pairs = []
     for truth in gpu_rows:
         key = (
+            truth["model"],
             truth["parallelism"],
             int(truth["parallel_size"]),
             truth["profile_id"],
