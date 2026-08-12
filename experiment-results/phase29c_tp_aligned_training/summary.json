@@ -1,0 +1,205 @@
+{
+  "can_conclude": [
+    "three DNN controls were retrained on aligned multi-model TP Hfull supervision",
+    "both confirmation prediction artifacts were frozen without target access",
+    "development validation can select guarded candidates for independent confirmation"
+  ],
+  "candidate_decisions": [
+    {
+      "enhanced_cost_guard": true,
+      "enhanced_wins": 2,
+      "h0_calls_mape": 0.10485197457537153,
+      "h0_cost_mape": 0.07317505753166673,
+      "h0_histogram_tv": 0.08852349663919254,
+      "legacy_cost_guard": true,
+      "legacy_wins": 3,
+      "policy": "latency",
+      "rule": "at_least_2_of_calls_tv_cost_wins_and_cost_mape_within_110pct_of_h0",
+      "selected_method": "legacy_bounded_residual",
+      "selection_source": "development_validation_only"
+    },
+    {
+      "enhanced_cost_guard": true,
+      "enhanced_wins": 2,
+      "h0_calls_mape": 0.10927496422637538,
+      "h0_cost_mape": 0.06138201022990118,
+      "h0_histogram_tv": 0.13097288889733083,
+      "legacy_cost_guard": true,
+      "legacy_wins": 3,
+      "policy": "balanced",
+      "rule": "at_least_2_of_calls_tv_cost_wins_and_cost_mape_within_110pct_of_h0",
+      "selected_method": "legacy_bounded_residual",
+      "selection_source": "development_validation_only"
+    },
+    {
+      "enhanced_cost_guard": true,
+      "enhanced_wins": 2,
+      "h0_calls_mape": 0.14743037920461657,
+      "h0_cost_mape": 0.06155733190587432,
+      "h0_histogram_tv": 0.24198984150180536,
+      "legacy_cost_guard": true,
+      "legacy_wins": 2,
+      "policy": "throughput",
+      "rule": "at_least_2_of_calls_tv_cost_wins_and_cost_mape_within_110pct_of_h0",
+      "selected_method": "enhanced_bounded_residual",
+      "selection_source": "development_validation_only"
+    }
+  ],
+  "cannot_conclude": [
+    "development validation improvements imply independent-window improvements",
+    "the final residual DNN is accepted before both confirmation evaluations",
+    "the common reference cost is measured physical topology time"
+  ],
+  "checkpoints": [
+    {
+      "best_epoch": 18,
+      "best_validation_loss": 0.028805822134017944,
+      "bytes": 45173,
+      "feature_columns": 55,
+      "method": "legacy_bounded_residual",
+      "path": "checkpoints/tp_legacy_bounded_residual.pt",
+      "sha256": "a0286b4b97cf8a3a4fe98fec50e07b17542c6ce01e42fe87218c095e632a9f27"
+    },
+    {
+      "best_epoch": 23,
+      "best_validation_loss": 0.02796332724392414,
+      "bytes": 63317,
+      "feature_columns": 113,
+      "method": "enhanced_bounded_residual",
+      "path": "checkpoints/tp_enhanced_bounded_residual.pt",
+      "sha256": "2a7dc5ea4ba27471aa1610328f99226705f91dd23cecace30c43a64595480526"
+    },
+    {
+      "best_epoch": 20,
+      "best_validation_loss": 0.0896533653140068,
+      "bytes": 63093,
+      "feature_columns": 113,
+      "method": "enhanced_direct",
+      "path": "checkpoints/tp_enhanced_direct.pt",
+      "sha256": "36cd8f18eadc84acb16efd2f7651293d6240dd02424593f244257bc34e10d9af"
+    }
+  ],
+  "checks": {
+    "all_metrics_finite": true,
+    "candidate_mapping_three_policies": true,
+    "confirmation_targets_not_script_inputs": true,
+    "development_rows_2268": true,
+    "features_55_legacy_113_enhanced": true,
+    "first_confirmation_features_972_no_targets": true,
+    "first_confirmation_predictions_3888": true,
+    "fit_validation_profiles_30_12": true,
+    "phase29b_status_pass": true,
+    "second_confirmation_features_972_no_targets": true,
+    "second_confirmation_predictions_3888": true,
+    "three_frozen_checkpoints": true,
+    "validation_records_3888": true
+  },
+  "counts": {
+    "checkpoints": 3,
+    "development_phase_rows": 2268,
+    "enhanced_feature_columns": 113,
+    "first_confirmation_feature_rows": 972,
+    "first_confirmation_prediction_rows": 3888,
+    "fit_phase_rows": 1620,
+    "fit_profiles": 30,
+    "legacy_feature_columns": 55,
+    "second_confirmation_feature_rows": 972,
+    "second_confirmation_prediction_rows": 3888,
+    "validation_case_metric_rows": 3888,
+    "validation_phase_rows": 648,
+    "validation_profiles": 12
+  },
+  "device": "cuda:0",
+  "inputs": {
+    "dataset_summary_sha256": "22198edb5e1aefa10b1ed0698faa54718caf374e6894295e6c753696385d0883",
+    "development_dataset_sha256": "b6e32a2cb6b445c317f96d4d96f2f2dbe07c1b5839dfd424be527b799f5a5a8c",
+    "feature_columns_sha256": "2a26d9f5c6732dcf6d5b31a64facc31e961aad83c4156dbde6549e54292fb543",
+    "first_confirmation_features_sha256": "42d32eb03daa4c30464a0b8245ad6d2a43a4ea4f341a1956fa7d143e65800d23",
+    "second_confirmation_features_sha256": "21c4a80590383e120aa85e53425ab68b05765847439a4dfbcadca34f5c504284"
+  },
+  "next_step": "archive this run, then evaluate first confirmation by joining only frozen predictions and isolated targets",
+  "objective": "retrain TP H0 plus residual DNN on aligned Hfull labels and freeze two confirmation prediction sets before target access",
+  "schema_version": "phase29c-tp-aligned-training-v1",
+  "split_contract": {
+    "confirmation_targets_read": false,
+    "early_stopping": "development_validation",
+    "first_confirmation_features_only": "independent_confirmation",
+    "fit": "development_train",
+    "second_confirmation_features_only": "second_independent_confirmation"
+  },
+  "status": "PASS",
+  "validation_headline": {
+    "enhanced_bounded_residual": {
+      "bytes_mape": 0.024480388183983806,
+      "bytes_wape": 0.01628735092708569,
+      "calls_mape": 0.07980091694780321,
+      "calls_wape": 0.06871873135400317,
+      "cases": 324,
+      "common_reference_cost_mape": 0.039511392323366826,
+      "common_reference_cost_wape": 0.03074256759111183,
+      "mean_histogram_l1": 0.3354148293354675,
+      "mean_histogram_tv": 0.16770741466773376,
+      "mean_normalized_log_payload_emd": 0.01627018031101326,
+      "method": "enhanced_bounded_residual",
+      "model": "all",
+      "parallel_size": "all",
+      "phase": "total",
+      "policy": "all",
+      "segment": "all"
+    },
+    "enhanced_direct": {
+      "bytes_mape": 0.23181788133384523,
+      "bytes_wape": 0.185989881867406,
+      "calls_mape": 0.27823752935353196,
+      "calls_wape": 0.25311933489209526,
+      "cases": 324,
+      "common_reference_cost_mape": 0.23334924510952862,
+      "common_reference_cost_wape": 0.18693110045624517,
+      "mean_histogram_l1": 0.32640952176178806,
+      "mean_histogram_tv": 0.16320476088089403,
+      "mean_normalized_log_payload_emd": 0.01621984450069827,
+      "method": "enhanced_direct",
+      "model": "all",
+      "parallel_size": "all",
+      "phase": "total",
+      "policy": "all",
+      "segment": "all"
+    },
+    "h0": {
+      "bytes_mape": 0.020473232429257613,
+      "bytes_wape": 0.017078003282127514,
+      "calls_mape": 0.12051910600212117,
+      "calls_wape": 0.11079693103601822,
+      "cases": 324,
+      "common_reference_cost_mape": 0.06537146655581408,
+      "common_reference_cost_wape": 0.05053163483395047,
+      "mean_histogram_l1": 0.3076574846922191,
+      "mean_histogram_tv": 0.15382874234610955,
+      "mean_normalized_log_payload_emd": 0.014421098961892004,
+      "method": "h0",
+      "model": "all",
+      "parallel_size": "all",
+      "phase": "total",
+      "policy": "all",
+      "segment": "all"
+    },
+    "legacy_bounded_residual": {
+      "bytes_mape": 0.020395665062614553,
+      "bytes_wape": 0.01651540488529873,
+      "calls_mape": 0.09151236833184412,
+      "calls_wape": 0.07463151830577378,
+      "cases": 324,
+      "common_reference_cost_mape": 0.0487308533686999,
+      "common_reference_cost_wape": 0.03474289115818445,
+      "mean_histogram_l1": 0.3094565075763269,
+      "mean_histogram_tv": 0.15472825378816346,
+      "mean_normalized_log_payload_emd": 0.015181097991154063,
+      "method": "legacy_bounded_residual",
+      "model": "all",
+      "parallel_size": "all",
+      "phase": "total",
+      "policy": "all",
+      "segment": "all"
+    }
+  }
+}
