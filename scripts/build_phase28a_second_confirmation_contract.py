@@ -24,7 +24,14 @@ from build_phase27a_pp_feature_and_holdout_contract import (
 )
 
 
-SELECTED_PER_SEGMENT = 3
+QUOTAS = {
+    "burstgpt_1": 3,
+    "burstgpt_2": 3,
+    "burstgpt_3": 3,
+    "mooncake_conversation": 4,
+    "mooncake_toolagent": 4,
+    "mooncake_synthetic": 1,
+}
 SEED = "phase28-second-independent-confirmation-20260812-v1"
 FROZEN_MAPPING = {
     "mb1": "h0",
@@ -112,10 +119,11 @@ def main() -> None:
             & (~windows["window_id"].astype(str).isin(excluded))
         ].copy()
         candidates = candidates.sort_values("window_id", kind="stable").reset_index(drop=True)
-        if len(candidates) < SELECTED_PER_SEGMENT:
+        quota = QUOTAS[segment]
+        if len(candidates) < quota:
             raise RuntimeError(f"{segment}: only {len(candidates)} candidates")
         matrix = np.stack([selection_vector(row) for _, row in candidates.iterrows()])
-        medoids, labels, distances = choose_medoids(matrix, SELECTED_PER_SEGMENT)
+        medoids, labels, distances = choose_medoids(matrix, quota)
         for cluster, index in enumerate(medoids):
             row = candidates.iloc[index]
             members = np.flatnonzero(labels == cluster)
@@ -141,7 +149,7 @@ def main() -> None:
                 "segment": segment,
                 "eligible_unused_windows": len(candidates),
                 "minimum_history_count": minimum,
-                "selected_windows": SELECTED_PER_SEGMENT,
+                "selected_windows": quota,
             }
         )
     selected_rows.sort(key=lambda row: row["profile_id"])
@@ -164,8 +172,9 @@ def main() -> None:
         "status": "PASS",
         "selection_seed": SEED,
         "selection_rule": (
-            "exclude Phase16 and Phase27 windows, then select three robust-scaled "
-            "history-only medoids per segment before any Phase28 Hfull label"
+            "exclude Phase16 and Phase27 windows, then select robust-scaled history-only "
+            "medoids with frozen quotas 3/3/3/4/4/1 before any Phase28 Hfull label; "
+            "Mooncake synthetic has only one eligible unused window"
         ),
         "selected_profiles": len(selected_rows),
         "segments": len(SEGMENTS),
@@ -188,8 +197,8 @@ def main() -> None:
     write_json(args.output_dir / "summary.json", summary)
     checks = {
         "selected_profiles_18": len(selected_rows) == 18,
-        "three_per_segment": Counter(row["segment"] for row in selected_rows)
-        == Counter({segment: 3 for segment in SEGMENTS}),
+        "frozen_segment_quotas": Counter(row["segment"] for row in selected_rows)
+        == Counter(QUOTAS),
         "all_window_ids_unique": len({row["window_id"] for row in selected_rows}) == 18,
         "no_phase16_or_phase27_reuse": not (
             {row["window_id"] for row in selected_rows} & excluded
@@ -216,8 +225,10 @@ def main() -> None:
 
 本阶段在生成任何Phase 28预测和Hfull标签前，冻结Phase 27D确认后形成的方法映射：
 `MB1=H0、MB4/MB16=增强bounded residual`。从Phase 15窗口中排除Phase 16的24个窗口和
-Phase 27的60个窗口，再对每个segment用相同{len(SELECTION_FEATURES)}个历史侧特征选3个
-medoid，共18个第二独立确认画像。
+Phase 27的60个窗口，再用相同{len(SELECTION_FEATURES)}个历史侧特征按3/3/3/4/4/1配额
+选择medoid，共18个第二独立确认画像。Mooncake synthetic总共只有12个候选，排除前两轮后
+仅剩1个，因此将多出的2个配额分给conversation和toolagent；该调整发生在任何选择清单、
+预测或Hfull标签生成之前。
 
 `selection/selected_windows.csv`是不可事后更改的窗口清单；
 `frozen_method_mapping.json`是不可事后更改的方法映射。当前没有Phase 28预测或Hfull标签，
