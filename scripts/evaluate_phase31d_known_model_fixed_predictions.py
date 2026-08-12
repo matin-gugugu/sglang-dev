@@ -34,12 +34,13 @@ from build_phase31b_known_model_hfull_dataset import (
     summarize_profile,
 )
 from prepare_phase15_trace_windows import BURST_FILES, MOONCAKE_FILES, load_segment
-from train_phase27c_pp_scheduler_feature_predictors import case_record
 
 
 FIXED_ROLE = "fixed_prediction"
 HISTORY_SECONDS = 300
 METHODS = ("h0", "h0_plus_dnn_residual")
+COMMON_REFERENCE_LAUNCH_US = 5.0
+COMMON_REFERENCE_BANDWIDTH_GBPS = 100.0
 OFFICIAL = {
     "tp": {
         "calls_wape": 0.10,
@@ -230,6 +231,72 @@ def vector(row: dict[str, str], name: str) -> np.ndarray:
     return np.asarray(json.loads(row[name]), dtype=np.float64)
 
 
+def normalized_log_emd(predicted: np.ndarray, actual: np.ndarray, edges: list[float]) -> float:
+    predicted_total = max(float(predicted.sum()), 1e-12)
+    actual_total = max(float(actual.sum()), 1e-12)
+    predicted_cdf = np.cumsum(predicted / predicted_total)
+    actual_cdf = np.cumsum(actual / actual_total)
+    values = np.asarray(edges, dtype=np.float64)
+    centers = (np.log2(values[:-1]) + np.log2(values[1:])) / 2
+    area = float(np.sum(np.abs(predicted_cdf[:-1] - actual_cdf[:-1]) * np.diff(centers)))
+    return area / (math.log2(edges[-1]) - math.log2(edges[0]))
+
+
+def histogram_tv(predicted: np.ndarray, actual: np.ndarray) -> float:
+    predicted_total = max(float(predicted.sum()), 1e-12)
+    actual_total = max(float(actual.sum()), 1e-12)
+    return float(np.abs(predicted / predicted_total - actual / actual_total).sum() / 2)
+
+
+def common_reference_cost(calls: np.ndarray, logical_bytes: np.ndarray) -> float:
+    return float(
+        COMMON_REFERENCE_LAUNCH_US * calls.sum()
+        + logical_bytes.sum() / (COMMON_REFERENCE_BANDWIDTH_GBPS * 1e9) * 1e6
+    )
+
+
+def case_record(
+    row: dict[str, str],
+    method: str,
+    phase: str,
+    actual_calls: np.ndarray,
+    actual_bytes: np.ndarray,
+    predicted_calls: np.ndarray,
+    predicted_bytes: np.ndarray,
+    edges: list[float],
+) -> dict:
+    actual_calls_total = float(actual_calls.sum())
+    predicted_calls_total = float(predicted_calls.sum())
+    actual_bytes_total = float(actual_bytes.sum())
+    predicted_bytes_total = float(predicted_bytes.sum())
+    actual_cost = common_reference_cost(actual_calls, actual_bytes)
+    predicted_cost = common_reference_cost(predicted_calls, predicted_bytes)
+    tv = histogram_tv(predicted_calls, actual_calls)
+    return {
+        "profile_id": row["profile_id"],
+        "segment": row["segment"],
+        "parallel_size": row["parallel_size"],
+        "policy": row["policy"],
+        "method": method,
+        "phase": phase,
+        "actual_total_calls": actual_calls_total,
+        "predicted_total_calls": predicted_calls_total,
+        "calls_absolute_error": abs(predicted_calls_total - actual_calls_total),
+        "calls_ape": abs(predicted_calls_total - actual_calls_total) / max(actual_calls_total, 1e-12),
+        "actual_total_logical_bytes": actual_bytes_total,
+        "predicted_total_logical_bytes": predicted_bytes_total,
+        "bytes_absolute_error": abs(predicted_bytes_total - actual_bytes_total),
+        "bytes_ape": abs(predicted_bytes_total - actual_bytes_total) / max(actual_bytes_total, 1e-12),
+        "histogram_l1": 2 * tv,
+        "histogram_tv": tv,
+        "normalized_log_payload_emd": normalized_log_emd(predicted_calls, actual_calls, edges),
+        "actual_common_reference_cost_us": actual_cost,
+        "predicted_common_reference_cost_us": predicted_cost,
+        "cost_absolute_error": abs(predicted_cost - actual_cost),
+        "cost_ape": abs(predicted_cost - actual_cost) / max(actual_cost, 1e-12),
+    }
+
+
 def evaluation_records(predictions: list[dict[str, str]], targets: list[dict]) -> list[dict]:
     target_by_id = {row["example_id"]: row for row in targets}
     if len(target_by_id) != len(targets):
@@ -410,6 +477,42 @@ def closure(metrics: list[dict], parallelism: str) -> dict:
     }
 
 
+def write_fallback_svg(path: Path, decisions: dict) -> None:
+    keys = ("calls_wape", "bytes_wape", "mean_histogram_tv", "common_reference_cost_wape")
+    labels = ("calls WAPE", "bytes WAPE", "TV", "cost WAPE")
+    colors = {"h0": "#8b95a5", "h0_plus_dnn_residual": "#276ef1"}
+    pieces = [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="620" viewBox="0 0 1000 620">',
+        '<rect width="1000" height="620" fill="white"/>',
+        '<style>text{font-family:Arial,sans-serif;fill:#172033}.title{font-size:22px;font-weight:700}.label{font-size:13px}.value{font-size:12px}</style>',
+        '<text x="500" y="36" text-anchor="middle" class="title">Phase 31D fixed prediction: H0 vs H0+DNN residual</text>',
+    ]
+    for panel, parallelism in enumerate(("tp", "pp")):
+        left = 45 + panel * 490
+        pieces.append(f'<text x="{left + 220}" y="78" text-anchor="middle" class="title">{parallelism.upper()}</text>')
+        h0 = decisions[parallelism]["h0"]
+        dnn = decisions[parallelism]["h0_plus_dnn_residual"]
+        for index, (key, label) in enumerate(zip(keys, labels)):
+            y = 120 + index * 112
+            pieces.append(f'<text x="{left}" y="{y - 12}" class="label">{label}</text>')
+            for row_index, (method, values) in enumerate((("h0", h0), ("h0_plus_dnn_residual", dnn))):
+                value = float(values[key])
+                width = min(value / 0.30 * 350, 350)
+                bar_y = y + row_index * 31
+                method_label = "H0" if method == "h0" else "H0+DNN"
+                pieces.append(f'<text x="{left}" y="{bar_y + 16}" class="value">{method_label}</text>')
+                pieces.append(f'<rect x="{left + 78}" y="{bar_y}" width="{width:.2f}" height="21" rx="3" fill="{colors[method]}"/>')
+                pieces.append(f'<text x="{left + 84 + width:.2f}" y="{bar_y + 16}" class="value">{100 * value:.2f}%</text>')
+    pieces.extend(
+        [
+            '<rect x="360" y="578" width="18" height="12" fill="#8b95a5"/><text x="384" y="589" class="label">H0</text>',
+            '<rect x="500" y="578" width="18" height="12" fill="#276ef1"/><text x="524" y="589" class="label">H0+DNN residual</text>',
+            '</svg>',
+        ]
+    )
+    path.write_text("\n".join(pieces) + "\n")
+
+
 def main() -> None:
     args = parse_args()
     for name in ("labels", "analysis", "figures", "logs"):
@@ -464,7 +567,8 @@ def main() -> None:
         figure.savefig(args.output_dir / "figures/fixed_prediction_comparison.png", dpi=180)
         plt.close(figure)
     except Exception as error:
-        write_json(args.output_dir / "figures/plot_failure.json", {"error": repr(error)})
+        write_fallback_svg(args.output_dir / "figures/fixed_prediction_comparison.svg", decisions)
+        write_json(args.output_dir / "logs/plot_fallback.json", {"matplotlib_error": repr(error), "fallback": "deterministic_svg"})
 
     checks = {
         "phase31b_development_fixed_target_absent": phase31b["fixed_target_state"] == "not_generated",
