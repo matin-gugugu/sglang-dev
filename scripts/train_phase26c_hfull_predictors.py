@@ -579,6 +579,45 @@ def aggregate_records(records: list[dict]) -> list[dict]:
     return result
 
 
+def plot_validation_headline(path: Path, headline: dict) -> None:
+    import matplotlib.pyplot as plt
+
+    method_order = ("h0", "h0_bounded_residual", "direct")
+    method_labels = ("H0", "H0 + bounded residual", "Direct")
+    colors = ("#4C78A8", "#F58518", "#9D9D9D")
+    metrics = (
+        ("calls_mape", "Total calls MAPE", 100.0, "%"),
+        ("mean_histogram_tv", "Histogram TV", 1.0, ""),
+        ("common_reference_cost_mape", "Common cost MAPE", 100.0, "%"),
+    )
+    figure, axes = plt.subplots(2, 3, figsize=(14, 7.5), constrained_layout=True)
+    for row_index, parallelism in enumerate(PARALLELISMS):
+        for column_index, (metric, title, scale, suffix) in enumerate(metrics):
+            axis = axes[row_index, column_index]
+            values = [headline[parallelism][method][metric] * scale for method in method_order]
+            bars = axis.bar(method_labels, values, color=colors, width=0.68)
+            axis.set_title(f"{parallelism.upper()} · {title}")
+            axis.grid(axis="y", alpha=0.22, linewidth=0.8)
+            axis.set_axisbelow(True)
+            axis.tick_params(axis="x", rotation=18)
+            axis.spines[["top", "right"]].set_visible(False)
+            upper = max(values) * 1.18 if max(values) > 0 else 1.0
+            axis.set_ylim(0, upper)
+            for bar, value in zip(bars, values):
+                label = f"{value:.1f}{suffix}" if suffix else f"{value:.3f}"
+                axis.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    bar.get_height() + upper * 0.025,
+                    label,
+                    ha="center",
+                    va="bottom",
+                    fontsize=9,
+                )
+    figure.suptitle("Phase 26C validation: Hfull predictor comparison", fontsize=15)
+    figure.savefig(path, dpi=180, bbox_inches="tight")
+    plt.close(figure)
+
+
 def readme(summary: dict) -> str:
     rows = summary["validation_headline"]
     table = [
@@ -635,6 +674,7 @@ TV则保留phase-aware的24维分布。
 - `analysis/validation_predictions.csv.gz`：validation逐配置、逐phase与total预测；
 - `analysis/validation_metrics.csv`：TP/PP、方法、phase与policy聚合；
 - `analysis/training_history.csv.gz`：四个网络的训练/早停轨迹；
+- `figures/validation_method_comparison.png`：TP/PP的calls、TV与common cost对比；
 - `feature_contract.json`、`summary.json`、`audit_summary.json`、`logs/training.log`、
   `DONE`和`manifest.sha256`。
 
@@ -649,6 +689,7 @@ def main() -> None:
     for directory in (
         args.output_dir / "checkpoints",
         args.output_dir / "analysis",
+        args.output_dir / "figures",
         args.output_dir / "logs",
     ):
         directory.mkdir(parents=True, exist_ok=True)
@@ -756,6 +797,9 @@ def main() -> None:
     write_csv(args.output_dir / "analysis/validation_metrics.csv", metric_rows)
     write_csv_gz(args.output_dir / "analysis/training_history.csv.gz", history_rows)
     write_csv(args.output_dir / "analysis/checkpoint_inventory.csv", checkpoint_inventory)
+    plot_validation_headline(
+        args.output_dir / "figures/validation_method_comparison.png", headline
+    )
 
     checks = {
         "dataset_status_pass": dataset_summary["status"] == "PASS",
