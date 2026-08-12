@@ -1,0 +1,28 @@
+{
+  "audited_models": [
+    "deepseek-v2-lite",
+    "qwen3-30b-a3b",
+    "qwen3-8b"
+  ],
+  "audited_policies": [
+    "latency",
+    "balanced",
+    "throughput"
+  ],
+  "audited_tp_sizes": [
+    2,
+    4,
+    8
+  ],
+  "execution_semantics": "fixed-draining",
+  "gpu_capture": "histogram-only；不保存raw events",
+  "out_of_scope": [
+    "online arrival-aware调度",
+    "不同collective实现或模型结构元数据",
+    "未经独立审计的其他SGLang版本"
+  ],
+  "parallelism": "tp",
+  "predictor_input": "低维历史画像、模型结构、固定TP、固定策略和phase",
+  "schema_version": "phase26a-tp-hfull-teacher-contract-v1",
+  "teacher_input": "完整窗口真实请求长度列表，保持原始顺序"
+}

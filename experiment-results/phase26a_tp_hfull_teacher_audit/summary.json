@@ -1,0 +1,61 @@
+{
+  "can_conclude": [
+    "当前三个正式TP模型的结构公式均有完整窗口GPU sentinel证据",
+    "TP2、TP4、TP8与三种固定执行策略均被sentinel覆盖",
+    "1,296条TP Hfull标签可作为后续full-window监督训练teacher"
+  ],
+  "cannot_conclude": [
+    "1,296条标签均为GPU逐条实测",
+    "该teacher适用于online arrival-aware或不同执行契约",
+    "旧Phase 16 H32模型无需重新训练"
+  ],
+  "cells": 4,
+  "checks": {
+    "all_cells_pass": true,
+    "all_three_policies_each_cell": true,
+    "exact_histogram_l1_zero": true,
+    "four_cells": true,
+    "phase_comparisons_24": true,
+    "promoted_labels_1296": true,
+    "scalar_errors_within_floating_tolerance": true,
+    "three_models_covered": true,
+    "tp2_tp4_tp8_covered": true
+  },
+  "inputs": {
+    "phase25a_tp_labels_sha256": "683a7f1f63096ddc7de38d8f307e8b3d28d79b59b64f9b19812a686f1d4db430",
+    "repository_head_at_finalize": "d2fbf7d89e6d143e702ec5f366cdcb25ea04440a"
+  },
+  "maximum_absolute_errors": {
+    "calls_abs_error": 1.1641532182693481e-10,
+    "histogram_calls_l1": 0.0,
+    "histogram_logical_bytes_l1": 0.0,
+    "logical_bytes_abs_error": 3.0517578125e-05
+  },
+  "models": [
+    "deepseek-v2-lite",
+    "qwen3-30b-a3b",
+    "qwen3-8b"
+  ],
+  "new_gpu_cells": 3,
+  "next_step": "使用晋升后的TP Hfull标签与Phase 25B PP Hfull标签构造统一训练集，并重训direct与H0+bounded residual",
+  "objective": "跨模型、TP size、策略与流量尾部审计TP Hfull结构teacher",
+  "phase_comparisons": 24,
+  "policies": [
+    "latency",
+    "balanced",
+    "throughput"
+  ],
+  "promoted_label_status": "GPU_VALIDATED_STRUCTURAL_FORMULA_SENTINELS_4_CELLS",
+  "promoted_labels": 1296,
+  "scalar_absolute_tolerances": {
+    "calls_abs_error": 1e-07,
+    "logical_bytes_abs_error": 0.0001
+  },
+  "schema_version": "phase26a-tp-hfull-teacher-audit-v1",
+  "status": "PASS",
+  "tp_sizes": [
+    2,
+    4,
+    8
+  ]
+}

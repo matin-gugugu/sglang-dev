@@ -1,0 +1,34 @@
+{
+  "schema_version": "profiledemand-gpu-labels-v1",
+  "model": "deepseek-v2-lite",
+  "tp": 8,
+  "workloads": 137,
+  "phase_labels": 6,
+  "profiles": 1,
+  "strategies": [
+    "balanced",
+    "latency",
+    "throughput"
+  ],
+  "repeats": [
+    0
+  ],
+  "statistical_contract": {
+    "calls": "group-level collective calls from representative rank",
+    "payload": "representative-rank logical input tensor bytes",
+    "normalization": "per 1000 requests",
+    "output": "12 bins, retaining both calls and logical bytes"
+  },
+  "checks": {
+    "all_rank_histograms_equal": true,
+    "fixed_actual_outputs": true,
+    "h0_canonical_histograms_exact": true,
+    "histogram_only_no_raw_events": true,
+    "group_size_matches_tp": true,
+    "repeats_identical": true
+  },
+  "result_sha256": "b1899a5eeb0508fb799d211803a87272a3d88b021ed5f74faa4b223a27760eb3",
+  "plan_sha256": "999e421f8f39c037148a18b87ae64e4672999423ebff4b0e564813103522c6d9",
+  "model_features_sha256": "ed11867cb5c2e9246c54485449db992aa2cb55de494b3cbc888ec5f6c42db7b7",
+  "bins_sha256": "e7cbe5ea8e0f2b10e8fcc48fc761df9935e6da16ddd131e190284217d3778c48"
+}
