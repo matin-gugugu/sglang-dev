@@ -354,7 +354,7 @@ def main() -> None:
         path
         for path in args.output_root.rglob("*")
         if path.is_file()
-        and path.name != "manifest.sha256"
+        and path != args.output_root / "manifest.sha256"
     )
     (args.output_root / "manifest.sha256").write_text(
         "".join(f"{sha256(path)}  {path.relative_to(args.output_root)}\n" for path in files)
