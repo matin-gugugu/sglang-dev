@@ -1,0 +1,63 @@
+{
+  "checks": {
+    "batch_partition_checks_162_of_162": true,
+    "history_counts_match_18_of_18": true,
+    "no_request_arrays_saved": true,
+    "prediction_feature_target_ids_exact": true,
+    "predictions_frozen_before_targets": true,
+    "profiles_18_all_second_confirmation": true,
+    "raw_source_hashes_6_of_6": true,
+    "targets_972_unique": true,
+    "teacher_promoted_phase26a": true
+  },
+  "frozen_prediction_sha256": "45b7382e8be44e3ba81a95c86809f80766b19dd7ccfa0efcf938fe0f248bd44c",
+  "full_window_requests": 15440,
+  "inputs": {
+    "features_sha256": "21c4a80590383e120aa85e53425ab68b05765847439a4dfbcadca34f5c504284",
+    "model_features_sha256": "ed11867cb5c2e9246c54485449db992aa2cb55de494b3cbc888ec5f6c42db7b7",
+    "phase26a_summary_sha256": "769ab777dc9bfb59d701112704c0c6eb58b471a2c61f6327d1ad263ec398e5b1",
+    "phase29b_summary_sha256": "22198edb5e1aefa10b1ed0698faa54718caf374e6894295e6c753696385d0883",
+    "phase29c_audit_sha256": "7e5745e646f9ce9e9de422ac20cebd148c7935d04ab5f69296f69fbf41ef3992",
+    "phase29d1_summary_sha256": "6ec37a1061e67412510025bb59fbb6768ecf214d4b09fa10048dd55d9ea55499",
+    "predictions_sha256": "45b7382e8be44e3ba81a95c86809f80766b19dd7ccfa0efcf938fe0f248bd44c",
+    "raw_manifest_sha256": "1a337b54d086760051a1991a897193f149d35e40dab2e247723524a5628e2041",
+    "windows_sha256": "f839ab1e24bccc06c2c7ba9af0ae1147c074b98a06f2b627fd8d4c89c95c98b2"
+  },
+  "models": [
+    "deepseek-v2-lite",
+    "qwen3-8b",
+    "qwen3-30b-a3b"
+  ],
+  "next_step": "archive these targets, then evaluate the already-frozen Phase29C predictions and Phase29D1 mapping without retraining",
+  "objective": "generate Hfull targets for the untouched second confirmation windows only after all method predictions and the post-first mapping were frozen",
+  "policies": [
+    "latency",
+    "balanced",
+    "throughput"
+  ],
+  "profiles": 18,
+  "raw_source_checks": {
+    "BurstGPT_without_fails_1.csv": true,
+    "BurstGPT_without_fails_2.csv": true,
+    "BurstGPT_without_fails_3.csv": true,
+    "conversation_trace.jsonl": true,
+    "synthetic_trace.jsonl": true,
+    "toolagent_trace.jsonl": true
+  },
+  "schema_version": "phase29d2-tp-second-confirmation-targets-v1",
+  "second_confirmation_frozen_mapping": {
+    "balanced": "legacy_bounded_residual",
+    "latency": "legacy_bounded_residual",
+    "throughput": "h0"
+  },
+  "status": "PASS",
+  "target_generated_after_prediction_and_mapping_freeze": true,
+  "target_phase_rows": 972,
+  "teacher_kind": "full_window_fixed_draining_structural_teacher",
+  "teacher_status": "GPU_VALIDATED_STRUCTURAL_FORMULA_SENTINELS_4_CELLS",
+  "tp_sizes": [
+    2,
+    4,
+    8
+  ]
+}
