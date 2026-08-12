@@ -318,6 +318,7 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     selection_dir = args.output_dir / "selection"
     selection_dir.mkdir(exist_ok=True)
+    (args.output_dir / "logs").mkdir(exist_ok=True)
     phase29_features = json.loads(args.phase29_feature_contract.read_text())
     phase29d3 = json.loads(args.phase29d3_summary.read_text())
     if phase29d3["status"] != "PASS":
