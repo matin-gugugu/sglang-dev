@@ -1,0 +1,34 @@
+{
+  "direct_role": "control only",
+  "early_stopping_role": "development_validation",
+  "first_confirmation_role": "independent_confirmation",
+  "fit_role": "development_train",
+  "h0_role": "structural prior, baseline, and fail-safe fallback; not a replacement for DNN",
+  "methods": [
+    "h0",
+    "phase26_legacy_bounded_residual",
+    "enhanced_bounded_residual",
+    "enhanced_direct_control"
+  ],
+  "pre_registered_guard": "relative to H0, residual should win at least two of calls MAPE, TV, and cost MAPE; cost MAPE may not regress by more than 10%, and bytes MAPE must be reported as a guard rather than hidden",
+  "prediction_freeze_rule": "write predictions and freeze their SHA-256 before reading the matching confirmation Hfull targets",
+  "primary_architecture": "H0 plus enhanced bounded residual DNN",
+  "report_slices": [
+    "all models",
+    "each model",
+    "qwen3-8b aligned with PP",
+    "TP2/TP4/TP8",
+    "latency/balanced/throughput",
+    "prefill/decode/total",
+    "traffic segment"
+  ],
+  "schema_version": "phase29a-tp-training-holdout-contract-v1",
+  "second_confirmation_role": "second_independent_confirmation",
+  "selection_metrics": [
+    "total calls MAPE/WAPE",
+    "logical bytes MAPE/WAPE",
+    "histogram L1/TV",
+    "normalized log-payload EMD",
+    "common-reference cost MAPE/WAPE"
+  ]
+}

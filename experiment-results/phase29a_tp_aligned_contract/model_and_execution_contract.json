@@ -1,0 +1,35 @@
+{
+  "models": [
+    "deepseek-v2-lite",
+    "qwen3-8b",
+    "qwen3-30b-a3b"
+  ],
+  "normalization_requests": 1000,
+  "parallel_configuration_is_predictor_input": true,
+  "phases": [
+    "prefill",
+    "decode"
+  ],
+  "scheduler_selects_tp_size": false,
+  "scheduler_semantics": "fixed-draining",
+  "schema_version": "phase29a-tp-model-execution-contract-v1",
+  "strategies": {
+    "balanced": {
+      "max_batch_size": 8,
+      "max_prefill_tokens": 32768
+    },
+    "latency": {
+      "max_batch_size": 4,
+      "max_prefill_tokens": 8192
+    },
+    "throughput": {
+      "max_batch_size": 16,
+      "max_prefill_tokens": 65536
+    }
+  },
+  "tp_sizes": [
+    2,
+    4,
+    8
+  ]
+}
