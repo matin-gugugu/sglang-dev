@@ -18,6 +18,10 @@ from run_phase26a_tp_hfull_teacher_audit import CELL_SPECS
 
 
 PROMOTED_STATUS = "GPU_VALIDATED_STRUCTURAL_FORMULA_SENTINELS_4_CELLS"
+SCALAR_TOLERANCES = {
+    "calls_abs_error": 1e-7,
+    "logical_bytes_abs_error": 1e-4,
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -226,7 +230,14 @@ def main() -> None:
             "histogram_logical_bytes_l1",
         )
     }
-    all_pass &= all(value == 0 for value in maxima.values())
+    scalar_within_tolerance = all(
+        maxima[field] <= tolerance for field, tolerance in SCALAR_TOLERANCES.items()
+    )
+    exact_histograms_zero_l1 = (
+        maxima["histogram_calls_l1"] == 0
+        and maxima["histogram_logical_bytes_l1"] == 0
+    )
+    all_pass &= scalar_within_tolerance and exact_histograms_zero_l1
 
     promoted = [{**row, "label_status": PROMOTED_STATUS} for row in teacher_rows]
     write_csv_gz(args.output_root / "labels/tp_hfull_phase_labels.csv.gz", promoted)
@@ -266,6 +277,7 @@ def main() -> None:
         "promoted_labels": len(promoted),
         "promoted_label_status": PROMOTED_STATUS,
         "maximum_absolute_errors": maxima,
+        "scalar_absolute_tolerances": SCALAR_TOLERANCES,
         "inputs": {
             "phase25a_tp_labels_sha256": sha256(teacher_path),
             "repository_head_at_finalize": subprocess_head(root),
@@ -277,7 +289,8 @@ def main() -> None:
             "tp2_tp4_tp8_covered": {int(row["tp"]) for row in cell_rows} == {2, 4, 8},
             "all_three_policies_each_cell": all(int(row["strategies"]) == 3 for row in cell_rows),
             "phase_comparisons_24": len(comparison_rows) == 24,
-            "all_errors_zero": all(value == 0 for value in maxima.values()),
+            "scalar_errors_within_floating_tolerance": scalar_within_tolerance,
+            "exact_histogram_l1_zero": exact_histograms_zero_l1,
             "promoted_labels_1296": len(promoted) == 1296,
         },
         "can_conclude": [
@@ -311,7 +324,8 @@ def main() -> None:
 
 - 4/4 cell通过；
 - 24/24个`cell × strategy × phase`比较完全一致；
-- calls、logical bytes、精确payload直方图和12桶直方图的最大绝对误差全部为0；
+- 精确payload直方图的calls L1与logical-bytes L1均为0；
+- 由直方图重新求和得到的标量只有浮点累加顺序残差：calls最大绝对误差为{maxima['calls_abs_error']:.3g}，logical bytes为{maxima['logical_bytes_abs_error']:.3g} bytes/千请求，均在预设浮点容差内；
 - 原Phase 25A的1,296条TP Hfull标签以`{PROMOTED_STATUS}`状态晋升并保存在`labels/`。
 
 ## 结论边界
