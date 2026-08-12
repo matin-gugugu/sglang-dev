@@ -38,6 +38,7 @@ TV则保留phase-aware的24维分布。
 - `analysis/validation_predictions.csv.gz`：validation逐配置、逐phase与total预测；
 - `analysis/validation_metrics.csv`：TP/PP、方法、phase与policy聚合；
 - `analysis/training_history.csv.gz`：四个网络的训练/早停轨迹；
+- `figures/validation_method_comparison.png`：TP/PP的calls、TV与common cost对比；
 - `feature_contract.json`、`summary.json`、`audit_summary.json`、`logs/training.log`、
   `DONE`和`manifest.sha256`。
 
