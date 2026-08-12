@@ -226,6 +226,68 @@ def comparison_rows(diagnostic_metrics: list[dict], hybrid_metrics: list[dict]) 
     return rows
 
 
+def plot_comparison(path: Path, comparisons: list[dict]) -> None:
+    import matplotlib.pyplot as plt
+
+    policies = ("all", "mb1", "mb4", "mb16")
+    labels = ("All", "MB1", "MB4", "MB16")
+    lookup = {row["policy"]: row for row in comparisons}
+    facets = (
+        ("calls_mape", "Total calls MAPE", 100.0, "%"),
+        ("bytes_mape", "Logical bytes MAPE", 100.0, "%"),
+        ("mean_histogram_tv", "Histogram TV", 1.0, ""),
+        ("common_reference_cost_mape", "Common cost MAPE", 100.0, "%"),
+    )
+    figure, axes = plt.subplots(2, 2, figsize=(11.5, 7.2), constrained_layout=True)
+    positions = np.arange(len(policies), dtype=np.float64)
+    width = 0.36
+    for axis, (metric, title, scale, suffix) in zip(axes.reshape(-1), facets):
+        h0_values = [float(lookup[policy][f"h0_{metric}"]) * scale for policy in policies]
+        hybrid_values = [
+            float(lookup[policy][f"frozen_hybrid_{metric}"]) * scale
+            for policy in policies
+        ]
+        h0_bars = axis.bar(
+            positions - width / 2,
+            h0_values,
+            width,
+            label="H0",
+            color="#4C78A8",
+        )
+        hybrid_bars = axis.bar(
+            positions + width / 2,
+            hybrid_values,
+            width,
+            label="Frozen hybrid",
+            color="#F58518",
+        )
+        axis.set_title(title)
+        axis.set_xticks(positions, labels)
+        axis.grid(axis="y", alpha=0.22, linewidth=0.8)
+        axis.set_axisbelow(True)
+        axis.spines[["top", "right"]].set_visible(False)
+        upper = max(h0_values + hybrid_values) * 1.22
+        axis.set_ylim(0, upper if upper > 0 else 1.0)
+        for bars, values in ((h0_bars, h0_values), (hybrid_bars, hybrid_values)):
+            for bar, value in zip(bars, values):
+                text = f"{value:.1f}{suffix}" if suffix else f"{value:.3f}"
+                axis.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    bar.get_height() + axis.get_ylim()[1] * 0.018,
+                    text,
+                    ha="center",
+                    va="bottom",
+                    fontsize=8,
+                )
+    axes[0, 0].legend(frameon=False, ncol=2, loc="upper right")
+    figure.suptitle(
+        "Phase 28C second independent confirmation: H0 vs frozen PP mapping",
+        fontsize=14,
+    )
+    figure.savefig(path, dpi=180, bbox_inches="tight")
+    plt.close(figure)
+
+
 def readme(summary: dict) -> str:
     headline = summary["headline"]
     h0 = headline["h0"]
@@ -273,6 +335,8 @@ hash和manifest之后，才由18个此前未用于Phase16/27的历史窗口生�
 
 {chr(10).join(policies)}
 
+对比图见 `figures/frozen_mapping_second_confirmation.png`。
+
 Hfull标签来自完整窗口请求列表的GPU验证结构公式，完整请求列表只在内存中使用，未写入
 结果目录或Git；保存的是324条归一化teacher phase rows。冻结映射的无偏结论只适用于
 Qwen3-8B、PP2/4/8、fixed-draining和当前三种microbatch策略。common cost仍是5 μs +
@@ -283,7 +347,7 @@ arrival-aware调度。
 
 def main() -> None:
     args = parse_args()
-    for name in ("labels", "analysis", "logs"):
+    for name in ("labels", "analysis", "figures", "logs"):
         (args.output_dir / name).mkdir(parents=True, exist_ok=True)
 
     contract = json.loads(args.phase28a_summary.read_text())
@@ -430,6 +494,10 @@ def main() -> None:
     write_csv(args.output_dir / "analysis/frozen_hybrid_metrics.csv", hybrid_metrics)
     write_csv(args.output_dir / "analysis/frozen_mapping_vs_h0.csv", comparisons)
     write_csv(args.output_dir / "analysis/profile_inventory.csv", profile_inventory(profiles))
+    plot_comparison(
+        args.output_dir / "figures/frozen_mapping_second_confirmation.png",
+        comparisons,
+    )
 
     finite_fields = (
         "calls_mape",
