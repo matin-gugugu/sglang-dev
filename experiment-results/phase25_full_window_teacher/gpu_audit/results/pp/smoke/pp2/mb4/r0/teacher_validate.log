@@ -1,0 +1,37 @@
+Traceback (most recent call last):
+  File "/sgl-workspace/sglang-src/scripts/validate_phase25_full_window_gpu_audit.py", line 307, in <module>
+    main()
+  File "/sgl-workspace/sglang-src/scripts/validate_phase25_full_window_gpu_audit.py", line 301, in main
+    raise RuntimeError(json.dumps(summary, indent=2))
+RuntimeError: {
+  "schema_version": "phase25-full-window-gpu-teacher-audit-v1",
+  "status": "FAIL",
+  "parallelism": "pp",
+  "model": "qwen3-8b",
+  "parallel_size": 2,
+  "policy": "mb4",
+  "profiles": [
+    "profile_13_burstgpt_3_c2"
+  ],
+  "phase_comparisons": 2,
+  "integrity_checks": {
+    "all_output_lengths_exact": true,
+    "all_workloads_labeled_on_forward_boundaries": true,
+    "every_forward_boundary_has_proxy": true,
+    "histogram_only": true,
+    "last_stage_has_no_proxy_send": true,
+    "rank_file_count_matches_pp": true,
+    "rank_ids_complete": true,
+    "tp_is_one": true,
+    "forward_boundaries_identical": true,
+    "sender_boundary_count": true,
+    "config_identity": true
+  },
+  "checks": {
+    "gpu_integrity": true,
+    "unique_gpu_keys": true,
+    "teacher_comparisons_nonempty": true,
+    "teacher_exact_match": false
+  },
+  "teacher_labels_sha256": "7afaab26185a21de92b27be2039c2b8739b305c6081637d5d951537f7e2206c9"
+}

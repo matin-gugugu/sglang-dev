@@ -1,10 +1,10 @@
 {
-  "checks": {
+  "build_checks": {
     "all_labels_provisional": true,
     "all_segments_in_sentinel_plan": true,
     "all_totals_positive": true,
     "full_requests_18285": true,
-    "gpu_results_empty": true,
+    "gpu_results_empty_at_build": true,
     "phase24_regression_pass": true,
     "pp_boundary_labels_1584": true,
     "pp_labels_432": true,
@@ -39,6 +39,93 @@
       }
     }
   },
+  "gpu_smoke": {
+    "checks": {
+      "analysis_complete": true,
+      "labels_remain_provisional": true,
+      "no_phase25_pid_files": true,
+      "pp_cells_9": true,
+      "pp_integrity_pass_9": true,
+      "pp_matrix_complete": true,
+      "pp_teacher_exact_3": true,
+      "tp_done": true,
+      "tp_smoke_pass": true
+    },
+    "pp": {
+      "cells": 9,
+      "integrity_pass_cells": 9,
+      "phase_labels": 18,
+      "teacher_exact_cells": 3,
+      "teacher_mismatch_cells": 6,
+      "total_metrics": {
+        "bytes_mape": 0.0,
+        "bytes_wape": 0.0,
+        "calls_mape": 0.6054025496238632,
+        "calls_wape": 0.23133928571428564,
+        "cases": 9,
+        "common_reference_cost_mape": 0.3237041531604679,
+        "exact_histograms": 3,
+        "mean_calls_histogram_tv": 0.3673675702257132,
+        "mean_normalized_log_payload_emd": 0.03416020939043644,
+        "parallelism": "pp",
+        "phase": "total",
+        "policy": "all"
+      },
+      "total_metrics_by_policy": {
+        "mb1": {
+          "bytes_mape": 0.0,
+          "bytes_wape": 0.0,
+          "calls_mape": 0.0,
+          "calls_wape": 0.0,
+          "cases": 3,
+          "common_reference_cost_mape": 0.0,
+          "exact_histograms": 3,
+          "mean_calls_histogram_tv": 0.0,
+          "mean_normalized_log_payload_emd": 0.0,
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "mb1"
+        },
+        "mb16": {
+          "bytes_mape": 0.0,
+          "bytes_wape": 0.0,
+          "calls_mape": 1.3383612562031242,
+          "calls_wape": 0.9659820282413348,
+          "cases": 3,
+          "common_reference_cost_mape": 0.650836608525737,
+          "exact_histograms": 0,
+          "mean_calls_histogram_tv": 0.6248427780549051,
+          "mean_normalized_log_payload_emd": 0.06626508548663619,
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "mb16"
+        },
+        "mb4": {
+          "bytes_mape": 0.0,
+          "bytes_wape": 0.0,
+          "calls_mape": 0.47784639266846574,
+          "calls_wape": 0.43667068757539185,
+          "cases": 3,
+          "common_reference_cost_mape": 0.3202758509556667,
+          "exact_histograms": 0,
+          "mean_calls_histogram_tv": 0.4772599326222345,
+          "mean_normalized_log_payload_emd": 0.03621554268467312,
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "mb4"
+        }
+      }
+    },
+    "profile_id": "profile_13_burstgpt_3_c2",
+    "requests": 42,
+    "status": "COMPLETE_MEASURED_PP_MISMATCH",
+    "tp": {
+      "cells": 1,
+      "phase_labels": 6,
+      "status": "PASS",
+      "teacher_exact_cells": 1
+    }
+  },
   "inputs": {
     "model_features_sha256": "ed11867cb5c2e9246c54485449db992aa2cb55de494b3cbc888ec5f6c42db7b7",
     "phase24_labels_sha256": "50dd08c62fb5b825ef614223df98e1768f09b2ccf21c9492a463464888b9f1bc",
@@ -53,7 +140,7 @@
     "pp_phase_labels": 432,
     "tp_phase_labels": 1296
   },
-  "next_step": "run TP/PP GPU smoke, then formal sentinel audits",
+  "next_step": "recover and validate the fixed-draining PP scheduler split/merge semantics before any full-window teacher training",
   "phase24_regression": {
     "comparisons": 864,
     "exact_histogram_matches": 864,
@@ -62,7 +149,7 @@
     "scalar_matches": 864,
     "status": "PASS"
   },
-  "promotion_gate": "sentinel GPU audit must match calls, bytes, exact histograms, 12-bin conservation, and PP sender boundaries",
+  "promotion_gate": "TP smoke passed; PP MB>1 full-window scheduler mismatch blocks promotion of the provisional PP labels",
   "schema_version": "phase25-full-window-teacher-build-v1",
   "sentinel_profiles": [
     {
@@ -192,5 +279,5 @@
       "tiers": "qwen_formal,tp_multimodel"
     }
   ],
-  "status": "PROVISIONAL_READY_FOR_GPU_AUDIT"
+  "status": "PROVISIONAL_PP_SCHEDULER_MISMATCH"
 }

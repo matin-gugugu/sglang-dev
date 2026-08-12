@@ -27,3 +27,13 @@ request lists. GPU calls, bytes, exact histograms, 12-bin conservation, and PP
 sender boundaries must pass before promotion to a formal teacher dataset.
 
 Raw traces, model weights, caches, and PIDs are excluded.
+
+## GPU smoke result
+
+The 42-request full-window smoke completed one TP cell and all nine PP cells.
+TP matched exactly. PP integrity passed in 9/9 cells, but the static teacher
+matched only the three MB1 cells; every MB4/MB16 cell measured a scheduler
+split/merge mismatch. Logical bytes remained exact while calls, histogram shape,
+and curve-integrated cost changed. PP labels therefore remain provisional.
+
+See `analysis/gpu_smoke-v1/README.md` and `gpu_audit/smoke_summary.json`.

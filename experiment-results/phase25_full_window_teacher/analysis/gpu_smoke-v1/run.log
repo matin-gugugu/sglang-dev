@@ -1,0 +1,79 @@
+{
+  "schema_version": "phase25-full-window-gpu-smoke-analysis-v1",
+  "status": "COMPLETE_MEASURED_PP_MISMATCH",
+  "profile_id": "profile_13_burstgpt_3_c2",
+  "requests": 42,
+  "tp": {
+    "cells": 1,
+    "teacher_exact_cells": 1,
+    "phase_labels": 6,
+    "status": "PASS"
+  },
+  "pp": {
+    "cells": 9,
+    "integrity_pass_cells": 9,
+    "teacher_exact_cells": 3,
+    "teacher_mismatch_cells": 6,
+    "phase_labels": 18,
+    "total_metrics": {
+      "parallelism": "pp",
+      "phase": "total",
+      "policy": "all",
+      "cases": 9,
+      "exact_histograms": 3,
+      "calls_mape": 0.6054025496238632,
+      "calls_wape": 0.23133928571428564,
+      "bytes_mape": 0.0,
+      "bytes_wape": 0.0,
+      "mean_calls_histogram_tv": 0.3673675702257132,
+      "mean_normalized_log_payload_emd": 0.03416020939043644,
+      "common_reference_cost_mape": 0.3237041531604679
+    },
+    "total_metrics_by_policy": {
+      "mb1": {
+        "parallelism": "pp",
+        "phase": "total",
+        "policy": "mb1",
+        "cases": 3,
+        "exact_histograms": 3,
+        "calls_mape": 0.0,
+        "calls_wape": 0.0,
+        "bytes_mape": 0.0,
+        "bytes_wape": 0.0,
+        "mean_calls_histogram_tv": 0.0,
+        "mean_normalized_log_payload_emd": 0.0,
+        "common_reference_cost_mape": 0.0
+      },
+      "mb4": {
+        "parallelism": "pp",
+        "phase": "total",
+        "policy": "mb4",
+        "cases": 3,
+        "exact_histograms": 0,
+        "calls_mape": 0.47784639266846574,
+        "calls_wape": 0.43667068757539185,
+        "bytes_mape": 0.0,
+        "bytes_wape": 0.0,
+        "mean_calls_histogram_tv": 0.4772599326222345,
+        "mean_normalized_log_payload_emd": 0.03621554268467312,
+        "common_reference_cost_mape": 0.3202758509556667
+      },
+      "mb16": {
+        "parallelism": "pp",
+        "phase": "total",
+        "policy": "mb16",
+        "cases": 3,
+        "exact_histograms": 0,
+        "calls_mape": 1.3383612562031242,
+        "calls_wape": 0.9659820282413348,
+        "bytes_mape": 0.0,
+        "bytes_wape": 0.0,
+        "mean_calls_histogram_tv": 0.6248427780549051,
+        "mean_normalized_log_payload_emd": 0.06626508548663619,
+        "common_reference_cost_mape": 0.650836608525737
+      }
+    }
+  },
+  "interpretation": "Full-window TP aggregation is exact for the sentinel. PP logical bytes are conserved, but MB>1 scheduler split/merge changes calls and payload histograms; the current static PP structural formula cannot be promoted as Y_full.",
+  "promotion_gate": "BLOCKED_BY_PP_MB_GT_1_SCHEDULER_MISMATCH"
+}
