@@ -120,7 +120,7 @@ def main() -> None:
     if sha256(predictions_path) != phase32d["frozen_prediction_sha256"]:
         raise RuntimeError("Phase32D frozen SHA mismatch")
     predictions = read_csv(predictions_path)
-    if {row["parallelism"] for row in predictions} != {"tp"} or {row["method"] for row in predictions} != METHODS:
+    if {row["parallelism"] for row in predictions} != {"tp"} or {row["method"] for row in predictions} != set(METHODS):
         raise RuntimeError("unexpected prediction methods or parallelism")
 
     evidence_inputs = {
