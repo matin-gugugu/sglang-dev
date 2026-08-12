@@ -381,6 +381,55 @@ def compare_methods(metrics: list[dict]) -> list[dict]:
     return rows
 
 
+def confirmation_decisions(metrics: list[dict], frozen: dict[str, str]) -> list[dict]:
+    rows = []
+    for policy in ("mb1", "mb4", "mb16"):
+        lookup = {
+            row["method"]: row
+            for row in metrics
+            if row["phase"] == "total"
+            and row["policy"] == policy
+            and row["segment"] == "all"
+        }
+        h0 = lookup["h0"]
+        candidate = lookup[frozen[policy]]
+        wins = sum(
+            float(candidate[field]) < float(h0[field])
+            for field in (
+                "calls_mape",
+                "mean_histogram_tv",
+                "common_reference_cost_mape",
+            )
+        )
+        cost_guard = float(candidate["common_reference_cost_mape"]) <= 1.10 * float(
+            h0["common_reference_cost_mape"]
+        )
+        confirmed = wins >= 2 and cost_guard
+        rows.append(
+            {
+                "policy": policy,
+                "frozen_candidate_method": frozen[policy],
+                "confirmation_wins_of_calls_tv_cost": wins,
+                "confirmation_cost_guard": cost_guard,
+                "frozen_candidate_confirmed": confirmed,
+                "post_confirmation_recommendation": frozen[policy] if confirmed else "h0",
+                "recommendation_status": (
+                    "candidate_for_future_independent_validation"
+                    if confirmed
+                    else "fallback_to_h0"
+                ),
+                "h0_calls_mape": h0["calls_mape"],
+                "candidate_calls_mape": candidate["calls_mape"],
+                "h0_histogram_tv": h0["mean_histogram_tv"],
+                "candidate_histogram_tv": candidate["mean_histogram_tv"],
+                "h0_cost_mape": h0["common_reference_cost_mape"],
+                "candidate_cost_mape": candidate["common_reference_cost_mape"],
+                "same_confirmation_set_hybrid_score_is_unbiased": False,
+            }
+        )
+    return rows
+
+
 def plot_confirmation(path: Path, headline: dict[str, dict]) -> None:
     import matplotlib.pyplot as plt
 
@@ -444,6 +493,12 @@ def readme(summary: dict) -> str:
             f"- {policy}：`{result['method']}`，calls MAPE {result['calls_mape']:.2%}，"
             f"TV {result['mean_histogram_tv']:.4f}，cost MAPE {result['common_reference_cost_mape']:.2%}。"
         )
+    decision_lines = []
+    for row in summary["post_confirmation_decisions"]:
+        decision_lines.append(
+            f"- {row['policy']}：冻结候选确认=`{row['frozen_candidate_confirmed']}`；后续建议"
+            f" `{row['post_confirmation_recommendation']}`。"
+        )
     return f"""# Phase 27D：PP 独立确认集评测
 
 状态：**{summary['status']}**。本阶段没有训练、早停或重新选择方法，只把 Phase 27C 已写入
@@ -456,6 +511,14 @@ Git并通过hash冻结的1,296行预测，与Phase 27B的18个独立确认画像
 ## Phase 27C预先冻结候选
 
 {chr(10).join(policy_lines)}
+
+## 确认后的首版建议
+
+{chr(10).join(decision_lines)}
+
+MB1的冻结residual候选只改善TV，calls和cost均退化，因此回退H0；MB4/MB16在calls、TV、
+cost三项都改善，保留增强residual候选。但这份5 μs + 100 GB/s确认集已经参与上述建议，
+不能在同一数据上计算一个“新混合规则”的无偏总分，建议还需要下一批新窗口确认。
 
 这里的主结论应同时看calls、bytes、TV/EMD和common cost。common cost仍是5 μs +
 100 GB/s参考曲线，不是PP P2P物理实测。增强residual相对legacy residual的差异才是新增
@@ -522,11 +585,19 @@ def main() -> None:
         )
         for policy in ("mb1", "mb4", "mb16")
     }
+    frozen_mapping = {
+        row["policy"]: row["selected_method"] for row in decisions
+    }
+    post_confirmation = confirmation_decisions(metrics, frozen_mapping)
 
     write_csv_gz(args.output_dir / "analysis/confirmation_predictions_and_errors.csv.gz", records)
     write_csv(args.output_dir / "analysis/confirmation_metrics.csv", metrics)
     write_csv(args.output_dir / "analysis/method_delta_vs_h0.csv", comparisons)
     write_csv(args.output_dir / "analysis/frozen_candidate_metrics.csv", candidate_metrics)
+    write_csv(
+        args.output_dir / "analysis/post_confirmation_decisions.csv",
+        post_confirmation,
+    )
     plot_confirmation(args.output_dir / "figures/independent_confirmation_comparison.png", headline)
 
     checks = {
@@ -537,13 +608,11 @@ def main() -> None:
         "predictions_1296": len(predictions) == 1296,
         "targets_324": len(targets) == 324,
         "join_1296_of_1296": len(phase_records) == 1296 and not join_failures,
-        "total_records_648": len(records) == 1296 + 648,
+        "phase_plus_total_records_1944": len(records) == 1296 + 648,
         "confirmation_profiles_18": len({row["profile_id"] for row in phase_records}) == 18,
         "methods_four": Counter(row["method"] for row in phase_records)
         == Counter({method: 324 for method in METHODS}),
-        "frozen_candidate_mapping_unchanged": {
-            row["policy"]: row["selected_method"] for row in decisions
-        }
+        "frozen_candidate_mapping_unchanged": frozen_mapping
         == {
             "mb1": "enhanced_bounded_residual",
             "mb4": "enhanced_bounded_residual",
@@ -587,9 +656,9 @@ def main() -> None:
         },
         "confirmation_headline": headline,
         "candidate_policy_headline": candidate_policy_headline,
-        "frozen_candidate_mapping": {
-            row["policy"]: row["selected_method"] for row in decisions
-        },
+        "frozen_candidate_mapping": frozen_mapping,
+        "post_confirmation_decisions": post_confirmation,
+        "post_confirmation_mapping_is_unbiased_on_this_set": False,
         "checks": checks,
         "can_conclude": [
             "whether scheduler-sensitive low-dimensional PP features repeat their development gains on 18 new windows",
@@ -600,7 +669,7 @@ def main() -> None:
             "physical PP P2P communication-time accuracy from the common reference curve",
             "online arrival-aware scheduling behavior",
         ],
-        "next_step": "freeze the first-version PP method based on independent confirmation and update the project handoff/index/guide",
+        "next_step": "use H0 for MB1 and keep enhanced residual as the MB4/MB16 candidate, then validate this post-confirmation mapping on another untouched window set",
     }
     write_json(args.output_dir / "summary.json", summary)
     write_json(
