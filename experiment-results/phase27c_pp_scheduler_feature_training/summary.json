@@ -1,0 +1,180 @@
+{
+  "candidate_decisions": [
+    {
+      "enhanced_cost_guard": true,
+      "enhanced_wins": 2,
+      "h0_calls_mape": 0.07729999465841789,
+      "h0_cost_mape": 0.026085702447623302,
+      "h0_histogram_tv": 0.07845763934214954,
+      "legacy_cost_guard": false,
+      "legacy_wins": 0,
+      "policy": "mb1",
+      "rule": "at_least_2_of_calls_tv_cost_wins_and_cost_mape_within_110pct_of_h0",
+      "selected_method": "enhanced_bounded_residual",
+      "selection_source": "development_validation_only"
+    },
+    {
+      "enhanced_cost_guard": true,
+      "enhanced_wins": 3,
+      "h0_calls_mape": 0.31781489514284544,
+      "h0_cost_mape": 0.06886375020467793,
+      "h0_histogram_tv": 0.18483603921598213,
+      "legacy_cost_guard": true,
+      "legacy_wins": 3,
+      "policy": "mb4",
+      "rule": "at_least_2_of_calls_tv_cost_wins_and_cost_mape_within_110pct_of_h0",
+      "selected_method": "enhanced_bounded_residual",
+      "selection_source": "development_validation_only"
+    },
+    {
+      "enhanced_cost_guard": true,
+      "enhanced_wins": 3,
+      "h0_calls_mape": 1.3869756070279107,
+      "h0_cost_mape": 0.17259574044504225,
+      "h0_histogram_tv": 0.48390383840807544,
+      "legacy_cost_guard": true,
+      "legacy_wins": 3,
+      "policy": "mb16",
+      "rule": "at_least_2_of_calls_tv_cost_wins_and_cost_mape_within_110pct_of_h0",
+      "selected_method": "enhanced_bounded_residual",
+      "selection_source": "development_validation_only"
+    }
+  ],
+  "checkpoints": [
+    {
+      "best_epoch": 53,
+      "best_validation_loss": 0.03719215840101242,
+      "bytes": 44213,
+      "feature_columns": 52,
+      "method": "legacy_bounded_residual",
+      "path": "checkpoints/pp_legacy_bounded_residual.pt",
+      "sha256": "3752fa03a85e34de66f43a1909ef94debf7df1b28d23297014ab40a94718e8aa"
+    },
+    {
+      "best_epoch": 54,
+      "best_validation_loss": 0.03492721915245056,
+      "bytes": 61653,
+      "feature_columns": 108,
+      "method": "enhanced_bounded_residual",
+      "path": "checkpoints/pp_enhanced_bounded_residual.pt",
+      "sha256": "7706f30a6fcb39942f364a765a0e86a72ea98b674a054147a7a1aaa0be4606ec"
+    },
+    {
+      "best_epoch": 114,
+      "best_validation_loss": 0.04411812499165535,
+      "bytes": 61301,
+      "feature_columns": 108,
+      "method": "enhanced_direct",
+      "path": "checkpoints/pp_enhanced_direct.pt",
+      "sha256": "019cd1ae09ca139a4c61afca681f96344df1186b59601f38c2dff4d890b3357b"
+    }
+  ],
+  "checks": {
+    "all_metrics_finite": true,
+    "candidate_mapping_three_policies": true,
+    "confirmation_feature_rows_324": true,
+    "confirmation_features_have_no_target_columns": true,
+    "confirmation_predictions_1296": true,
+    "confirmation_targets_not_a_script_input": true,
+    "development_rows_756": true,
+    "enhanced_feature_columns_108": true,
+    "fit_validation_profiles_30_12": true,
+    "legacy_feature_subset_strict": true,
+    "phase27b_status_pass": true,
+    "three_frozen_checkpoints": true,
+    "validation_records_1296": true
+  },
+  "counts": {
+    "checkpoints": 3,
+    "confirmation_feature_rows": 324,
+    "confirmation_prediction_rows": 1296,
+    "development_phase_rows": 756,
+    "enhanced_feature_columns": 108,
+    "fit_profiles": 30,
+    "legacy_feature_columns": 52,
+    "validation_prediction_records": 1296,
+    "validation_profiles": 12
+  },
+  "device": "cuda:0",
+  "inputs": {
+    "confirmation_features_sha256": "dc4056e0d5fb57d9395de23d1f83c4a0809e51c4692cb08574ee209b9fc346de",
+    "dataset_summary_sha256": "3adf2d064dbb13f3ef2ddf7cc00a6c1931caff2ecba528fcaa05027e8bbcdb7f",
+    "development_dataset_sha256": "a5100b53067b9347e6072d3020102dd9d5ebc27ae18d2916e4ce2ba62087cefa"
+  },
+  "next_step": "freeze this commit, then join the already-written confirmation predictions with Phase27B confirmation targets in a separate evaluation script",
+  "objective": "compare legacy and PP scheduler-sensitive low-dimensional features under Hfull supervision while freezing confirmation predictions before target access",
+  "schema_version": "phase27c-pp-scheduler-feature-training-v1",
+  "split_contract": {
+    "confirmation_features_only": "independent_confirmation",
+    "confirmation_targets_read": false,
+    "early_stopping": "development_validation",
+    "fit": "development_train"
+  },
+  "status": "PASS",
+  "validation_headline": {
+    "enhanced_bounded_residual": {
+      "bytes_mape": 0.025171986672023614,
+      "bytes_wape": 0.02017427794831427,
+      "calls_mape": 0.23775606400259916,
+      "calls_wape": 0.0976728133104309,
+      "cases": 108,
+      "common_reference_cost_mape": 0.045210371303431356,
+      "common_reference_cost_wape": 0.03640028995645457,
+      "mean_histogram_l1": 0.34210113262189557,
+      "mean_histogram_tv": 0.17105056631094778,
+      "mean_normalized_log_payload_emd": 0.02553709494414927,
+      "method": "enhanced_bounded_residual",
+      "phase": "total",
+      "policy": "all",
+      "segment": "all"
+    },
+    "enhanced_direct": {
+      "bytes_mape": 0.38695929104468896,
+      "bytes_wape": 0.16163638720874265,
+      "calls_mape": 0.17376046016181962,
+      "calls_wape": 0.16250206453400193,
+      "cases": 108,
+      "common_reference_cost_mape": 0.1663570652608431,
+      "common_reference_cost_wape": 0.10387281452622045,
+      "mean_histogram_l1": 0.2618696004799754,
+      "mean_histogram_tv": 0.1309348002399877,
+      "mean_normalized_log_payload_emd": 0.015575978362628898,
+      "method": "enhanced_direct",
+      "phase": "total",
+      "policy": "all",
+      "segment": "all"
+    },
+    "h0": {
+      "bytes_mape": 0.02047323242925764,
+      "bytes_wape": 0.01707800328212753,
+      "calls_mape": 0.5940301656097247,
+      "calls_wape": 0.18495545019097495,
+      "cases": 108,
+      "common_reference_cost_mape": 0.08918173103244781,
+      "common_reference_cost_wape": 0.06831325334299328,
+      "mean_histogram_l1": 0.49813167797747143,
+      "mean_histogram_tv": 0.24906583898873572,
+      "mean_normalized_log_payload_emd": 0.041839291144746264,
+      "method": "h0",
+      "phase": "total",
+      "policy": "all",
+      "segment": "all"
+    },
+    "legacy_bounded_residual": {
+      "bytes_mape": 0.026847861162168404,
+      "bytes_wape": 0.018526362551186306,
+      "calls_mape": 0.2852698612049477,
+      "calls_wape": 0.16952154732659194,
+      "cases": 108,
+      "common_reference_cost_mape": 0.07742534476467575,
+      "common_reference_cost_wape": 0.06482204301245696,
+      "mean_histogram_l1": 0.370792324931517,
+      "mean_histogram_tv": 0.1853961624657585,
+      "mean_normalized_log_payload_emd": 0.027542194248473064,
+      "method": "legacy_bounded_residual",
+      "phase": "total",
+      "policy": "all",
+      "segment": "all"
+    }
+  }
+}
