@@ -112,6 +112,16 @@ def coverage_figure(cells: list[dict], path: Path) -> None:
     plt.close(figure)
 
 
+def write_directory_manifest(directory: Path) -> None:
+    manifest = directory / "manifest.sha256"
+    files = sorted(
+        path for path in directory.rglob("*") if path.is_file() and path != manifest
+    )
+    manifest.write_text(
+        "".join(f"{sha256(path)}  {path.relative_to(directory)}\n" for path in files)
+    )
+
+
 def main() -> None:
     args = parse_args()
     root = Path(__file__).resolve().parents[1]
@@ -349,6 +359,11 @@ def main() -> None:
         + "\n"
     )
     (args.output_root / "DONE").write_text(summary["status"] + "\n")
+
+    # validate_profiledemand_gpu_labels.py会在validate.log仍打开时生成局部manifest；
+    # 所有日志关闭后在这里重建，避免自引用日志的过期哈希。
+    for cell_id in CELL_SPECS:
+        write_directory_manifest(args.output_root / "results" / cell_id / "r0")
 
     files = sorted(
         path
