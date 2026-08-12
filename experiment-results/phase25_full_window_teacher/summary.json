@@ -1,0 +1,196 @@
+{
+  "checks": {
+    "all_labels_provisional": true,
+    "all_segments_in_sentinel_plan": true,
+    "all_totals_positive": true,
+    "full_requests_18285": true,
+    "gpu_results_empty": true,
+    "phase24_regression_pass": true,
+    "pp_boundary_labels_1584": true,
+    "pp_labels_432": true,
+    "profiles_24": true,
+    "tp_labels_1296": true
+  },
+  "gpu_audit_plan": {
+    "pp": {
+      "qwen_formal": {
+        "cells": 81,
+        "profiles": 9,
+        "requests": 7305
+      },
+      "smoke": {
+        "cells": 9,
+        "profiles": 1,
+        "requests": 42
+      }
+    },
+    "tp": {
+      "qwen_formal": {
+        "profiles": 9,
+        "workloads": 5916
+      },
+      "smoke": {
+        "profiles": 1,
+        "workloads": 20
+      },
+      "tp_multimodel": {
+        "profiles": 3,
+        "workloads": 1376
+      }
+    }
+  },
+  "inputs": {
+    "model_features_sha256": "ed11867cb5c2e9246c54485449db992aa2cb55de494b3cbc888ec5f6c42db7b7",
+    "phase24_labels_sha256": "50dd08c62fb5b825ef614223df98e1768f09b2ccf21c9492a463464888b9f1bc",
+    "phase24_requests_sha256": "f5ee9864c205ed3076b170e0725939e060ab6b0cbf436d13abc0e59f793440cd",
+    "phase24_summary_sha256": "6ca49dc4b24b1a9216d08f206c8bebc7047a1eaecd175a598a45a48038402b55",
+    "profiles": 24,
+    "profiles_sha256": "096bd6978dbe59f0cbdc323571ee9b217a98366a16d19fdf68da51bd48f8e295",
+    "total_full_requests": 18285
+  },
+  "label_counts": {
+    "pp_boundary_labels": 1584,
+    "pp_phase_labels": 432,
+    "tp_phase_labels": 1296
+  },
+  "next_step": "run TP/PP GPU smoke, then formal sentinel audits",
+  "phase24_regression": {
+    "comparisons": 864,
+    "exact_histogram_matches": 864,
+    "expected_comparisons": 864,
+    "failures": [],
+    "scalar_matches": 864,
+    "status": "PASS"
+  },
+  "promotion_gate": "sentinel GPU audit must match calls, bytes, exact histograms, 12-bin conservation, and PP sender boundaries",
+  "schema_version": "phase25-full-window-teacher-build-v1",
+  "sentinel_profiles": [
+    {
+      "input_max": 3193,
+      "input_mean": 185.85861076859842,
+      "input_p99": 3055.68,
+      "output_max": 128,
+      "output_mean": 10.731196054254008,
+      "output_p99": 128.0,
+      "profile_id": "profile_02_burstgpt_1_c1",
+      "request_count": 2433,
+      "segment": "burstgpt_1",
+      "selection_reasons": "global_max_requests",
+      "source": "burstgpt",
+      "tiers": "qwen_formal"
+    },
+    {
+      "input_max": 2817,
+      "input_mean": 454.18589743589746,
+      "input_p99": 2798.23,
+      "output_max": 128,
+      "output_mean": 60.80448717948718,
+      "output_p99": 128.0,
+      "profile_id": "profile_03_burstgpt_1_c2",
+      "request_count": 312,
+      "segment": "burstgpt_1",
+      "selection_reasons": "global_median_requests",
+      "source": "burstgpt",
+      "tiers": "qwen_formal,tp_multimodel"
+    },
+    {
+      "input_max": 3281,
+      "input_mean": 799.0063694267516,
+      "input_p99": 1828.9999999999995,
+      "output_max": 128,
+      "output_mean": 48.439490445859875,
+      "output_p99": 128.0,
+      "profile_id": "profile_05_burstgpt_1_c4",
+      "request_count": 157,
+      "segment": "burstgpt_1",
+      "selection_reasons": "segment_median:burstgpt_1",
+      "source": "burstgpt",
+      "tiers": "qwen_formal"
+    },
+    {
+      "input_max": 3137,
+      "input_mean": 899.241935483871,
+      "input_p99": 1941.54,
+      "output_max": 128,
+      "output_mean": 100.20161290322581,
+      "output_p99": 128.0,
+      "profile_id": "profile_09_burstgpt_2_c3",
+      "request_count": 248,
+      "segment": "burstgpt_2",
+      "selection_reasons": "segment_median:burstgpt_2",
+      "source": "burstgpt",
+      "tiers": "qwen_formal"
+    },
+    {
+      "input_max": 3065,
+      "input_mean": 998.1369863013699,
+      "input_p99": 2686.2800000000007,
+      "output_max": 128,
+      "output_mean": 101.12328767123287,
+      "output_p99": 128.0,
+      "profile_id": "profile_11_burstgpt_3_c0",
+      "request_count": 73,
+      "segment": "burstgpt_3",
+      "selection_reasons": "segment_median:burstgpt_3",
+      "source": "burstgpt",
+      "tiers": "qwen_formal"
+    },
+    {
+      "input_max": 3348,
+      "input_mean": 480.0238095238095,
+      "input_p99": 3093.799999999998,
+      "output_max": 128,
+      "output_mean": 56.785714285714285,
+      "output_p99": 128.0,
+      "profile_id": "profile_13_burstgpt_3_c2",
+      "request_count": 42,
+      "segment": "burstgpt_3",
+      "selection_reasons": "global_min_requests",
+      "source": "burstgpt",
+      "tiers": "qwen_formal,smoke,tp_multimodel"
+    },
+    {
+      "input_max": 8192,
+      "input_mean": 5687.272043010753,
+      "input_p99": 8192.0,
+      "output_max": 128,
+      "output_mean": 107.28064516129032,
+      "output_p99": 128.0,
+      "profile_id": "profile_18_mooncake_conversation_c2",
+      "request_count": 930,
+      "segment": "mooncake_conversation",
+      "selection_reasons": "segment_median:mooncake_conversation",
+      "source": "mooncake",
+      "tiers": "qwen_formal"
+    },
+    {
+      "input_max": 8192,
+      "input_mean": 5702.82475299012,
+      "input_p99": 8192.0,
+      "output_max": 128,
+      "output_mean": 61.67342693707748,
+      "output_p99": 128.0,
+      "profile_id": "profile_22_mooncake_toolagent_c2",
+      "request_count": 1923,
+      "segment": "mooncake_toolagent",
+      "selection_reasons": "segment_median:mooncake_toolagent",
+      "source": "mooncake",
+      "tiers": "qwen_formal"
+    },
+    {
+      "input_max": 8192,
+      "input_mean": 4656.609941027801,
+      "input_p99": 8192.0,
+      "output_max": 128,
+      "output_mean": 75.27716933445662,
+      "output_p99": 128.0,
+      "profile_id": "profile_24_mooncake_synthetic_c0",
+      "request_count": 1187,
+      "segment": "mooncake_synthetic",
+      "selection_reasons": "global_max_input_p99,global_max_output_p99,segment_median:mooncake_synthetic",
+      "source": "mooncake",
+      "tiers": "qwen_formal,tp_multimodel"
+    }
+  ],
+  "status": "PROVISIONAL_READY_FOR_GPU_AUDIT"
+}
