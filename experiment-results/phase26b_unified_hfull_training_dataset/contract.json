@@ -1,0 +1,59 @@
+{
+  "bin_schemas": {
+    "pp_native_12bin_4k_8g_v1": [
+      4096.0,
+      13777.246867516858,
+      46340.95001184158,
+      155871.75497763665,
+      524288.0,
+      1763487.5990421579,
+      5931641.601515722,
+      19951584.63713749,
+      67108864.0,
+      225726412.6773962,
+      759250124.9940125,
+      2553802833.553599,
+      8589934592.0
+    ],
+    "tp_native_12bin_4k_512m_v1": [
+      4096.0,
+      10935.008085360918,
+      29192.969196022652,
+      77935.87748881833,
+      208063.830683576,
+      555463.7868154458,
+      1482910.4003789306,
+      3958895.8051780714,
+      10568983.79851655,
+      28215801.584674526,
+      75327152.94515502,
+      201099371.70470986,
+      536870912.0
+    ]
+  },
+  "cost_contract": {
+    "bandwidth_gbps": 100.0,
+    "kind": "common parameterized reference, not physical PP measurement",
+    "launch_us": 5.0
+  },
+  "h0": {
+    "pp": "Phase 25D sglang_pp_fcfs_lanes_v1 compact32 scheduler formula",
+    "sample": "32 pseudo requests reconstructed only from compact profile statistics",
+    "tp": "Phase 16 structural formula, exact-regressed to Phase 24 Qwen3-8B compact32"
+  },
+  "offline_only_input": "complete capped request lists used upstream to generate Hfull labels; absent from this dataset",
+  "prediction_input": "low-dimensional steady traffic profile + model structure + fixed TP/PP configuration + fixed execution policy + phase",
+  "prediction_output": "topology-independent calls and logical-byte payload histograms per 1000 requests",
+  "scheduler_contract": {
+    "chunk_tokens": 4096,
+    "page_size": 64,
+    "pp": "sglang_pp_fcfs_lanes_v1",
+    "proxy_tensor_count": 2
+  },
+  "schema_version": "phase26b-unified-hfull-training-contract-v1",
+  "split_contract": "Phase 16 profile split is frozen; no profile may cross fit/validation/test boundaries",
+  "teacher": {
+    "pp": "Phase 25B scheduler-faithful full-window fixed-draining teacher with Phase 25C tail evidence",
+    "tp": "Phase 26A GPU-sentinel-promoted full-window fixed-draining structural teacher"
+  }
+}
