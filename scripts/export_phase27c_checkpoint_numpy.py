@@ -111,6 +111,39 @@ def main() -> None:
     deterministic_npz(args.output, arrays)
 
     exported = np.load(args.output, allow_pickle=False)
+    test_input = np.random.default_rng(28).normal(size=(17, 108)).astype(np.float32)
+    with torch.no_grad():
+        torch_output = torch.nn.functional.linear(
+            torch.from_numpy(test_input),
+            checkpoint["model_state"]["network.0.weight"],
+            checkpoint["model_state"]["network.0.bias"],
+        ).relu()
+        torch_output = torch.nn.functional.linear(
+            torch_output,
+            checkpoint["model_state"]["network.2.weight"],
+            checkpoint["model_state"]["network.2.bias"],
+        ).relu()
+        torch_output = torch.tanh(
+            torch.nn.functional.linear(
+                torch_output,
+                checkpoint["model_state"]["network.4.weight"],
+                checkpoint["model_state"]["network.4.bias"],
+            )
+        ).numpy()
+    numpy_output = np.maximum(
+        test_input @ exported["network.0.weight"].T + exported["network.0.bias"],
+        0.0,
+    )
+    numpy_output = np.maximum(
+        numpy_output @ exported["network.2.weight"].T
+        + exported["network.2.bias"],
+        0.0,
+    )
+    numpy_output = np.tanh(
+        numpy_output @ exported["network.4.weight"].T
+        + exported["network.4.bias"]
+    )
+    inference_max_abs = float(np.max(np.abs(torch_output - numpy_output)))
     export_checks = {
         "feature_columns_108": len(exported["feature_names"]) == 108,
         "log_feature_names_match": set(exported["log_feature_names"].tolist())
@@ -131,6 +164,9 @@ def main() -> None:
             for key in STATE_KEYS
         ),
         "no_pickle_arrays": all(exported[name].dtype != object for name in exported.files),
+        "torch_numpy_inference_allclose": np.allclose(
+            torch_output, numpy_output, rtol=1e-5, atol=1e-6
+        ),
     }
     status = "PASS" if all(export_checks.values()) else "FAIL"
     result = {
@@ -141,6 +177,7 @@ def main() -> None:
         "numpy_checkpoint_sha256": sha256(args.output),
         "feature_columns": len(checkpoint["feature_names"]),
         "state_array_count": len(STATE_KEYS),
+        "torch_numpy_inference_max_abs": inference_max_abs,
         "checks": export_checks,
     }
     args.audit_output.parent.mkdir(parents=True, exist_ok=True)
