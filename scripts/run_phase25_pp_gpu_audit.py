@@ -59,7 +59,7 @@ def validate_cell(
     *, root: Path, teacher_root: Path, cell: Path, pp_size: int, microbatch: int
 ) -> dict:
     with (cell / "teacher_validate.log").open("w") as output:
-        subprocess.run(
+        completed = subprocess.run(
             [
                 sys.executable,
                 "scripts/validate_phase25_full_window_gpu_audit.py",
@@ -79,9 +79,19 @@ def validate_cell(
             cwd=root,
             stdout=output,
             stderr=subprocess.STDOUT,
-            check=True,
+            check=False,
         )
-    return json.loads((cell / "teacher_audit.json").read_text())
+    audit_path = cell / "teacher_audit.json"
+    if not audit_path.exists():
+        raise RuntimeError(
+            f"teacher validator exited {completed.returncode} without {audit_path}"
+        )
+    audit = json.loads(audit_path.read_text())
+    if completed.returncode == 0 and audit["status"] != "PASS":
+        raise RuntimeError("teacher validator returned zero for a non-PASS audit")
+    if completed.returncode != 0 and audit["status"] != "FAIL":
+        raise RuntimeError("teacher validator failed without a scientific mismatch")
+    return audit
 
 
 def main() -> None:
@@ -118,6 +128,18 @@ def main() -> None:
             if (cell / "TEACHER_AUDIT_DONE").exists():
                 audits.append(json.loads((cell / "teacher_audit.json").read_text()))
                 continue
+            if (cell / "DONE").exists():
+                (cell / "server.pid").unlink(missing_ok=True)
+                audits.append(
+                    validate_cell(
+                        root=root,
+                        teacher_root=args.teacher_root,
+                        cell=cell,
+                        pp_size=pp_size,
+                        microbatch=microbatch,
+                    )
+                )
+                continue
             if cell.exists() and any(cell.iterdir()):
                 raise RuntimeError(f"nonempty incomplete attempt: {cell}")
             audit = run_server_cell(
@@ -145,9 +167,14 @@ def main() -> None:
                     microbatch=microbatch,
                 )
             )
+    integrity_pass = all(row["checks"]["gpu_integrity"] for row in audits)
+    teacher_exact = all(row["checks"]["teacher_exact_match"] for row in audits)
+    status = "PASS" if integrity_pass and teacher_exact else (
+        "MEASURED_MISMATCH" if integrity_pass else "FAIL"
+    )
     summary = {
         "schema_version": "phase25-pp-full-window-gpu-matrix-v1",
-        "status": "PASS" if all(row["status"] == "PASS" for row in audits) else "FAIL",
+        "status": status,
         "tier": args.tier,
         "model": "qwen3-8b",
         "profiles": [row["profile_id"] for row in rows],
@@ -155,13 +182,15 @@ def main() -> None:
         "pp_sizes": list(dict.fromkeys(args.pp_sizes)),
         "microbatch_sizes": list(dict.fromkeys(args.microbatch_sizes)),
         "cells": len(audits),
+        "integrity_pass_cells": sum(row["checks"]["gpu_integrity"] for row in audits),
+        "teacher_exact_cells": sum(row["checks"]["teacher_exact_match"] for row in audits),
         "audits": audits,
     }
     output_root.mkdir(parents=True, exist_ok=True)
     (output_root / "matrix_summary.json").write_text(json.dumps(summary, indent=2) + "\n")
-    if summary["status"] != "PASS":
+    if summary["status"] == "FAIL":
         raise RuntimeError(json.dumps(summary, indent=2))
-    (output_root / "MATRIX_DONE").write_text("PASS\n")
+    (output_root / "MATRIX_DONE").write_text(summary["status"] + "\n")
     print(json.dumps(summary, indent=2))
 
 
