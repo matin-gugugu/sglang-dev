@@ -106,7 +106,8 @@ def coverage_figure(cells: list[dict], path: Path) -> None:
     for row in range(len(models)):
         for column in range(len(tps)):
             text = label.get((row, column), "—")
-            axis.text(column, row, text, ha="center", va="center", color="black")
+            color = "white" if matrix[row, column] else "black"
+            axis.text(column, row, text, ha="center", va="center", color=color)
     figure.tight_layout()
     figure.savefig(path, dpi=180)
     plt.close(figure)
