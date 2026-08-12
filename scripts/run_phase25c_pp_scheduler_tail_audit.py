@@ -77,9 +77,7 @@ def main() -> None:
     selected = set(args.profiles)
     rows = [
         row
-        for row in read_plan(
-            args.phase25a_root / "gpu_audit/plans/pp_qwen_formal_requests.jsonl.gz"
-        )
+        for row in read_plan(args.phase25a_root / "inputs/full_windows.jsonl.gz")
         if row["profile_id"] in selected
     ]
     if {row["profile_id"] for row in rows} != selected:
