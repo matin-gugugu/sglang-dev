@@ -93,8 +93,11 @@ def deterministic_gzip(path: Path, text: str) -> None:
 
 
 def write_csv(path: Path, rows: list[dict]) -> None:
+    fieldnames = list(rows[0])
+    for row in rows[1:]:
+        fieldnames.extend(name for name in row if name not in fieldnames)
     with path.open("w", newline="") as output:
-        writer = csv.DictWriter(output, fieldnames=list(rows[0]), lineterminator="\n")
+        writer = csv.DictWriter(output, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
