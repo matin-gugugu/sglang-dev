@@ -9,11 +9,11 @@ import gzip
 import hashlib
 import io
 import json
+import math
 from collections import Counter
 from pathlib import Path
 
 import numpy as np
-import torch
 
 from build_phase21b_pp_h0 import pseudo_requests
 from build_phase27b_pp_hfull_dataset import (
@@ -27,14 +27,12 @@ from build_phase27b_pp_hfull_dataset import (
     training_features,
 )
 from prepare_phase15_trace_windows import BURST_FILES, MOONCAKE_FILES, load_segment
-from train_phase27c_pp_scheduler_feature_predictors import (
-    common_reference_cost,
-    predict,
-    target_encode,
-)
 
 
 METHODS = ("h0", "enhanced_bounded_residual")
+BIN_COUNT = 12
+COMMON_REFERENCE_LAUNCH_US = 5.0
+COMMON_REFERENCE_BANDWIDTH_GBPS = 100.0
 
 
 def parse_args() -> argparse.Namespace:
@@ -60,10 +58,16 @@ def parse_args() -> argparse.Namespace:
         / "experiment-results/phase28a_second_confirmation_contract/frozen_method_mapping.json",
     )
     parser.add_argument(
-        "--checkpoint",
+        "--numpy-checkpoint",
         type=Path,
         default=root
-        / "experiment-results/phase27c_pp_scheduler_feature_training/checkpoints/pp_enhanced_bounded_residual.pt",
+        / "experiment-results/phase28b_frozen_predictions/checkpoint/pp_enhanced_bounded_residual_numpy.npz",
+    )
+    parser.add_argument(
+        "--checkpoint-export-audit",
+        type=Path,
+        default=root
+        / "experiment-results/phase28b_frozen_predictions/checkpoint/export_audit.json",
     )
     parser.add_argument(
         "--phase27c-audit",
@@ -81,7 +85,6 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=root / "experiment-results/phase28b_frozen_predictions",
     )
-    parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     return parser.parse_args()
 
 
@@ -127,14 +130,72 @@ def write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
 
 
-def choose_device(requested: str) -> torch.device:
-    if requested == "cpu":
-        return torch.device("cpu")
-    if requested == "cuda":
-        if not torch.cuda.is_available():
-            raise RuntimeError("CUDA requested but unavailable")
-        return torch.device("cuda:0")
-    return torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+def target_encode(calls: np.ndarray, logical_bytes: np.ndarray) -> np.ndarray:
+    encoded: list[float] = []
+    for vector in (calls, logical_bytes):
+        total = max(float(np.sum(vector)), 0.0)
+        smoothing = max(total, 1.0) * 1e-6 / BIN_COUNT
+        shares = (vector + smoothing) / (total + smoothing * BIN_COUNT)
+        encoded.extend([math.log1p(total), *np.log(shares)])
+    return np.asarray(encoded, dtype=np.float32)
+
+
+def target_decode(encoded: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    vectors = []
+    offset = 0
+    for _ in range(2):
+        total = max(math.expm1(float(np.clip(encoded[offset], 0, 40))), 0.0)
+        logits = np.clip(encoded[offset + 1 : offset + BIN_COUNT + 1], -50, 50)
+        probabilities = np.exp(logits - np.max(logits))
+        probabilities /= probabilities.sum()
+        vectors.append(total * probabilities)
+        offset += BIN_COUNT + 1
+    return vectors[0].astype(np.float64), vectors[1].astype(np.float64)
+
+
+def common_reference_cost(calls: np.ndarray, logical_bytes: np.ndarray) -> float:
+    return float(
+        COMMON_REFERENCE_LAUNCH_US * calls.sum()
+        + logical_bytes.sum() / (COMMON_REFERENCE_BANDWIDTH_GBPS * 1e9) * 1e6
+    )
+
+
+def predict_numpy(
+    rows: list[dict[str, object]], checkpoint: np.lib.npyio.NpzFile, h0_encoded: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    names = checkpoint["feature_names"].tolist()
+    log_names = set(checkpoint["log_feature_names"].tolist())
+    features = np.asarray(
+        [
+            [
+                math.log1p(max(float(row[name]), 0.0))
+                if name in log_names
+                else float(row[name])
+                for name in names
+            ]
+            for row in rows
+        ],
+        dtype=np.float32,
+    )
+    scaled = np.clip(
+        (features - checkpoint["feature_mean"]) / checkpoint["feature_std"],
+        -6.0,
+        6.0,
+    ).astype(np.float32)
+    hidden1 = np.maximum(
+        scaled @ checkpoint["network.0.weight"].T + checkpoint["network.0.bias"],
+        0.0,
+    )
+    hidden2 = np.maximum(
+        hidden1 @ checkpoint["network.2.weight"].T + checkpoint["network.2.bias"],
+        0.0,
+    )
+    raw = np.tanh(
+        hidden2 @ checkpoint["network.4.weight"].T + checkpoint["network.4.bias"]
+    )
+    encoded = h0_encoded + raw * checkpoint["target_std_or_residual_bounds"]
+    calls, logical_bytes = zip(*(target_decode(row) for row in encoded))
+    return np.stack(calls), np.stack(logical_bytes)
 
 
 def main() -> None:
@@ -155,8 +216,13 @@ def main() -> None:
     expected_checkpoint_hash = audit27c["checkpoint_sha256"][
         "enhanced_bounded_residual"
     ]
-    if sha256(args.checkpoint) != expected_checkpoint_hash:
-        raise RuntimeError("checkpoint hash mismatch")
+    export_audit = json.loads(args.checkpoint_export_audit.read_text())
+    if export_audit["status"] != "PASS":
+        raise RuntimeError("NumPy checkpoint export audit failed")
+    if export_audit["source_checkpoint_sha256"] != expected_checkpoint_hash:
+        raise RuntimeError("source checkpoint hash mismatch")
+    if sha256(args.numpy_checkpoint) != export_audit["numpy_checkpoint_sha256"]:
+        raise RuntimeError("NumPy checkpoint hash mismatch")
 
     raw_manifest_path = args.raw_dir / "source_manifest.json"
     raw_manifest = json.loads(raw_manifest_path.read_text())
@@ -262,11 +328,7 @@ def main() -> None:
                         }
                     )
 
-    device = choose_device(args.device)
-    try:
-        checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
-    except TypeError:
-        checkpoint = torch.load(args.checkpoint, map_location="cpu")
+    checkpoint = np.load(args.numpy_checkpoint, allow_pickle=False)
     h0_calls = np.stack(
         [np.asarray(json.loads(row["h0_calls_by_12bin_json"])) for row in feature_rows]
     )
@@ -279,9 +341,7 @@ def main() -> None:
     h0_encoded = np.stack(
         [target_encode(calls, byte_values) for calls, byte_values in zip(h0_calls, h0_bytes)]
     )
-    enhanced_calls, enhanced_bytes = predict(
-        feature_rows, checkpoint, h0_encoded, device
-    )
+    enhanced_calls, enhanced_bytes = predict_numpy(feature_rows, checkpoint, h0_encoded)
     method_arrays = {
         "h0": (h0_calls, h0_bytes),
         "enhanced_bounded_residual": (enhanced_calls, enhanced_bytes),
@@ -353,8 +413,9 @@ def main() -> None:
             [name for name in feature_rows[0] if name.startswith("feature_")]
         ),
         "frozen_mapping": mapping,
-        "device": str(device),
-        "checkpoint_sha256": sha256(args.checkpoint),
+        "inference_runtime": "numpy_cpu",
+        "source_checkpoint_sha256": expected_checkpoint_hash,
+        "numpy_checkpoint_sha256": sha256(args.numpy_checkpoint),
         "frozen_predictions_sha256": sha256(prediction_path),
         "raw_source_checks": raw_checks,
         "hfull_targets_generated_or_read": False,
@@ -363,6 +424,7 @@ def main() -> None:
             "phase28a_summary_sha256": sha256(args.phase28a_summary),
             "frozen_mapping_sha256": sha256(args.frozen_mapping),
             "phase27c_audit_sha256": sha256(args.phase27c_audit),
+            "checkpoint_export_audit_sha256": sha256(args.checkpoint_export_audit),
             "model_features_sha256": sha256(args.model_features),
             "raw_manifest_sha256": sha256(raw_manifest_path),
         },
@@ -377,8 +439,12 @@ def main() -> None:
         "feature_columns_108": summary["feature_columns"] == 108,
         "prediction_rows_648": len(predictions) == 648,
         "selected_prediction_rows_324": summary["selected_prediction_rows"] == 324,
-        "checkpoint_hash_matches_phase27c": sha256(args.checkpoint)
+        "source_checkpoint_hash_matches_phase27c": export_audit[
+            "source_checkpoint_sha256"
+        ]
         == expected_checkpoint_hash,
+        "numpy_checkpoint_hash_matches_export_audit": sha256(args.numpy_checkpoint)
+        == export_audit["numpy_checkpoint_sha256"],
         "h0_simulations_exact_162_of_162": len(h0_simulation_checks) == 162
         and all(h0_simulation_checks),
         "no_request_lists_or_targets_in_saved_features": not (
@@ -392,7 +458,8 @@ def main() -> None:
         "schema_version": "phase28b-frozen-predictions-audit-v1",
         "status": "PASS" if all(checks.values()) else "FAIL",
         "checks": checks,
-        "checkpoint_sha256": summary["checkpoint_sha256"],
+        "source_checkpoint_sha256": summary["source_checkpoint_sha256"],
+        "numpy_checkpoint_sha256": summary["numpy_checkpoint_sha256"],
         "frozen_predictions_sha256": summary["frozen_predictions_sha256"],
     }
     write_json(args.output_dir / "audit_summary.json", audit)
@@ -416,7 +483,7 @@ summary和audit；下一阶段必须先核验该hash，随后才可生成Hfull�
         {
             "schema_version": "phase28b-prediction-log-v1",
             "status": "PASS",
-            "device": str(device),
+            "inference_runtime": "numpy_cpu",
             "prediction_rows": len(predictions),
             "hfull_targets_generated_or_read": False,
         },
