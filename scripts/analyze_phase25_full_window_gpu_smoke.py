@@ -197,6 +197,39 @@ def aggregate(rows: list[dict], parallelism: str, phase: str, policy: str = "") 
     }
 
 
+def write_policy_plot(path: Path, policy_rows: dict[str, dict]) -> None:
+    import matplotlib.pyplot as plt
+
+    policies = ("mb1", "mb4", "mb16")
+    panels = (
+        ("calls_wape", "Calls WAPE", 100.0, "%"),
+        ("mean_calls_histogram_tv", "Histogram TV", 1.0, ""),
+        ("mean_normalized_log_payload_emd", "Normalized log-payload EMD", 1.0, ""),
+        ("common_reference_cost_mape", "Cost MAPE", 100.0, "%"),
+    )
+    figure, axes = plt.subplots(2, 2, figsize=(9.2, 6.4), constrained_layout=True)
+    colors = ("#4C78A8", "#F58518", "#E45756")
+    for axis, (field, title, scale, suffix) in zip(axes.flat, panels):
+        values = [float(policy_rows[policy][field]) * scale for policy in policies]
+        bars = axis.bar([policy.upper() for policy in policies], values, color=colors)
+        axis.set_title(title)
+        axis.grid(axis="y", alpha=0.25)
+        axis.set_axisbelow(True)
+        for bar, value in zip(bars, values):
+            axis.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height(),
+                f"{value:.2f}{suffix}",
+                ha="center",
+                va="bottom",
+                fontsize=9,
+            )
+        axis.margins(y=0.18)
+    figure.suptitle("Phase 25 PP full-window structural teacher vs GPU (42 requests)")
+    figure.savefig(path, dpi=180)
+    plt.close(figure)
+
+
 def main() -> None:
     args = parse_args()
     results = args.teacher_root / "gpu_audit" / "results"
@@ -342,6 +375,7 @@ def main() -> None:
         "离散 microbatch 拆分/合并，而不是请求规模抽样。当前 provisional PP 标签不能晋升为"
         "训练真值；下一步应恢复 fixed-draining scheduler 语义或生成 GPU/full-scheduler teacher。\n"
     )
+    write_policy_plot(args.output_dir / "pp_policy_mismatch.png", pp_policy_totals)
     (args.output_dir / "DONE").write_text("COMPLETE_MEASURED_PP_MISMATCH\n")
     files = sorted(
         path for path in args.output_dir.iterdir() if path.is_file() and path.name != "manifest.sha256"

@@ -168,6 +168,9 @@ See `analysis/gpu_smoke-v1/README.md` and `gpu_audit/smoke_summary.json`.
     (root / "gpu_audit" / "smoke_summary.json").write_text(
         json.dumps(smoke_summary, indent=2, sort_keys=True) + "\n"
     )
+    (root / "finalize_smoke.log").write_text(
+        json.dumps(smoke_summary, indent=2, sort_keys=True) + "\n"
+    )
 
     write_manifest(analysis, analysis / "manifest.sha256")
     write_manifest(root, root / "manifest.sha256")
