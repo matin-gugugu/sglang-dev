@@ -283,7 +283,7 @@ def reconstruct_message_vectors(
 def max_vector_error(
     predicted: dict[str, tuple[np.ndarray, np.ndarray]],
     actual: dict[str, tuple[np.ndarray, np.ndarray]],
-) -> tuple[float, float]:
+) -> tuple[float, float, float, float]:
     calls = max(
         float(np.max(np.abs(predicted[phase][0] - actual[phase][0])))
         for phase in PHASES
@@ -292,7 +292,25 @@ def max_vector_error(
         float(np.max(np.abs(predicted[phase][1] - actual[phase][1])))
         for phase in PHASES
     )
-    return calls, logical_bytes
+    calls_relative = max(
+        float(
+            np.max(
+                np.abs(predicted[phase][0] - actual[phase][0])
+                / np.maximum(np.abs(actual[phase][0]), 1.0)
+            )
+        )
+        for phase in PHASES
+    )
+    bytes_relative = max(
+        float(
+            np.max(
+                np.abs(predicted[phase][1] - actual[phase][1])
+                / np.maximum(np.abs(actual[phase][1]), 1.0)
+            )
+        )
+        for phase in PHASES
+    )
+    return calls, logical_bytes, calls_relative, bytes_relative
 
 
 def target_vectors_from_labels(
@@ -680,6 +698,10 @@ def main() -> None:
                 "max_logical_bytes_bin_absolute_error": max(
                     value[1] for value in errors
                 ),
+                "max_calls_bin_relative_error": max(value[2] for value in errors),
+                "max_logical_bytes_bin_relative_error": max(
+                    value[3] for value in errors
+                ),
             }
         )
     write_csv(args.output_dir / "analysis/adapter_exactness.csv", adapter_rows)
@@ -735,9 +757,9 @@ def main() -> None:
             if row["label_kind"] == "compact32_h0"
         )
         == 7128,
-        "adapter_max_errors_within_float_tolerance": all(
-            float(row["max_calls_bin_absolute_error"]) <= 1e-8
-            and float(row["max_logical_bytes_bin_absolute_error"]) <= 1e-2
+        "adapter_relative_errors_below_one_part_per_billion": all(
+            float(row["max_calls_bin_relative_error"]) <= 1e-9
+            and float(row["max_logical_bytes_bin_relative_error"]) <= 1e-9
             for row in adapter_rows
         ),
         "no_request_arrays_saved": not any(
