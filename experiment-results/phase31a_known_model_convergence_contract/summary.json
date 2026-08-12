@@ -1,0 +1,70 @@
+{
+  "checks": {
+    "historical_confirmation_embargo_300s": true,
+    "history_only_selection": true,
+    "no_target_or_prediction_at_freeze": true,
+    "profiles_59": true,
+    "request_intervals_disjoint_within_new_split": true,
+    "roles_39_10_10": true,
+    "segments_exact": true,
+    "three_known_models": true,
+    "window_ids_unique": true
+  },
+  "generated_at_utc": "2026-08-12T16:16:14.527122+00:00",
+  "inputs": {
+    "model_features_sha256": "ed11867cb5c2e9246c54485449db992aa2cb55de494b3cbc888ec5f6c42db7b7",
+    "phase15_windows_sha256": "3ce6ba2c77426f768a80cc824543773f27c8a2ca2bdd4695d6e7c5695189b809",
+    "phase27_selection_sha256": "41980df9911c8bb2f047b858cbea1bade25acdef1ba9d8812b97b9d6ca20fcbd",
+    "phase28_selection_sha256": "39497d36a7c5c9b2f9ffdf2cd09a9d81974038cab50d48903061b607697203cd",
+    "phase30_selection_sha256": "3dc96b7ae804c9f5cb4efeb227771af245faa823683af1958806b139b5c2d37e"
+  },
+  "isolation_rule": "all new roles are 300-second interval/request disjoint; all historical Phase27/28/30 confirmation intervals receive a 300-second embargo",
+  "models": [
+    "deepseek-v2-lite",
+    "qwen3-8b",
+    "qwen3-30b-a3b"
+  ],
+  "mooncake_capacity_limit": "only five request-disjoint Mooncake blocks remain after historical-confirmation embargo; three conversation blocks span train/validation/fixed prediction, toolagent and synthetic are train-only",
+  "normal_range_rule": "history-count admission plus robust-distance central pool; P95 preferred, deterministic fallback recorded only when Mooncake capacity is exhausted by 300-second embargo",
+  "objective": "known-model in-distribution TP/PP H0 plus DNN residual first-stage closure",
+  "pp_microbatches": [
+    1,
+    4,
+    16
+  ],
+  "pp_sizes": [
+    2,
+    4,
+    8
+  ],
+  "prediction_state_at_freeze": "no_phase31_predictions_generated",
+  "profiles": 59,
+  "role_counts": {
+    "development_train": 39,
+    "development_validation": 10,
+    "fixed_prediction": 10
+  },
+  "schema_version": "phase31a-known-model-convergence-contract-v1",
+  "segment_counts": {
+    "burstgpt_1": 18,
+    "burstgpt_2": 18,
+    "burstgpt_3": 18,
+    "mooncake_conversation": 3,
+    "mooncake_synthetic": 1,
+    "mooncake_toolagent": 1
+  },
+  "selection_seed": "phase31-known-model-normal-range-disjoint-v1-20260813",
+  "status": "PASS",
+  "target_state_at_freeze": "no_phase31_hfull_targets_generated",
+  "tp_policies": [
+    "latency",
+    "balanced",
+    "throughput"
+  ],
+  "tp_sizes": [
+    2,
+    4,
+    8
+  ],
+  "validation_strength": "known three models appear in train/validation/fixed prediction; no whole-model holdout"
+}
