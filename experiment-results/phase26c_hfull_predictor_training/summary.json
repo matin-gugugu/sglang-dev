@@ -1,0 +1,216 @@
+{
+  "can_conclude": [
+    "direct and bounded-residual models were retrained against Hfull targets",
+    "validation-only model selection preserved all temporal/external/synthetic profiles for Phase 26D",
+    "TP and PP native output bin semantics stayed separate"
+  ],
+  "cannot_conclude": [
+    "validation improvements imply test-domain improvements",
+    "the compact profile is sufficient for unseen traffic domains before Phase 26D",
+    "the common cost metric is a physical PP communication-time measurement"
+  ],
+  "checkpoints": [
+    {
+      "best_epoch": 45,
+      "best_validation_loss": 304.5409240722656,
+      "bytes": 45669,
+      "method": "direct",
+      "parallelism": "tp",
+      "path": "checkpoints/tp_direct.pt",
+      "sha256": "040abf0f5f4952b146667a431c0c11774d2ec8763838a5ba1112b7bd9c1eed0c"
+    },
+    {
+      "best_epoch": 3,
+      "best_validation_loss": 0.03339194878935814,
+      "bytes": 45941,
+      "method": "h0_bounded_residual",
+      "parallelism": "tp",
+      "path": "checkpoints/tp_h0_bounded_residual.pt",
+      "sha256": "79fef447f183606627c4c5d396ed9350b90f915d519b6dac5f9f6aa63d566831"
+    },
+    {
+      "best_epoch": 37,
+      "best_validation_loss": 0.16452819108963013,
+      "bytes": 45669,
+      "method": "direct",
+      "parallelism": "pp",
+      "path": "checkpoints/pp_direct.pt",
+      "sha256": "b0d7719336d69c412d8451d14981a7ff4fe37393880418a357df8a86d907acd4"
+    },
+    {
+      "best_epoch": 28,
+      "best_validation_loss": 0.08690781891345978,
+      "bytes": 45941,
+      "method": "h0_bounded_residual",
+      "parallelism": "pp",
+      "path": "checkpoints/pp_h0_bounded_residual.pt",
+      "sha256": "0ab6938b7ae25dc9e29d4cca4e6eae0441c34f1159d9ceb8de53a40a85e360e0"
+    }
+  ],
+  "checks": {
+    "all_metrics_finite": true,
+    "bounded_residual_contract": true,
+    "dataset_rows_1728": true,
+    "dataset_status_pass": true,
+    "feature_columns_55": true,
+    "four_checkpoints": true,
+    "profile_split_counts_5_5_5_8_1": true,
+    "profiles_do_not_cross_splits": true,
+    "test_splits_absent_from_predictions": true,
+    "tp_pp_separate_bin_schemas": true,
+    "validation_predictions_only": true,
+    "validation_records_expected": true
+  },
+  "counts": {
+    "checkpoints": 4,
+    "dataset_phase_rows": 1728,
+    "feature_columns": 55,
+    "profiles": 24,
+    "training_history_rows": 277,
+    "validation_metric_rows": 72,
+    "validation_prediction_records": 1620
+  },
+  "dataset": "/sgl-workspace/sglang-src/experiment-results/phase26b_unified_hfull_training_dataset/training_examples.csv.gz",
+  "dataset_sha256": "936e12fbdd8eede804b73042e910ceb8098a57d8a529e0d2785e5ca5011774b4",
+  "device": "cuda:0",
+  "metric_contract": {
+    "boundary": "not directly comparable to Phase 26B exact-payload L1/TV",
+    "common_reference_cost": "5 us launch plus 100 GB/s, using per-bin calls and logical bytes; not a physical PP curve",
+    "histogram_l1_tv": "native 12-bin calls distribution; total is phase-aware 24-dimensional distribution",
+    "normalized_log_payload_emd": "phase-pooled native-bin calls mass over log2 payload centers"
+  },
+  "next_step": "freeze these checkpoints and run Phase 26D on temporal_test, external_test, and external_synthetic profile groups",
+  "objective": "retrain structure-direct and H0+bounded-residual predictors against Hfull while reserving all test profiles for Phase 26D",
+  "parallelism": {
+    "pp": {
+      "bin_schema_id": "pp_native_12bin_4k_8g_v1",
+      "fit_phase_rows": 90,
+      "fit_profiles": 5,
+      "rows_train_plus_validation": 180,
+      "validation_phase_rows": 90,
+      "validation_profiles": 5
+    },
+    "tp": {
+      "bin_schema_id": "tp_native_12bin_4k_512m_v1",
+      "fit_phase_rows": 270,
+      "fit_profiles": 5,
+      "rows_train_plus_validation": 540,
+      "validation_phase_rows": 270,
+      "validation_profiles": 5
+    }
+  },
+  "schema_version": "phase26c-hfull-predictor-training-v1",
+  "split_contract": {
+    "early_stopping": "validation",
+    "fit": "train",
+    "profile_counts": {
+      "external_synthetic": 1,
+      "external_test": 8,
+      "temporal_test": 5,
+      "train": 5,
+      "validation": 5
+    },
+    "untouched_for_phase26d": [
+      "temporal_test",
+      "external_test",
+      "external_synthetic"
+    ]
+  },
+  "status": "PASS",
+  "validation_headline": {
+    "pp": {
+      "direct": {
+        "bytes_mape": 0.29702587457571583,
+        "bytes_wape": 0.28997822870993595,
+        "calls_mape": 0.659841158960431,
+        "calls_wape": 0.6831349425466758,
+        "cases": 45,
+        "common_reference_cost_mape": 0.5305524886884483,
+        "mean_histogram_l1": 1.074589501927143,
+        "mean_histogram_tv": 0.5372947509635715,
+        "mean_normalized_log_payload_emd": 0.07016406900322122,
+        "method": "direct",
+        "parallelism": "pp",
+        "phase": "total",
+        "policy": "all"
+      },
+      "h0": {
+        "bytes_mape": 0.031660710199205445,
+        "bytes_wape": 0.01266603344029354,
+        "calls_mape": 0.39053302478893015,
+        "calls_wape": 0.10467151995467781,
+        "cases": 45,
+        "common_reference_cost_mape": 0.15274485458969259,
+        "mean_histogram_l1": 0.4667873683440184,
+        "mean_histogram_tv": 0.2333936841720092,
+        "mean_normalized_log_payload_emd": 0.03439183922616034,
+        "method": "h0",
+        "parallelism": "pp",
+        "phase": "total",
+        "policy": "all"
+      },
+      "h0_bounded_residual": {
+        "bytes_mape": 0.09215147935989997,
+        "bytes_wape": 0.055939269143627075,
+        "calls_mape": 0.32030783602642793,
+        "calls_wape": 0.155865026567578,
+        "cases": 45,
+        "common_reference_cost_mape": 0.14954691287741761,
+        "mean_histogram_l1": 0.41719188828960607,
+        "mean_histogram_tv": 0.20859594414480304,
+        "mean_normalized_log_payload_emd": 0.03034609906067637,
+        "method": "h0_bounded_residual",
+        "parallelism": "pp",
+        "phase": "total",
+        "policy": "all"
+      }
+    },
+    "tp": {
+      "direct": {
+        "bytes_mape": 0.7293259963519082,
+        "bytes_wape": 0.6328946336323786,
+        "calls_mape": 1.2163579758470742,
+        "calls_wape": 1.4270088404144128,
+        "cases": 135,
+        "common_reference_cost_mape": 0.8213012757390628,
+        "mean_histogram_l1": 0.7072624260127451,
+        "mean_histogram_tv": 0.35363121300637257,
+        "mean_normalized_log_payload_emd": 0.042415664519989967,
+        "method": "direct",
+        "parallelism": "tp",
+        "phase": "total",
+        "policy": "all"
+      },
+      "h0": {
+        "bytes_mape": 0.03166071019920544,
+        "bytes_wape": 0.012666033440293545,
+        "calls_mape": 0.12340361917643948,
+        "calls_wape": 0.11550686601062077,
+        "cases": 135,
+        "common_reference_cost_mape": 0.08159985086723222,
+        "mean_histogram_l1": 0.21786037972026212,
+        "mean_histogram_tv": 0.10893018986013106,
+        "mean_normalized_log_payload_emd": 0.011690099591209566,
+        "method": "h0",
+        "parallelism": "tp",
+        "phase": "total",
+        "policy": "all"
+      },
+      "h0_bounded_residual": {
+        "bytes_mape": 0.049681047779440664,
+        "bytes_wape": 0.04098927797085364,
+        "calls_mape": 0.12673482554577598,
+        "calls_wape": 0.11369012464266318,
+        "cases": 135,
+        "common_reference_cost_mape": 0.07681292286670742,
+        "mean_histogram_l1": 0.21825090180085918,
+        "mean_histogram_tv": 0.10912545090042959,
+        "mean_normalized_log_payload_emd": 0.011702734711634506,
+        "method": "h0_bounded_residual",
+        "parallelism": "tp",
+        "phase": "total",
+        "policy": "all"
+      }
+    }
+  }
+}
