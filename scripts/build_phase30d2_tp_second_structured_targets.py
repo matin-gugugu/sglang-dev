@@ -206,7 +206,7 @@ def main() -> None:
         and all(count_checks),
         "full_partition_checks_45_of_45": len(partition_checks) == 45
         and all(partition_checks),
-        "adapter_expansions_1215_phase_rows_2430": len(adapter_errors) == 1215,
+        "adapter_expansions_405_phase_rows_810": len(adapter_errors) == 405,
         "adapter_relative_errors_below_one_part_per_billion": max_calls_relative
         <= 1e-9
         and max_bytes_relative <= 1e-9,
@@ -272,7 +272,7 @@ def main() -> None:
 为15个第二确认画像生成45个profile×policy Hfull结构事件target。共处理{request_total:,}个完整
 历史请求；请求数组只在内存中用于离线teacher，没有保存到Git。
 
-62维事件经确定性适配器展开为1,215个模型×TP×策略配置、2,430条phase行；最大calls/bytes
+62维事件经确定性适配器展开为405个模型×TP×策略配置、810条phase行；最大calls/bytes
 相对误差分别为{max_calls_relative:.3e}和{max_bytes_relative:.3e}，审计通过。当前仍不能给出第二
 确认误差；下一阶段只能把本真值连接到已经冻结的3,240条预测，不能重训或改写映射。
 """
