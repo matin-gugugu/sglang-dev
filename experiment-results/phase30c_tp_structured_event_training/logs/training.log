@@ -1,0 +1,60 @@
+{
+  "args": {
+    "batch_size": 64,
+    "dataset_summary": "/sgl-workspace/sglang-src/experiment-results/phase30b_tp_structured_event_dataset/summary.json",
+    "development_dataset": "/sgl-workspace/sglang-src/experiment-results/phase30b_tp_structured_event_dataset/dataset/development_examples.csv.gz",
+    "device": "cuda",
+    "epochs": 800,
+    "event_contract": "/sgl-workspace/sglang-src/experiment-results/phase30a_tp_structured_event_contract/event_contract.json",
+    "feature_contract": "/sgl-workspace/sglang-src/experiment-results/phase30b_tp_structured_event_dataset/feature_columns.json",
+    "first_confirmation_features": "/sgl-workspace/sglang-src/experiment-results/phase30b_tp_structured_event_dataset/dataset/first_confirmation_features.csv.gz",
+    "learning_rate": 0.001,
+    "model_features": "/sgl-workspace/sglang-src/experiment-results/phase16_model_features/model_features.json",
+    "modeling_contract": "/sgl-workspace/sglang-src/experiment-results/phase30a_tp_structured_event_contract/modeling_contract.json",
+    "output_dir": "/sgl-workspace/sglang-src/experiment-results/phase30c_tp_structured_event_training",
+    "patience": 100,
+    "phase29_checkpoint": "/sgl-workspace/sglang-src/experiment-results/phase29c_tp_aligned_training/checkpoints/tp_enhanced_bounded_residual.pt",
+    "second_confirmation_features": "/sgl-workspace/sglang-src/experiment-results/phase30b_tp_structured_event_dataset/dataset/second_confirmation_features.csv.gz",
+    "seed": 20260813
+  },
+  "completed_at_utc": "2026-08-12T14:39:32.340671+00:00",
+  "confirmation_targets_read": false,
+  "device": "cuda:0",
+  "device_name": "NVIDIA B200",
+  "loss_weights": {
+    "log_common_reference_cost": 0.25,
+    "log_total_calls": 0.25,
+    "log_total_logical_bytes": 0.25,
+    "normalized_event_smooth_l1": 1.0,
+    "phase_aware_histogram_tv": 0.5
+  },
+  "numpy": "2.3.5",
+  "platform": "Linux-5.14.0-3.1.8.kwai.x86_64-x86_64-with-glibc2.39",
+  "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "repository_head_at_training": "a225673b5ae8779eaea192b64923fb6d9e51e2c8",
+  "schema_version": "phase30c-training-log-v1",
+  "status": "PASS",
+  "torch": "2.11.0+cu130",
+  "training_runs": [
+    {
+      "best_epoch": 42,
+      "best_validation_loss": 0.2964911460876465,
+      "bytes": 71177,
+      "event_targets": 62,
+      "feature_columns": 91,
+      "method": "structured_event_bounded_residual",
+      "path": "checkpoints/tp_structured_event_bounded_residual.pt",
+      "sha256": "8eb37dbd35242b835c5e215a206bed0d9257086470a3f03ce970ada989817f76"
+    },
+    {
+      "best_epoch": 245,
+      "best_validation_loss": 0.21366971731185913,
+      "bytes": 71141,
+      "event_targets": 62,
+      "feature_columns": 91,
+      "method": "structured_event_direct_control",
+      "path": "checkpoints/tp_structured_event_direct_control.pt",
+      "sha256": "f07e9b9611cd1d3620b4cfb02ecf339090b1882a635e96b96746b72db1ac4b18"
+    }
+  ]
+}
