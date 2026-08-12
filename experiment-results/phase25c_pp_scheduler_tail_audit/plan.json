@@ -1,0 +1,41 @@
+{
+  "schema_version": "phase25c-pp-scheduler-tail-plan-v1",
+  "model": "qwen3-8b",
+  "profiles": [
+    "profile_14_burstgpt_3_c3",
+    "profile_18_mooncake_conversation_c2"
+  ],
+  "profile_metadata": [
+    {
+      "profile_id": "profile_14_burstgpt_3_c3",
+      "source": "burstgpt",
+      "segment": "burstgpt_3",
+      "window_id": "burstgpt_3-27904910000",
+      "request_count": 48
+    },
+    {
+      "profile_id": "profile_18_mooncake_conversation_c2",
+      "source": "mooncake",
+      "segment": "mooncake_conversation",
+      "window_id": "mooncake_conversation-1200000",
+      "request_count": 930
+    }
+  ],
+  "cells": [
+    {
+      "pp_size": 2,
+      "microbatch": 1
+    },
+    {
+      "pp_size": 4,
+      "microbatch": 4
+    },
+    {
+      "pp_size": 8,
+      "microbatch": 16
+    }
+  ],
+  "profile_cells": 6,
+  "selection_contract": "BurstGPT long-prompt small window plus Mooncake long-context full window; diagonal PP/MB coverage",
+  "phase25b_teacher": "/sgl-workspace/sglang-src/experiment-results/phase25b_pp_scheduler_teacher"
+}

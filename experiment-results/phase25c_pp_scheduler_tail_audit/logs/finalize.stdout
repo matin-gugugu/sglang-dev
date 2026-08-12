@@ -1,0 +1,61 @@
+{
+  "can_conclude": [
+    "the Phase 25B scheduler teacher exactly matches both BurstGPT and Mooncake tail sentinels in all three diagonal PP/MB cells",
+    "the recovered chunk/lane semantics generalize beyond the original 42-request smoke to long prompts and a 930-request Mooncake window"
+  ],
+  "cannot_conclude": [
+    "three diagonal cells replace a full Cartesian tail matrix",
+    "the fixed-draining teacher applies to online arrival-aware scheduling or other server contracts"
+  ],
+  "cells": [
+    {
+      "microbatch": 1,
+      "pp_size": 2
+    },
+    {
+      "microbatch": 4,
+      "pp_size": 4
+    },
+    {
+      "microbatch": 16,
+      "pp_size": 8
+    }
+  ],
+  "checks": {
+    "all_comparison_fields_pass": true,
+    "all_gpu_integrity_pass": true,
+    "all_teacher_exact": true,
+    "cells_3": true,
+    "no_pid_files": true,
+    "phase_comparisons_12": true,
+    "profile_cells_6": true,
+    "run_summary_pass": true
+  },
+  "gpu_validation": {
+    "all_scalar_vector_and_exact_histogram_checks": true,
+    "integrity_pass_cells": 3,
+    "teacher_exact_cells": 3
+  },
+  "next_step": "recompute PP H32/H64/H128/Hfull convergence with the Phase 25B scheduler-faithful formula",
+  "phase_comparisons": 12,
+  "profile_cells": 6,
+  "profiles": [
+    {
+      "profile_id": "profile_14_burstgpt_3_c3",
+      "request_count": 48,
+      "segment": "burstgpt_3",
+      "source": "burstgpt",
+      "window_id": "burstgpt_3-27904910000"
+    },
+    {
+      "profile_id": "profile_18_mooncake_conversation_c2",
+      "request_count": 930,
+      "segment": "mooncake_conversation",
+      "source": "mooncake",
+      "window_id": "mooncake_conversation-1200000"
+    }
+  ],
+  "schema_version": "phase25c-pp-scheduler-tail-audit-v1",
+  "selection": "BurstGPT long-prompt small window plus Mooncake long-context full window; diagonal PP/MB coverage",
+  "status": "PASS"
+}
