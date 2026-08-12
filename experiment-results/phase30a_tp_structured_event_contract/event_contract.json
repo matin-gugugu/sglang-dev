@@ -1,0 +1,265 @@
+{
+  "event_predictor_inputs": [
+    "low-dimensional history profile",
+    "fixed TP batching policy",
+    "compact32 H0 event vector for residual methods"
+  ],
+  "event_target_count": 62,
+  "exact_reconstruction": {
+    "decode_calls": "active-lane step count multiplied by model logical_collectives_per_forward",
+    "decode_logical_bytes": "active-lane step count multiplied by active lanes, model bytes/token, and logical_collectives_per_forward",
+    "prefill_calls": "category batch count multiplied by model logical_collectives_per_forward; category maps losslessly to the TP output bin for both 4096 and 8192 bytes/token",
+    "prefill_logical_bytes": "category input-token mass multiplied by model bytes/token and logical_collectives_per_forward"
+  },
+  "forbidden_inputs": [
+    "full_request_list",
+    "representative_request_list",
+    "Hfull_event_target",
+    "Hfull_histogram_target",
+    "communication_cost_target",
+    "placement_or_topology_choice",
+    "future_window_columns"
+  ],
+  "model_adapter_inputs": [
+    "logical_collectives_per_forward_prior",
+    "payload_bytes_per_active_token_prior"
+  ],
+  "normalization_requests": 1000,
+  "prefill_joint_categories": [
+    {
+      "category": 0,
+      "token_sum_max_inclusive": 1,
+      "token_sum_min_inclusive": 1,
+      "tp_bin_for_4096_bytes_per_token": 0,
+      "tp_bin_for_8192_bytes_per_token": 0
+    },
+    {
+      "category": 1,
+      "token_sum_max_inclusive": 2,
+      "token_sum_min_inclusive": 2,
+      "tp_bin_for_4096_bytes_per_token": 0,
+      "tp_bin_for_8192_bytes_per_token": 1
+    },
+    {
+      "category": 2,
+      "token_sum_max_inclusive": 3,
+      "token_sum_min_inclusive": 3,
+      "tp_bin_for_4096_bytes_per_token": 1,
+      "tp_bin_for_8192_bytes_per_token": 1
+    },
+    {
+      "category": 3,
+      "token_sum_max_inclusive": 7,
+      "token_sum_min_inclusive": 4,
+      "tp_bin_for_4096_bytes_per_token": 1,
+      "tp_bin_for_8192_bytes_per_token": 2
+    },
+    {
+      "category": 4,
+      "token_sum_max_inclusive": 9,
+      "token_sum_min_inclusive": 8,
+      "tp_bin_for_4096_bytes_per_token": 2,
+      "tp_bin_for_8192_bytes_per_token": 2
+    },
+    {
+      "category": 5,
+      "token_sum_max_inclusive": 19,
+      "token_sum_min_inclusive": 10,
+      "tp_bin_for_4096_bytes_per_token": 2,
+      "tp_bin_for_8192_bytes_per_token": 3
+    },
+    {
+      "category": 6,
+      "token_sum_max_inclusive": 25,
+      "token_sum_min_inclusive": 20,
+      "tp_bin_for_4096_bytes_per_token": 3,
+      "tp_bin_for_8192_bytes_per_token": 3
+    },
+    {
+      "category": 7,
+      "token_sum_max_inclusive": 50,
+      "token_sum_min_inclusive": 26,
+      "tp_bin_for_4096_bytes_per_token": 3,
+      "tp_bin_for_8192_bytes_per_token": 4
+    },
+    {
+      "category": 8,
+      "token_sum_max_inclusive": 67,
+      "token_sum_min_inclusive": 51,
+      "tp_bin_for_4096_bytes_per_token": 4,
+      "tp_bin_for_8192_bytes_per_token": 4
+    },
+    {
+      "category": 9,
+      "token_sum_max_inclusive": 135,
+      "token_sum_min_inclusive": 68,
+      "tp_bin_for_4096_bytes_per_token": 4,
+      "tp_bin_for_8192_bytes_per_token": 5
+    },
+    {
+      "category": 10,
+      "token_sum_max_inclusive": 181,
+      "token_sum_min_inclusive": 136,
+      "tp_bin_for_4096_bytes_per_token": 5,
+      "tp_bin_for_8192_bytes_per_token": 5
+    },
+    {
+      "category": 11,
+      "token_sum_max_inclusive": 362,
+      "token_sum_min_inclusive": 182,
+      "tp_bin_for_4096_bytes_per_token": 5,
+      "tp_bin_for_8192_bytes_per_token": 6
+    },
+    {
+      "category": 12,
+      "token_sum_max_inclusive": 483,
+      "token_sum_min_inclusive": 363,
+      "tp_bin_for_4096_bytes_per_token": 6,
+      "tp_bin_for_8192_bytes_per_token": 6
+    },
+    {
+      "category": 13,
+      "token_sum_max_inclusive": 966,
+      "token_sum_min_inclusive": 484,
+      "tp_bin_for_4096_bytes_per_token": 6,
+      "tp_bin_for_8192_bytes_per_token": 7
+    },
+    {
+      "category": 14,
+      "token_sum_max_inclusive": 1290,
+      "token_sum_min_inclusive": 967,
+      "tp_bin_for_4096_bytes_per_token": 7,
+      "tp_bin_for_8192_bytes_per_token": 7
+    },
+    {
+      "category": 15,
+      "token_sum_max_inclusive": 2580,
+      "token_sum_min_inclusive": 1291,
+      "tp_bin_for_4096_bytes_per_token": 7,
+      "tp_bin_for_8192_bytes_per_token": 8
+    },
+    {
+      "category": 16,
+      "token_sum_max_inclusive": 3444,
+      "token_sum_min_inclusive": 2581,
+      "tp_bin_for_4096_bytes_per_token": 8,
+      "tp_bin_for_8192_bytes_per_token": 8
+    },
+    {
+      "category": 17,
+      "token_sum_max_inclusive": 6888,
+      "token_sum_min_inclusive": 3445,
+      "tp_bin_for_4096_bytes_per_token": 8,
+      "tp_bin_for_8192_bytes_per_token": 9
+    },
+    {
+      "category": 18,
+      "token_sum_max_inclusive": 9195,
+      "token_sum_min_inclusive": 6889,
+      "tp_bin_for_4096_bytes_per_token": 9,
+      "tp_bin_for_8192_bytes_per_token": 9
+    },
+    {
+      "category": 19,
+      "token_sum_max_inclusive": 18390,
+      "token_sum_min_inclusive": 9196,
+      "tp_bin_for_4096_bytes_per_token": 9,
+      "tp_bin_for_8192_bytes_per_token": 10
+    },
+    {
+      "category": 20,
+      "token_sum_max_inclusive": 24548,
+      "token_sum_min_inclusive": 18391,
+      "tp_bin_for_4096_bytes_per_token": 10,
+      "tp_bin_for_8192_bytes_per_token": 10
+    },
+    {
+      "category": 21,
+      "token_sum_max_inclusive": 49096,
+      "token_sum_min_inclusive": 24549,
+      "tp_bin_for_4096_bytes_per_token": 10,
+      "tp_bin_for_8192_bytes_per_token": 11
+    },
+    {
+      "category": 22,
+      "token_sum_max_inclusive": 65536,
+      "token_sum_min_inclusive": 49097,
+      "tp_bin_for_4096_bytes_per_token": 11,
+      "tp_bin_for_8192_bytes_per_token": 11
+    }
+  ],
+  "prefill_joint_category_count": 23,
+  "schema_version": "phase30-tp-structured-scheduler-event-v1",
+  "target_groups": {
+    "decode_active_lane_step_counts": [
+      "decode_active_lanes_1_step_count_per_1000",
+      "decode_active_lanes_2_step_count_per_1000",
+      "decode_active_lanes_3_step_count_per_1000",
+      "decode_active_lanes_4_step_count_per_1000",
+      "decode_active_lanes_5_step_count_per_1000",
+      "decode_active_lanes_6_step_count_per_1000",
+      "decode_active_lanes_7_step_count_per_1000",
+      "decode_active_lanes_8_step_count_per_1000",
+      "decode_active_lanes_9_step_count_per_1000",
+      "decode_active_lanes_10_step_count_per_1000",
+      "decode_active_lanes_11_step_count_per_1000",
+      "decode_active_lanes_12_step_count_per_1000",
+      "decode_active_lanes_13_step_count_per_1000",
+      "decode_active_lanes_14_step_count_per_1000",
+      "decode_active_lanes_15_step_count_per_1000",
+      "decode_active_lanes_16_step_count_per_1000"
+    ],
+    "prefill_batch_counts": [
+      "prefill_joint_category_0_batch_count_per_1000",
+      "prefill_joint_category_1_batch_count_per_1000",
+      "prefill_joint_category_2_batch_count_per_1000",
+      "prefill_joint_category_3_batch_count_per_1000",
+      "prefill_joint_category_4_batch_count_per_1000",
+      "prefill_joint_category_5_batch_count_per_1000",
+      "prefill_joint_category_6_batch_count_per_1000",
+      "prefill_joint_category_7_batch_count_per_1000",
+      "prefill_joint_category_8_batch_count_per_1000",
+      "prefill_joint_category_9_batch_count_per_1000",
+      "prefill_joint_category_10_batch_count_per_1000",
+      "prefill_joint_category_11_batch_count_per_1000",
+      "prefill_joint_category_12_batch_count_per_1000",
+      "prefill_joint_category_13_batch_count_per_1000",
+      "prefill_joint_category_14_batch_count_per_1000",
+      "prefill_joint_category_15_batch_count_per_1000",
+      "prefill_joint_category_16_batch_count_per_1000",
+      "prefill_joint_category_17_batch_count_per_1000",
+      "prefill_joint_category_18_batch_count_per_1000",
+      "prefill_joint_category_19_batch_count_per_1000",
+      "prefill_joint_category_20_batch_count_per_1000",
+      "prefill_joint_category_21_batch_count_per_1000",
+      "prefill_joint_category_22_batch_count_per_1000"
+    ],
+    "prefill_input_token_mass": [
+      "prefill_joint_category_0_input_token_mass_per_1000",
+      "prefill_joint_category_1_input_token_mass_per_1000",
+      "prefill_joint_category_2_input_token_mass_per_1000",
+      "prefill_joint_category_3_input_token_mass_per_1000",
+      "prefill_joint_category_4_input_token_mass_per_1000",
+      "prefill_joint_category_5_input_token_mass_per_1000",
+      "prefill_joint_category_6_input_token_mass_per_1000",
+      "prefill_joint_category_7_input_token_mass_per_1000",
+      "prefill_joint_category_8_input_token_mass_per_1000",
+      "prefill_joint_category_9_input_token_mass_per_1000",
+      "prefill_joint_category_10_input_token_mass_per_1000",
+      "prefill_joint_category_11_input_token_mass_per_1000",
+      "prefill_joint_category_12_input_token_mass_per_1000",
+      "prefill_joint_category_13_input_token_mass_per_1000",
+      "prefill_joint_category_14_input_token_mass_per_1000",
+      "prefill_joint_category_15_input_token_mass_per_1000",
+      "prefill_joint_category_16_input_token_mass_per_1000",
+      "prefill_joint_category_17_input_token_mass_per_1000",
+      "prefill_joint_category_18_input_token_mass_per_1000",
+      "prefill_joint_category_19_input_token_mass_per_1000",
+      "prefill_joint_category_20_input_token_mass_per_1000",
+      "prefill_joint_category_21_input_token_mass_per_1000",
+      "prefill_joint_category_22_input_token_mass_per_1000"
+    ]
+  },
+  "teacher_scheduler": "tp_fixed_order_token_budget_batches_v1",
+  "tp_size_semantics": "TP size remains a predictor/deployment contract input and audit key, but the current GPU-validated topology-independent teacher formula is invariant to TP2/4/8"
+}
