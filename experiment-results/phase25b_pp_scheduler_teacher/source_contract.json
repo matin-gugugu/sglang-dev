@@ -1,0 +1,31 @@
+{
+  "mirrored_rules": [
+    "pp_loop_size equals pp_size when pp_async_batch_depth is zero",
+    "each PP loop lane owns an independent running batch",
+    "a global chunked request continues before fresh FCFS admission and may migrate lanes",
+    "prefill chunk budget charges page-rounded tokens while the forward payload uses exact tokens",
+    "get_new_batch_prefill runs before update_running_batch filters finished decode requests",
+    "the just-shrunk decode batch executes once before its freed slot is refilled",
+    "final prefill emits token one; decode emits the remaining output tokens"
+  ],
+  "repository_head_at_build": "3f18ec66874ee216e389e2d1dbe81cff45268790",
+  "schema_version": "phase25b-pp-scheduler-source-contract-v1",
+  "scope_boundary": "fixed-draining batch generate; no online arrival timing, preemption, radix reuse, mixed chunk, async PP depth, or speculative decoding",
+  "server_contract": {
+    "chunked_prefill_size": 4096,
+    "disable_overlap_schedule": true,
+    "disable_radix_cache": true,
+    "enable_mixed_chunk": false,
+    "ignore_eos": true,
+    "page_size": 64,
+    "pp_async_batch_depth": 0,
+    "proxy_tensor_count": 2,
+    "schedule_policy": "fcfs"
+  },
+  "source_files": {
+    "python/sglang/srt/managers/schedule_policy.py": "5a505dfbb0a6854d36180c0337fbfb98d75ecde647abc00b66a33c971e1700b3",
+    "python/sglang/srt/managers/scheduler.py": "4f9f52ab2c3679286f93d76b71c446b4b00c374831d289129ae52613a6618edb",
+    "python/sglang/srt/managers/scheduler_components/batch_result_processor.py": "d6274912963ab21acc4a4462bc9cda9e8d938a6e7e9dd808f9c42bb85165cdb0",
+    "python/sglang/srt/managers/scheduler_pp_mixin.py": "fd77b0f49618f02bb293cbcd9deab94b77fcc5ca8c879a8bf0d7636671f060c5"
+  }
+}

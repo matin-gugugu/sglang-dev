@@ -1,0 +1,124 @@
+{
+  "can_conclude": [
+    "the recovered simulator exactly reproduces all nine saved Phase 25 PP smoke histograms",
+    "PP size is a scheduler input because it changes the number of independent running lanes",
+    "logical-byte mass was never the failing component; the correction changes forward-call grouping and payload distribution",
+    "MB1 is exact for the no-cross-chunk smoke but can still require correction for full windows containing long prompts whose chunks migrate across lanes",
+    "the scheduler-faithful full-window labels can replace the Phase 25A provisional static PP labels for the scoped contract"
+  ],
+  "cannot_conclude": [
+    "one sentinel proves accuracy for every possible request distribution",
+    "the same teacher applies to online arrival-aware scheduling or other server options",
+    "compact low-dimensional profiles can recover the scheduler-faithful labels without a learned residual"
+  ],
+  "checks": {
+    "all_label_statuses_validated": true,
+    "boundary_labels_1584": true,
+    "cpu_configurations_216": true,
+    "cpu_invariants_all_pass": true,
+    "gpu_smoke_cells_9": true,
+    "gpu_smoke_exact_9_of_9": true,
+    "logical_bytes_conserved_old_vs_new": true,
+    "mb1_gpu_smoke_exact_3_of_3": true,
+    "old_formula_correction_detected": true,
+    "phase_labels_432": true,
+    "profiles_24": true,
+    "requests_18285": true
+  },
+  "cpu_invariants": {
+    "configurations": 216,
+    "failed": 0,
+    "failures": [],
+    "passed": 216
+  },
+  "gpu_smoke_validation": {
+    "cells": 9,
+    "exact_cells": 9,
+    "max_annotation_histogram_l1": 0,
+    "max_calls_abs_error": 0,
+    "max_logical_bytes_abs_error": 0,
+    "max_payload_histogram_l1": 0,
+    "profile_id": "profile_13_burstgpt_3_c2",
+    "requests": 42
+  },
+  "inputs": {
+    "full_windows": "experiment-results/phase25_full_window_teacher/inputs/full_windows.jsonl.gz",
+    "full_windows_sha256": "152d492ab0d0ecda268143ce2fb5fdb7876fc9ac1eb837da62496b0bd7e8c4bf",
+    "model_features_sha256": "ed11867cb5c2e9246c54485449db992aa2cb55de494b3cbc888ec5f6c42db7b7",
+    "old_phase25a_pp_labels": "experiment-results/phase25_full_window_teacher/labels/pp_phase_labels.csv.gz",
+    "old_phase25a_pp_labels_sha256": "7afaab26185a21de92b27be2039c2b8739b305c6081637d5d951537f7e2206c9",
+    "profiles": 24,
+    "requests": 18285
+  },
+  "labels": {
+    "boundary_rows": 1584,
+    "label_status": "GPU_VALIDATED_SCHEDULER_FORMULA_SMOKE_9_OF_9",
+    "phase_rows": 432
+  },
+  "next_step": "run a small tail-coverage GPU audit on selected full windows, then rebuild H32/H64/H128/Hfull convergence against the scheduler-faithful PP teacher and the existing TP teacher",
+  "old_static_formula_comparison": {
+    "by_policy": [
+      {
+        "bytes_mape": 0.0,
+        "bytes_wape": 0.0,
+        "calls_mape": 0.3576278099492998,
+        "calls_wape": 0.31930109900521164,
+        "cases": 72,
+        "common_reference_cost_mape": 0.11340192234271582,
+        "exact_histograms": 39,
+        "mean_calls_histogram_tv": 0.14200831726685106,
+        "mean_normalized_log_payload_emd": 0.0148353942105399,
+        "parallelism": "pp",
+        "phase": "total",
+        "policy": "mb1"
+      },
+      {
+        "bytes_mape": 2.6006152592737683e-17,
+        "bytes_wape": 3.922538509143399e-17,
+        "calls_mape": 2.0600026256840307,
+        "calls_wape": 2.08358091391667,
+        "cases": 72,
+        "common_reference_cost_mape": 0.48063286624518725,
+        "exact_histograms": 0,
+        "mean_calls_histogram_tv": 0.7266939818808501,
+        "mean_normalized_log_payload_emd": 0.09475133733100022,
+        "parallelism": "pp",
+        "phase": "total",
+        "policy": "mb4"
+      },
+      {
+        "bytes_mape": 4.329567806466708e-17,
+        "bytes_wape": 4.7526192724890976e-17,
+        "calls_mape": 6.161266391291085,
+        "calls_wape": 6.032119431988875,
+        "cases": 72,
+        "common_reference_cost_mape": 0.7433242749112596,
+        "exact_histograms": 1,
+        "mean_calls_histogram_tv": 0.7984372833811083,
+        "mean_normalized_log_payload_emd": 0.1727263425504542,
+        "parallelism": "pp",
+        "phase": "total",
+        "policy": "mb16"
+      }
+    ],
+    "interpretation": "Phase 25A static structural formula is prediction; Phase 25B scheduler-faithful formula is reference",
+    "overall": {
+      "bytes_mape": 2.310061021913492e-17,
+      "bytes_wape": 2.8917192605441654e-17,
+      "calls_mape": 2.859632275641472,
+      "calls_wape": 1.2159076141253917,
+      "cases": 216,
+      "common_reference_cost_mape": 0.44578635449972087,
+      "exact_histograms": 40,
+      "mean_calls_histogram_tv": 0.5557131941762699,
+      "mean_normalized_log_payload_emd": 0.09410435803066476,
+      "parallelism": "pp",
+      "phase": "total",
+      "policy": "all"
+    },
+    "schema_version": "phase25b-old-vs-scheduler-comparison-v1"
+  },
+  "schema_version": "phase25b-pp-scheduler-teacher-v1",
+  "scope": "SGLang fixed-draining FCFS PP scheduler contract recorded in source_contract.json",
+  "status": "PASS"
+}
