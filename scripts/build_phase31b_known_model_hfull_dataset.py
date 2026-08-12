@@ -191,6 +191,11 @@ def identifiers(
     }
 
 
+def feature_safe_profile(profile: dict) -> dict:
+    """Remove split metadata before calling reused Phase27/29 feature builders."""
+    return {key: value for key, value in profile.items() if key != "split_role"}
+
+
 def prefixed_fields(prefix: str, values: dict) -> dict:
     return {
         f"{prefix}_total_calls_per_1000": values["total_calls_per_1000"],
@@ -278,6 +283,7 @@ def main() -> None:
         full_requests = request_windows[profile["profile_id"]]
         compact_requests = pseudo_requests(profile)
         is_development = profile["split_role"] in DEVELOPMENT_ROLES
+        feature_profile = feature_safe_profile(profile)
 
         for model_name in MODELS:
             model_meta, model_values = model_map[model_name]
@@ -294,7 +300,7 @@ def main() -> None:
                     }
                     for phase in PHASES:
                         ids = identifiers(profile, model=model_name, parallelism="tp", parallel_size=tp_size, policy=policy, phase=phase)
-                        features = tp_feature_values(profile, model_values, tp_size, policy, phase, [])
+                        features = tp_feature_values(feature_profile, model_values, tp_size, policy, phase, [])
                         h0 = histogram_fields(h0_by_phase[phase], TP_BIN_EDGES)
                         base = {**ids, **features, **prefixed_fields("h0", h0)}
                         baseline_rows.append({**ids, **h0, "baseline_kind": "compact32_h0"})
@@ -331,7 +337,7 @@ def main() -> None:
                     for phase in PHASES:
                         policy = f"mb{microbatch}"
                         ids = identifiers(profile, model=model_name, parallelism="pp", parallel_size=pp_size, policy=policy, phase=phase)
-                        features = pp_training_features(profile, model_values, pp_size, microbatch, phase)
+                        features = pp_training_features(feature_profile, model_values, pp_size, microbatch, phase)
                         h0 = histogram_fields(h0_pp[phase], PP_BIN_EDGES)
                         base = {**ids, **features, **prefixed_fields("h0", h0)}
                         baseline_rows.append({**ids, **h0, "baseline_kind": "compact32_h0"})
@@ -342,7 +348,10 @@ def main() -> None:
                         else:
                             pp_fixed.append(base)
 
-    profile_rows = [{**profile, **scalar_profile_features(profile)} for profile in profiles]
+    profile_rows = [
+        {**profile, **scalar_profile_features(feature_safe_profile(profile))}
+        for profile in profiles
+    ]
     write_csv_gz(args.output_dir / "profiles/low_dimensional_profiles.csv.gz", profile_rows)
     write_csv_gz(args.output_dir / "labels/development_hfull_targets.csv.gz", target_rows)
     write_csv_gz(args.output_dir / "baselines/compact32_h0.csv.gz", baseline_rows)
@@ -375,6 +384,7 @@ def main() -> None:
         "pp_development_rows_2646": len(pp_development) == 49 * 3 * 3 * 3 * 2,
         "fixed_features_540_each": len(tp_fixed) == len(pp_fixed) == 10 * 3 * 3 * 3 * 2,
         "fixed_features_have_no_target_columns": not any(name.startswith("target_") for name in set(tp_fixed[0]) | set(pp_fixed[0])),
+        "split_role_not_exposed_as_feature": "feature_profile_split_role" not in set(tp_development[0]) | set(pp_development[0]) | set(tp_fixed[0]) | set(pp_fixed[0]),
         "full_request_lists_not_saved": not any(name in set(profile_rows[0]) | set(tp_development[0]) | set(pp_development[0]) for name in {"input_lens", "output_lens", "full_request_list", "requests"}),
         "pp_scheduler_mass_and_completion_exact": simulation_exact,
         "fixed_hfull_targets_not_generated": all(row["split_role"] != FIXED_ROLE for row in target_rows),
