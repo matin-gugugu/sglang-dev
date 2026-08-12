@@ -1,0 +1,629 @@
+{
+  "can_conclude": [
+    "the frozen Phase 26C models were evaluated without train/validation profile leakage",
+    "TP and PP generalization can be compared across temporal, external, and synthetic holdouts",
+    "H0, direct, and bounded residual can be selected or rejected using untouched-profile evidence",
+    "TP should retain H0; PP MB1 should retain H0; PP MB4/MB16 residuals are candidates that still require new-profile confirmation"
+  ],
+  "cannot_conclude": [
+    "one external synthetic profile represents a population distribution",
+    "the result applies to online arrival-aware scheduling or another PP scheduler contract",
+    "the common parameterized cost is physical PP communication time",
+    "PP MB4/MB16 accuracy is solved; their absolute holdout calls errors remain large"
+  ],
+  "checkpoint_hashes": {
+    "pp_direct": "b0d7719336d69c412d8451d14981a7ff4fe37393880418a357df8a86d907acd4",
+    "pp_h0_bounded_residual": "0ab6938b7ae25dc9e29d4cca4e6eae0441c34f1159d9ceb8de53a40a85e360e0",
+    "tp_direct": "040abf0f5f4952b146667a431c0c11774d2ec8763838a5ba1112b7bd9c1eed0c",
+    "tp_h0_bounded_residual": "79fef447f183606627c4c5d396ed9350b90f915d519b6dac5f9f6aa63d566831"
+  },
+  "checks": {
+    "all_metrics_finite": true,
+    "candidate_decisions_6": true,
+    "candidate_pp_policy_split": true,
+    "candidate_tp_all_h0": true,
+    "checkpoint_hashes_frozen": true,
+    "headline_scopes_complete": true,
+    "no_train_or_validation_predictions": true,
+    "prediction_records_4536": true,
+    "predictions_only_test_splits": true,
+    "test_profile_split_counts_5_8_1": true,
+    "test_profiles_14": true,
+    "tp_pp_bin_schemas_separate": true,
+    "training_audit_pass": true,
+    "training_status_pass": true
+  },
+  "counts": {
+    "candidate_rows": 6,
+    "comparison_rows": 8,
+    "metric_rows": 288,
+    "prediction_records": 4536,
+    "test_profiles": 14
+  },
+  "device": "cuda:0",
+  "first_version_candidate": [
+    {
+      "candidate_bytes_mape": 0.035022411896129715,
+      "candidate_calls_mape": 0.11079555650976056,
+      "candidate_calls_wape": 0.11082253490573134,
+      "candidate_common_reference_cost_mape": 0.0783390450090684,
+      "candidate_histogram_tv": 0.09777341448089771,
+      "candidate_method": "h0",
+      "candidate_normalized_log_payload_emd": 0.00977489457221848,
+      "decision_rule": "residual wins at least 2 of calls MAPE, TV, cost MAPE and cost regression <=10%; otherwise H0",
+      "parallelism": "tp",
+      "policy": "latency",
+      "residual_cost_relative_change": 0.6807025590008262,
+      "residual_metric_wins_of_3": 0,
+      "selection_boundary": "post-holdout first-version candidate; validate on new profiles before reporting an unbiased hybrid score"
+    },
+    {
+      "candidate_bytes_mape": 0.03502241189612969,
+      "candidate_calls_mape": 0.12446315088594273,
+      "candidate_calls_wape": 0.10519259573812655,
+      "candidate_common_reference_cost_mape": 0.07250768835746936,
+      "candidate_histogram_tv": 0.15916066301608872,
+      "candidate_method": "h0",
+      "candidate_normalized_log_payload_emd": 0.01619923698737147,
+      "decision_rule": "residual wins at least 2 of calls MAPE, TV, cost MAPE and cost regression <=10%; otherwise H0",
+      "parallelism": "tp",
+      "policy": "balanced",
+      "residual_cost_relative_change": 0.6007148574829198,
+      "residual_metric_wins_of_3": 0,
+      "selection_boundary": "post-holdout first-version candidate; validate on new profiles before reporting an unbiased hybrid score"
+    },
+    {
+      "candidate_bytes_mape": 0.03502241189612971,
+      "candidate_calls_mape": 0.11277136996750599,
+      "candidate_calls_wape": 0.09426324878616069,
+      "candidate_common_reference_cost_mape": 0.06206560805727228,
+      "candidate_histogram_tv": 0.1567562704594106,
+      "candidate_method": "h0",
+      "candidate_normalized_log_payload_emd": 0.016525164299747788,
+      "decision_rule": "residual wins at least 2 of calls MAPE, TV, cost MAPE and cost regression <=10%; otherwise H0",
+      "parallelism": "tp",
+      "policy": "throughput",
+      "residual_cost_relative_change": 0.9473271017794389,
+      "residual_metric_wins_of_3": 0,
+      "selection_boundary": "post-holdout first-version candidate; validate on new profiles before reporting an unbiased hybrid score"
+    },
+    {
+      "candidate_bytes_mape": 0.035022411896129736,
+      "candidate_calls_mape": 0.08767149371715445,
+      "candidate_calls_wape": 0.07521523829770901,
+      "candidate_common_reference_cost_mape": 0.030267183540174325,
+      "candidate_histogram_tv": 0.1010927250884046,
+      "candidate_method": "h0",
+      "candidate_normalized_log_payload_emd": 0.011379396559765123,
+      "decision_rule": "residual wins at least 2 of calls MAPE, TV, cost MAPE and cost regression <=10%; otherwise H0",
+      "parallelism": "pp",
+      "policy": "mb1",
+      "residual_cost_relative_change": 1.3289295304302502,
+      "residual_metric_wins_of_3": 0,
+      "selection_boundary": "post-holdout first-version candidate; validate on new profiles before reporting an unbiased hybrid score"
+    },
+    {
+      "candidate_bytes_mape": 0.05332521117607425,
+      "candidate_calls_mape": 0.3319149826556962,
+      "candidate_calls_wape": 0.2971231912265166,
+      "candidate_common_reference_cost_mape": 0.10263418265328708,
+      "candidate_histogram_tv": 0.21668381471916856,
+      "candidate_method": "h0_bounded_residual",
+      "candidate_normalized_log_payload_emd": 0.03240732963085576,
+      "decision_rule": "residual wins at least 2 of calls MAPE, TV, cost MAPE and cost regression <=10%; otherwise H0",
+      "parallelism": "pp",
+      "policy": "mb4",
+      "residual_cost_relative_change": 0.033469289000145334,
+      "residual_metric_wins_of_3": 2,
+      "selection_boundary": "post-holdout first-version candidate; validate on new profiles before reporting an unbiased hybrid score"
+    },
+    {
+      "candidate_bytes_mape": 0.04869522220166537,
+      "candidate_calls_mape": 1.2535782728578349,
+      "candidate_calls_wape": 1.1090797511786499,
+      "candidate_common_reference_cost_mape": 0.13653518563496644,
+      "candidate_histogram_tv": 0.4797321942121359,
+      "candidate_method": "h0_bounded_residual",
+      "candidate_normalized_log_payload_emd": 0.08683634580571419,
+      "decision_rule": "residual wins at least 2 of calls MAPE, TV, cost MAPE and cost regression <=10%; otherwise H0",
+      "parallelism": "pp",
+      "policy": "mb16",
+      "residual_cost_relative_change": -0.17087283438610362,
+      "residual_metric_wins_of_3": 3,
+      "selection_boundary": "post-holdout first-version candidate; validate on new profiles before reporting an unbiased hybrid score"
+    }
+  ],
+  "next_step": "use the holdout evidence to freeze the first-version TP/PP predictor choice; if PP remains weak, enrich compact scheduler-sensitive profile features without changing Hfull teacher",
+  "objective": "evaluate frozen Phase 26C Hfull predictors on untouched temporal, external, and external-synthetic profile groups",
+  "residual_relative_outcome": {
+    "all_test": {
+      "pp": {
+        "calls_mape_relative_change": -0.1732539062512394,
+        "common_cost_mape_relative_change": 0.05236548035317478,
+        "histogram_tv_relative_change": -0.04822618745373034
+      },
+      "tp": {
+        "calls_mape_relative_change": 0.2673126407786604,
+        "common_cost_mape_relative_change": 0.7311857342107635,
+        "histogram_tv_relative_change": 0.020475800403383433
+      }
+    },
+    "external_synthetic": {
+      "pp": {
+        "calls_mape_relative_change": -0.31915174479910813,
+        "common_cost_mape_relative_change": -0.06755039559618939,
+        "histogram_tv_relative_change": -0.03485837979435569
+      },
+      "tp": {
+        "calls_mape_relative_change": 0.40646802643867974,
+        "common_cost_mape_relative_change": 2.581771413425952,
+        "histogram_tv_relative_change": -0.13255124638815347
+      }
+    },
+    "external_test": {
+      "pp": {
+        "calls_mape_relative_change": -0.18976100175235844,
+        "common_cost_mape_relative_change": -0.11217834227341024,
+        "histogram_tv_relative_change": -0.03226462726221497
+      },
+      "tp": {
+        "calls_mape_relative_change": 0.6611018151261299,
+        "common_cost_mape_relative_change": 2.817199610754413,
+        "histogram_tv_relative_change": 0.1137045560743114
+      }
+    },
+    "temporal_test": {
+      "pp": {
+        "calls_mape_relative_change": 0.042971848890650186,
+        "common_cost_mape_relative_change": 0.22837738999595064,
+        "histogram_tv_relative_change": -0.10365721174516622
+      },
+      "tp": {
+        "calls_mape_relative_change": -0.002656915071173466,
+        "common_cost_mape_relative_change": -0.04234653205749705,
+        "histogram_tv_relative_change": -0.010925134554820484
+      }
+    }
+  },
+  "schema_version": "phase26d-hfull-profile-holdout-evaluation-v1",
+  "status": "PASS",
+  "test_headline": {
+    "all_test": {
+      "pp": {
+        "direct": {
+          "bytes_mape": 0.7384665276810785,
+          "bytes_wape": 0.868660023494379,
+          "calls_mape": 0.6196752029416762,
+          "calls_wape": 0.5937547049172031,
+          "cases": 126,
+          "common_reference_cost_mape": 0.5421799999668517,
+          "common_reference_cost_wape": 0.6067871805768217,
+          "evaluation_scope": "all_test",
+          "mean_histogram_l1": 1.0611660636301368,
+          "mean_histogram_tv": 0.5305830318150684,
+          "mean_normalized_log_payload_emd": 0.08362953688214371,
+          "method": "direct",
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0": {
+          "bytes_mape": 0.035022411896129715,
+          "bytes_wape": 0.012657630399660317,
+          "calls_mape": 0.7043948062651818,
+          "calls_wape": 0.27423150536953206,
+          "cases": 126,
+          "common_reference_cost_mape": 0.09808363843772726,
+          "common_reference_cost_wape": 0.07289886011899906,
+          "evaluation_scope": "all_test",
+          "mean_histogram_l1": 0.5707731114779029,
+          "mean_histogram_tv": 0.28538655573895144,
+          "mean_normalized_log_payload_emd": 0.05016115054734613,
+          "method": "h0",
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0_bounded_residual": {
+          "bytes_mape": 0.05228751307812226,
+          "bytes_wape": 0.03703722218392599,
+          "calls_mape": 0.582355654536654,
+          "calls_wape": 0.27769423849354186,
+          "cases": 126,
+          "common_reference_cost_mape": 0.10321983527930596,
+          "common_reference_cost_wape": 0.07469014038109355,
+          "evaluation_scope": "all_test",
+          "mean_histogram_l1": 0.5432469004102206,
+          "mean_histogram_tv": 0.2716234502051103,
+          "mean_normalized_log_payload_emd": 0.04647657774135247,
+          "method": "h0_bounded_residual",
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "all"
+        }
+      },
+      "tp": {
+        "direct": {
+          "bytes_mape": 0.790939823766559,
+          "bytes_wape": 0.8865235283947034,
+          "calls_mape": 0.5485379812394984,
+          "calls_wape": 0.5598079066077435,
+          "cases": 378,
+          "common_reference_cost_mape": 0.5364298300377813,
+          "common_reference_cost_wape": 0.6175775668007674,
+          "evaluation_scope": "all_test",
+          "mean_histogram_l1": 0.7476857798237649,
+          "mean_histogram_tv": 0.37384288991188247,
+          "mean_normalized_log_payload_emd": 0.045554216238520635,
+          "method": "direct",
+          "parallelism": "tp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0": {
+          "bytes_mape": 0.0350224118961297,
+          "bytes_wape": 0.012657630399660296,
+          "calls_mape": 0.11601002578773643,
+          "calls_wape": 0.10753591007857773,
+          "cases": 378,
+          "common_reference_cost_mape": 0.07097078047460334,
+          "common_reference_cost_wape": 0.04332337197768329,
+          "evaluation_scope": "all_test",
+          "mean_histogram_l1": 0.27579356530426474,
+          "mean_histogram_tv": 0.13789678265213237,
+          "mean_normalized_log_payload_emd": 0.01416643195311258,
+          "method": "h0",
+          "parallelism": "tp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0_bounded_residual": {
+          "bytes_mape": 0.09431041834468291,
+          "bytes_wape": 0.10316339642995283,
+          "calls_mape": 0.14702097213785675,
+          "calls_wape": 0.16325160715403064,
+          "cases": 378,
+          "common_reference_cost_mape": 0.1228636027034371,
+          "common_reference_cost_wape": 0.12202520884762669,
+          "evaluation_scope": "all_test",
+          "mean_histogram_l1": 0.28144065929997236,
+          "mean_histogram_tv": 0.14072032964998618,
+          "mean_normalized_log_payload_emd": 0.014412722694990889,
+          "method": "h0_bounded_residual",
+          "parallelism": "tp",
+          "phase": "total",
+          "policy": "all"
+        }
+      }
+    },
+    "external_synthetic": {
+      "pp": {
+        "direct": {
+          "bytes_mape": 0.7556682638443234,
+          "bytes_wape": 0.7556682638443235,
+          "calls_mape": 0.7297351061039786,
+          "calls_wape": 0.8576672310082775,
+          "cases": 9,
+          "common_reference_cost_mape": 0.7646017535191986,
+          "common_reference_cost_wape": 0.7697515228253758,
+          "evaluation_scope": "external_synthetic",
+          "mean_histogram_l1": 1.1037215041186388,
+          "mean_histogram_tv": 0.5518607520593194,
+          "mean_normalized_log_payload_emd": 0.08692169245307874,
+          "method": "direct",
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0": {
+          "bytes_mape": 0.021524850892065624,
+          "bytes_wape": 0.021524850892065628,
+          "calls_mape": 0.8091352699276847,
+          "calls_wape": 0.29427750580227546,
+          "cases": 9,
+          "common_reference_cost_mape": 0.09716664618979272,
+          "common_reference_cost_wape": 0.08793239402007992,
+          "evaluation_scope": "external_synthetic",
+          "mean_histogram_l1": 0.553826196101618,
+          "mean_histogram_tv": 0.276913098050809,
+          "mean_normalized_log_payload_emd": 0.04765422760657384,
+          "method": "h0",
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0_bounded_residual": {
+          "bytes_mape": 0.06814415630548315,
+          "bytes_wape": 0.06814415630548314,
+          "calls_mape": 0.5508983367517668,
+          "calls_wape": 0.19277488697882744,
+          "cases": 9,
+          "common_reference_cost_mape": 0.09060300080091725,
+          "common_reference_cost_wape": 0.0808307982223934,
+          "evaluation_scope": "external_synthetic",
+          "mean_histogram_l1": 0.5345207122178445,
+          "mean_histogram_tv": 0.26726035610892224,
+          "mean_normalized_log_payload_emd": 0.04205929109228743,
+          "method": "h0_bounded_residual",
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "all"
+        }
+      },
+      "tp": {
+        "direct": {
+          "bytes_mape": 0.8439583832488543,
+          "bytes_wape": 0.8480845704433776,
+          "calls_mape": 0.6205172307718755,
+          "calls_wape": 0.720909529301215,
+          "cases": 27,
+          "common_reference_cost_mape": 0.7948603007812951,
+          "common_reference_cost_wape": 0.8120376054974624,
+          "evaluation_scope": "external_synthetic",
+          "mean_histogram_l1": 0.8719684581907616,
+          "mean_histogram_tv": 0.4359842290953808,
+          "mean_normalized_log_payload_emd": 0.054561251679665315,
+          "method": "direct",
+          "parallelism": "tp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0": {
+          "bytes_mape": 0.02152485089206554,
+          "bytes_wape": 0.02152485089206556,
+          "calls_mape": 0.12691273985090262,
+          "calls_wape": 0.13431946211376472,
+          "cases": 27,
+          "common_reference_cost_mape": 0.049470097782940016,
+          "common_reference_cost_wape": 0.05321447985731876,
+          "evaluation_scope": "external_synthetic",
+          "mean_histogram_l1": 0.33557535114027964,
+          "mean_histogram_tv": 0.16778767557013982,
+          "mean_normalized_log_payload_emd": 0.01755236780433308,
+          "method": "h0",
+          "parallelism": "tp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0_bounded_residual": {
+          "bytes_mape": 0.18656928999528993,
+          "bytes_wape": 0.1861665161572163,
+          "calls_mape": 0.1784987107480246,
+          "calls_wape": 0.20605910987487233,
+          "cases": 27,
+          "common_reference_cost_mape": 0.1771905820583211,
+          "common_reference_cost_wape": 0.18440278796403237,
+          "evaluation_scope": "external_synthetic",
+          "mean_histogram_l1": 0.2910944200894933,
+          "mean_histogram_tv": 0.14554721004474666,
+          "mean_normalized_log_payload_emd": 0.01585063616576913,
+          "method": "h0_bounded_residual",
+          "parallelism": "tp",
+          "phase": "total",
+          "policy": "all"
+        }
+      }
+    },
+    "external_test": {
+      "pp": {
+        "direct": {
+          "bytes_mape": 0.9221777380412866,
+          "bytes_wape": 0.9223538982757403,
+          "calls_mape": 0.6383768407280456,
+          "calls_wape": 0.5017174327138283,
+          "cases": 72,
+          "common_reference_cost_mape": 0.6041251153640617,
+          "common_reference_cost_wape": 0.607137920869718,
+          "evaluation_scope": "external_test",
+          "mean_histogram_l1": 1.1467175396451335,
+          "mean_histogram_tv": 0.5733587698225667,
+          "mean_normalized_log_payload_emd": 0.10215148335273988,
+          "method": "direct",
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0": {
+          "bytes_mape": 0.009683546453306427,
+          "bytes_wape": 0.009699159132823139,
+          "calls_mape": 0.9878865445020407,
+          "calls_wape": 0.3998010737401199,
+          "cases": 72,
+          "common_reference_cost_mape": 0.07815906049597732,
+          "common_reference_cost_wape": 0.07236513377504694,
+          "evaluation_scope": "external_test",
+          "mean_histogram_l1": 0.7088217607571495,
+          "mean_histogram_tv": 0.35441088037857477,
+          "mean_normalized_log_payload_emd": 0.06938090562292208,
+          "method": "h0",
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0_bounded_residual": {
+          "bytes_mape": 0.033823076150563,
+          "bytes_wape": 0.033604010165986936,
+          "calls_mape": 0.8004242041996577,
+          "calls_wape": 0.3667081425456518,
+          "cases": 72,
+          "common_reference_cost_mape": 0.0693913066558914,
+          "common_reference_cost_wape": 0.06574251223074484,
+          "evaluation_scope": "external_test",
+          "mean_histogram_l1": 0.6859518908509732,
+          "mean_histogram_tv": 0.3429759454254866,
+          "mean_normalized_log_payload_emd": 0.064604448370082,
+          "method": "h0_bounded_residual",
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "all"
+        }
+      },
+      "tp": {
+        "direct": {
+          "bytes_mape": 0.9177240906948227,
+          "bytes_wape": 0.920503325798246,
+          "calls_mape": 0.5599559283935621,
+          "calls_wape": 0.5552966820551163,
+          "cases": 216,
+          "common_reference_cost_mape": 0.5836941341494517,
+          "common_reference_cost_wape": 0.6217183041950425,
+          "evaluation_scope": "external_test",
+          "mean_histogram_l1": 0.8896758592761005,
+          "mean_histogram_tv": 0.44483792963805024,
+          "mean_normalized_log_payload_emd": 0.05381138859166974,
+          "method": "direct",
+          "parallelism": "tp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0": {
+          "bytes_mape": 0.009683546453306425,
+          "bytes_wape": 0.009699159132823123,
+          "calls_mape": 0.07279476469585287,
+          "calls_wape": 0.09838752199799793,
+          "cases": 216,
+          "common_reference_cost_mape": 0.02792223127258701,
+          "common_reference_cost_wape": 0.03548747962451279,
+          "evaluation_scope": "external_test",
+          "mean_histogram_l1": 0.1625387033101583,
+          "mean_histogram_tv": 0.08126935165507915,
+          "mean_normalized_log_payload_emd": 0.00793359871475722,
+          "method": "h0",
+          "parallelism": "tp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0_bounded_residual": {
+          "bytes_mape": 0.08724758534529028,
+          "bytes_wape": 0.09649401706654467,
+          "calls_mape": 0.12091951576796073,
+          "calls_wape": 0.1675649514184477,
+          "cases": 216,
+          "common_reference_cost_mape": 0.10658473034511383,
+          "common_reference_cost_wape": 0.12036317212561855,
+          "evaluation_scope": "external_test",
+          "mean_histogram_l1": 0.18102009441493405,
+          "mean_histogram_tv": 0.09051004720746703,
+          "mean_normalized_log_payload_emd": 0.009000865700050866,
+          "method": "h0_bounded_residual",
+          "parallelism": "tp",
+          "phase": "total",
+          "policy": "all"
+        }
+      }
+    },
+    "temporal_test": {
+      "pp": {
+        "direct": {
+          "bytes_mape": 0.44108824387209666,
+          "bytes_wape": 0.11405728174114163,
+          "calls_mape": 0.5677406018510243,
+          "calls_wape": 0.6683124630230536,
+          "cases": 45,
+          "common_reference_cost_mape": 0.39858346462084643,
+          "common_reference_cost_wape": 0.49639612484765955,
+          "evaluation_scope": "temporal_test",
+          "mean_histogram_l1": 0.9157726139084417,
+          "mean_histogram_tv": 0.45788630695422083,
+          "mean_normalized_log_payload_emd": 0.05333599141500278,
+          "method": "direct",
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0": {
+          "bytes_mape": 0.0782641088054598,
+          "bytes_wape": 0.04930812927337172,
+          "calls_mape": 0.22985993235370697,
+          "calls_wape": 0.08511249981130466,
+          "cases": 45,
+          "common_reference_cost_mape": 0.13014636159411405,
+          "common_reference_cost_wape": 0.06603212648175537,
+          "evaluation_scope": "temporal_test",
+          "mean_histogram_l1": 0.3532846557063652,
+          "mean_histogram_tv": 0.1766423278531826,
+          "mean_normalized_log_payload_emd": 0.019910927014579083,
+          "method": "h0",
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0_bounded_residual": {
+          "bytes_mape": 0.0786592835167449,
+          "bytes_wape": 0.04073893831762337,
+          "calls_mape": 0.23973743863282554,
+          "calls_wape": 0.16642379638789734,
+          "cases": 45,
+          "common_reference_cost_mape": 0.15986884797244705,
+          "common_reference_cost_wape": 0.12303548301377809,
+          "evaluation_scope": "temporal_test",
+          "mean_histogram_l1": 0.31666415334349235,
+          "mean_histogram_tv": 0.15833207667174617,
+          "mean_normalized_log_payload_emd": 0.018355442065198256,
+          "method": "h0_bounded_residual",
+          "parallelism": "pp",
+          "phase": "total",
+          "policy": "all"
+        }
+      },
+      "tp": {
+        "direct": {
+          "bytes_mape": 0.5774812847848777,
+          "bytes_wape": 0.3472976538986424,
+          "calls_mape": 0.515873415886521,
+          "calls_wape": 0.5103133350738017,
+          "cases": 135,
+          "common_reference_cost_mape": 0.4091208493104057,
+          "common_reference_cost_wape": 0.41943004976545917,
+          "evaluation_scope": "temporal_test",
+          "mean_histogram_l1": 0.4956451170266287,
+          "mean_histogram_tv": 0.24782255851331436,
+          "mean_normalized_log_payload_emd": 0.030541333385253104,
+          "method": "direct",
+          "parallelism": "tp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0": {
+          "bytes_mape": 0.07826410880545977,
+          "bytes_wape": 0.049308129273371686,
+          "calls_mape": 0.1829739007221169,
+          "calls_wape": 0.13576264399246996,
+          "cases": 135,
+          "common_reference_cost_mape": 0.14414859573616212,
+          "common_reference_cost_wape": 0.09980308849595898,
+          "evaluation_scope": "temporal_test",
+          "mean_histogram_l1": 0.44504498732763204,
+          "mean_histogram_tv": 0.22252249366381602,
+          "mean_normalized_log_payload_emd": 0.023461777964237047,
+          "method": "h0",
+          "parallelism": "tp",
+          "phase": "total",
+          "policy": "all"
+        },
+        "h0_bounded_residual": {
+          "bytes_mape": 0.08715917681358966,
+          "bytes_wape": 0.06824551238579307,
+          "calls_mape": 0.1824877546076569,
+          "calls_wape": 0.12617355991696544,
+          "cases": 135,
+          "common_reference_cost_mape": 0.13804440260577755,
+          "common_reference_cost_wape": 0.08319946856192126,
+          "evaluation_scope": "temporal_test",
+          "mean_histogram_l1": 0.4401828109581293,
+          "mean_histogram_tv": 0.22009140547906464,
+          "mean_normalized_log_payload_emd": 0.02278411119273928,
+          "method": "h0_bounded_residual",
+          "parallelism": "tp",
+          "phase": "total",
+          "policy": "all"
+        }
+      }
+    }
+  },
+  "test_profile_split_counts": {
+    "external_synthetic": 1,
+    "external_test": 8,
+    "temporal_test": 5
+  }
+}
