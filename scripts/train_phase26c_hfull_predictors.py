@@ -616,7 +616,9 @@ H0+bounded-residual模型；H0作为无参数基线。拟合只使用5个`train`
 {chr(10).join(table)}
 
 这些是模型选择用validation结果，不是最终测试结论。正式结论必须以Phase 26D的三个
-测试域为准。
+测试域为准。这里的L1/TV在各自原生12桶上计算，和Phase 26B用于teacher审计的exact
+payload TV不是同一个离散粒度；log-payload EMD在total时合并prefill/decode的桶质量，
+TV则保留phase-aware的24维分布。
 
 ## 训练契约
 
@@ -841,6 +843,12 @@ def main() -> None:
             "fit": FIT_SPLIT,
             "early_stopping": VALIDATION_SPLIT,
             "untouched_for_phase26d": list(TEST_SPLITS),
+        },
+        "metric_contract": {
+            "histogram_l1_tv": "native 12-bin calls distribution; total is phase-aware 24-dimensional distribution",
+            "normalized_log_payload_emd": "phase-pooled native-bin calls mass over log2 payload centers",
+            "common_reference_cost": "5 us launch plus 100 GB/s, using per-bin calls and logical bytes; not a physical PP curve",
+            "boundary": "not directly comparable to Phase 26B exact-payload L1/TV",
         },
         "parallelism": parallel_summaries,
         "validation_headline": headline,
