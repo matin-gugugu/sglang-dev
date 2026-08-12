@@ -1,0 +1,176 @@
+{
+  "can_conclude": [
+    "representative request convergence under the scheduler-faithful PP contract can be assessed against full-window labels",
+    "the reported Phase 25D PP metrics supersede Phase 24 PP convergence metrics that used static groups"
+  ],
+  "cannot_conclude": [
+    "representative structural labels are direct GPU measurements",
+    "the same convergence applies to online arrivals or a different scheduler contract"
+  ],
+  "checks": {
+    "all_histograms_positive": true,
+    "all_metrics_finite": true,
+    "decomposition_metrics_648": true,
+    "histogram_labels_2160": true,
+    "per_case_metrics_2592": true,
+    "phase25b_hfull_exact_432_of_432": true,
+    "phase25c_tail_audit_pass": true,
+    "profiles_24": true,
+    "request_rows_120": true,
+    "simulation_configurations_1080": true
+  },
+  "convergence": {
+    "by_sample": {
+      "h128": {
+        "bytes_mape": 0.020109930724746664,
+        "bytes_wape": 0.01372214585555885,
+        "calls_mape": 0.18650513134542168,
+        "calls_wape": 0.0793035373492401,
+        "common_reference_cost_mape": 0.06064711826313812,
+        "histogram_tv": 0.2623856111349759,
+        "meets_all": false,
+        "normalized_log_payload_emd": 0.02407814390725715,
+        "p95_bytes_ape": 0.04764687944704208,
+        "p95_calls_ape": 0.5939221215155338,
+        "p95_common_reference_cost_ape": 0.26931979860267663
+      },
+      "h32": {
+        "bytes_mape": 0.05817734946363697,
+        "bytes_wape": 0.047828370277941686,
+        "calls_mape": 0.7199196330050599,
+        "calls_wape": 0.2520841451632577,
+        "common_reference_cost_mape": 0.17130691709485277,
+        "histogram_tv": 0.4209150667691081,
+        "meets_all": false,
+        "normalized_log_payload_emd": 0.051135873477213746,
+        "p95_bytes_ape": 0.127821910983171,
+        "p95_calls_ape": 2.9436602936392595,
+        "p95_common_reference_cost_ape": 0.737812600697594
+      },
+      "h64": {
+        "bytes_mape": 0.027810913952374203,
+        "bytes_wape": 0.022730695553326522,
+        "calls_mape": 0.33500175462744936,
+        "calls_wape": 0.12934767481291576,
+        "common_reference_cost_mape": 0.08404759530326039,
+        "histogram_tv": 0.3317628200870928,
+        "meets_all": false,
+        "normalized_log_payload_emd": 0.034663697915765276,
+        "p95_bytes_ape": 0.07136960858499004,
+        "p95_calls_ape": 1.50857477930245,
+        "p95_common_reference_cost_ape": 0.2973049429962171
+      }
+    },
+    "minimum_sample_meeting_all_preregistered_thresholds": null
+  },
+  "convergence_thresholds": {
+    "bytes_mape": 0.05,
+    "bytes_wape": 0.05,
+    "calls_mape": 0.05,
+    "calls_wape": 0.05,
+    "common_reference_cost_mape": 0.05,
+    "histogram_tv": 0.05,
+    "normalized_log_payload_emd": 0.02,
+    "p95_bytes_ape": 0.15,
+    "p95_calls_ape": 0.15,
+    "p95_common_reference_cost_ape": 0.15
+  },
+  "cost_contract": {
+    "bandwidth_gbps": 100.0,
+    "kind": "common parameterized reference, not physical PP measurement",
+    "launch_us": 5.0
+  },
+  "gpu_evidence": {
+    "phase25b_smoke": "9/9 PP2/4/8 x MB1/4/16 cells exact on 42-request BurstGPT window",
+    "phase25c_tail": "3/3 diagonal cells, 6/6 profile-cells, 12/12 phase comparisons exact on BurstGPT/Mooncake tails"
+  },
+  "inputs": {
+    "phase24_selected_requests_sha256": "f5ee9864c205ed3076b170e0725939e060ab6b0cbf436d13abc0e59f793440cd",
+    "phase25b_labels_sha256": "6e1ca18f879e38db20af9a96717d84a91d59a4bd2fc3fb4778c65778bf045836",
+    "phase25c_summary_sha256": "69234ecfe2225bb92c9d00bd4cc02c187eb7a611da63455917193aa2d4341fd2",
+    "profiles": 24,
+    "repository_head_at_build": "0835925bf4fa38b8b9182d02402225f41c47467e",
+    "request_rows": 120
+  },
+  "next_step": "use the Phase 25B Hfull labels as PP supervision and retrain compact-profile H0/direct/bounded-residual predictors; keep Phase 16 TP retraining on its separately audited Hfull teacher",
+  "objective": "Recompute PP H32/H64/H128/Hfull and compact32 convergence with the scheduler-faithful Phase 25B formula",
+  "old_vs_new_teacher": [
+    {
+      "new_bytes_mape": 0.05817734946363697,
+      "new_bytes_wape": 0.047828370277941686,
+      "new_calls_mape": 0.7199196330050599,
+      "new_calls_wape": 0.2520841451632577,
+      "new_common_reference_cost_mape": 0.17130691709485277,
+      "new_mean_calls_histogram_tv": 0.4209150667691081,
+      "new_mean_normalized_log_payload_emd": 0.051135873477213746,
+      "new_p95_calls_ape": 2.9436602936392595,
+      "new_teacher": "phase25b_sglang_pp_fcfs_lanes_v1",
+      "old_bytes_mape": 0.05817734946363696,
+      "old_bytes_wape": 0.04782837027794168,
+      "old_calls_mape": 0.08381432748067305,
+      "old_calls_wape": 0.04275508414529558,
+      "old_common_reference_cost_mape": 0.06630104709742003,
+      "old_mean_calls_histogram_tv": 0.09217925720539505,
+      "old_mean_normalized_log_payload_emd": 0.0052443526647147415,
+      "old_p95_calls_ape": 0.2713692196531791,
+      "old_teacher": "phase24_static_pp_groups",
+      "sample_label": "h32"
+    },
+    {
+      "new_bytes_mape": 0.027810913952374203,
+      "new_bytes_wape": 0.022730695553326522,
+      "new_calls_mape": 0.33500175462744936,
+      "new_calls_wape": 0.12934767481291576,
+      "new_common_reference_cost_mape": 0.08404759530326039,
+      "new_mean_calls_histogram_tv": 0.3317628200870928,
+      "new_mean_normalized_log_payload_emd": 0.034663697915765276,
+      "new_p95_calls_ape": 1.50857477930245,
+      "new_teacher": "phase25b_sglang_pp_fcfs_lanes_v1",
+      "old_bytes_mape": 0.027810913952374196,
+      "old_bytes_wape": 0.02273069555332652,
+      "old_calls_mape": 0.0461746141047938,
+      "old_calls_wape": 0.027595223380189896,
+      "old_common_reference_cost_mape": 0.03270923777052872,
+      "old_mean_calls_histogram_tv": 0.08335422615109132,
+      "old_mean_normalized_log_payload_emd": 0.004123260638543892,
+      "old_p95_calls_ape": 0.15395592485549142,
+      "old_teacher": "phase24_static_pp_groups",
+      "sample_label": "h64"
+    },
+    {
+      "new_bytes_mape": 0.020109930724746664,
+      "new_bytes_wape": 0.01372214585555885,
+      "new_calls_mape": 0.18650513134542168,
+      "new_calls_wape": 0.0793035373492401,
+      "new_common_reference_cost_mape": 0.06064711826313812,
+      "new_mean_calls_histogram_tv": 0.2623856111349759,
+      "new_mean_normalized_log_payload_emd": 0.02407814390725715,
+      "new_p95_calls_ape": 0.5939221215155338,
+      "new_teacher": "phase25b_sglang_pp_fcfs_lanes_v1",
+      "old_bytes_mape": 0.020109930724746657,
+      "old_bytes_wape": 0.013722145855558844,
+      "old_calls_mape": 0.0470352553344142,
+      "old_calls_wape": 0.02673892753944815,
+      "old_common_reference_cost_mape": 0.03562945317757811,
+      "old_mean_calls_histogram_tv": 0.07787975833549986,
+      "old_mean_normalized_log_payload_emd": 0.003869153735739437,
+      "old_p95_calls_ape": 0.22807234886025762,
+      "old_teacher": "phase24_static_pp_groups",
+      "sample_label": "h128"
+    }
+  ],
+  "outputs": {
+    "decomposition_metrics": 648,
+    "histogram_labels": 2160,
+    "per_case_metrics": 2592,
+    "simulation_configurations": 1080
+  },
+  "phase25b_regression": {
+    "exact_rows": 432,
+    "expected_rows": 432,
+    "failures": []
+  },
+  "schema_version": "phase25d-pp-scheduler-representative-convergence-v1",
+  "status": "PASS",
+  "teacher_contract": "sglang_pp_fcfs_lanes_v1; fixed-draining; full request order; 4096-token chunk; page size 64; no radix/mixed chunk/async PP depth"
+}
