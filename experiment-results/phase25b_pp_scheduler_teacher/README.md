@@ -1,50 +1,39 @@
-# Phase 25B: scheduler-faithful PP full-window teacher
+# Phase 25B：scheduler-faithful PP完整窗口teacher
 
-Status: **PASS** for the scoped fixed-draining scheduler contract. The source-derived
-simulator matches all 9/9 saved GPU
-smoke cells exactly, including calls, logical bytes, payload histograms, phase
-labels, active batch size, and active tokens.
+状态：在本阶段限定的fixed-draining scheduler契约下为 **PASS**。
+从SGLang源码恢复的模拟器与已保存的9/9个GPU smoke cell完全一致；
+核对范围包括calls、logical bytes、payload直方图、phase标签、active batch size和active tokens。
 
-## What changed
+## 相比Phase 25A修正了什么
 
-The Phase 25A PP formula used static prefill/decode groups. SGLang instead keeps
-one running batch per PP loop lane, continues a global chunked request across
-lanes, and attempts prefill before filtering finished decode requests. A freed
-slot therefore causes one smaller decode forward and is refilled on the next
-visit. Page-rounded chunk budget accounting is also required to reproduce the
-exact prefill payloads.
+Phase 25A的PP公式采用静态prefill/decode分组，而真实SGLang会为每条PP loop lane维护独立running batch，
+允许全局chunked request跨lane继续执行，并且在过滤已经完成的decode请求之前先尝试prefill admission。
+因此，一个刚释放的slot会先产生一次缩小后的decode forward，到下一次访问该lane时才补入新请求。
+此外，只有按page向上取整计算chunk budget，才能精确恢复prefill payload。
 
-## Assets and checks
+## 数据资产与校验
 
-- Complete windows: 24 profiles and
-  18,285 requests, original order, fixed-draining.
-- PP phase labels: 432.
-- Explicit sender-boundary labels: 1584.
-- CPU configurations checked: 216;
-  token-mass conservation and request completion pass in all cases.
-- GPU smoke: PP2/4/8 x MB1/4/16 on the 42-request BurstGPT sentinel; all 9 cells exact.
+- 完整窗口：24个画像、18,285条请求，保持原始顺序并采用fixed-draining。
+- PP phase标签：432条。
+- 显式sender-boundary标签：1,584条。
+- CPU不变量审计：216个配置全部完成请求，且token mass全部守恒。
+- GPU smoke：42请求BurstGPT sentinel上的`PP2/4/8 × MB1/4/16`，9/9 cell完全一致。
 
-## Size of the Phase 25A correction
+## Phase 25A旧静态公式的偏差
 
-Treating the new scheduler-faithful label as reference, the old static formula
-has overall calls WAPE 121.59%, mean histogram TV
-0.5557, normalized log-payload EMD
-0.0941, and reference-cost MAPE
-44.58%. Logical bytes remain conserved.
+以新的scheduler-faithful标签为reference，旧静态公式的overall calls WAPE为121.59%，
+平均直方图TV为0.5557，normalized log-payload EMD为0.0941，reference-cost MAPE为44.58%。
+logical bytes仍然守恒。
 
-- MB1: calls WAPE 31.93%; it is exact on the
-  no-cross-chunk smoke, but not generally on full windows with long prompts.
-- MB4: calls WAPE 208.36%.
-- MB16: calls WAPE 603.21%.
+- MB1：calls WAPE为31.93%；它在不发生跨chunk的smoke窗口上精确，但在包含长prompt的完整窗口上并不普遍精确。
+- MB4：calls WAPE为208.36%。
+- MB16：calls WAPE为603.21%。
 
-## Scientific boundary
+## 科学结论边界
 
-These labels are valid for the recorded fixed-draining contract. The 9/9 exact
-result validates all PP-size/microbatch combinations on one heterogeneous full
-window, not every traffic distribution. Online arrivals, preemption, radix
-cache, mixed chunking, async PP depth, speculative decoding, and other policies
-require separate teachers or audits. The final predictor still consumes only
-the compact history profile, model structure, fixed PP configuration, policy,
-and phase; full request lists are offline label-generation inputs only.
+这些标签只适用于本阶段记录的fixed-draining契约。9/9完全一致说明一个异构完整窗口上的全部
+PP size/microbatch组合通过验证，并不代表已经覆盖所有流量分布。online arrival、preemption、
+radix cache、mixed chunk、非零async PP depth、speculative decoding和其他策略都需要独立teacher或审计。
 
-Raw profiler traces, weights, caches, and PID files are not included.
+最终预测器仍只读取紧凑历史画像、模型结构、固定PP配置、固定策略和phase；
+完整请求列表仅用于离线生成训练标签。本目录不包含raw profiler trace、模型权重、缓存或PID文件。
