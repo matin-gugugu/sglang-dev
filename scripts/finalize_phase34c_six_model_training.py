@@ -72,6 +72,12 @@ def write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
 
 
+def refresh_manifest(directory: Path) -> None:
+    """Refresh after the externally redirected console log receives the final line."""
+    rows = [f"{sha256(path)}  {path.relative_to(directory)}" for path in sorted(directory.rglob("*")) if path.is_file() and path.name != "manifest.sha256"]
+    (directory / "manifest.sha256").write_text("\n".join(rows) + "\n")
+
+
 def phase33_tp_prediction(rows: list[dict[str, str]], args: argparse.Namespace, device: torch.device) -> tuple[np.ndarray, np.ndarray, str]:
     from train_phase33c_target_free_selection import infer_tp
     summary = json.loads((args.phase33c_dir / "summary.json").read_text())
@@ -103,6 +109,7 @@ def main() -> None:
     if device.type != "cuda": raise RuntimeError("CUDA unavailable")
     summaries = {p: json.loads((args.phase34c_dir / p / "summary.json").read_text()) for p in ("tp", "pp")}
     if any(summaries[p]["status"] != "PASS" for p in summaries): raise RuntimeError("direction training incomplete")
+    for parallelism in ("tp", "pp"): refresh_manifest(args.phase34c_dir / parallelism)
     phase34a = json.loads((args.phase34a_dir / "summary.json").read_text())
     if phase34a["blind_confirmation"]["target_state"] != "not_generated" or (args.phase34a_dir / "labels").exists(): raise RuntimeError("Phase34 blind target already exists")
 
