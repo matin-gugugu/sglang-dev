@@ -5,3 +5,5 @@
 TP单机B200 NVLink使用Phase2物理测量的CustomAllReduce/NCCL backend-aware曲线；TP L2/L3和全部PP曲线是参数化敏感性proxy，不能包装成真实硬件时延。共同参考曲线只做数值回归，与Phase34保存cost的最大相对差为`5.952e-16`。
 
 `analysis/cost_metrics.csv`保存整体、逐模型、逐policy的cost MAPE/WAPE；`analysis/communication_only_rankings.csv.gz`只给通信项排名，尚未加入显存、计算、资源、拥塞和重叠，不能直接等同最终调度决策。Phase34D target已经打开，本阶段cost误差属于重复工程证据，不是新盲测。
+
+中文执行参考、最终报告、Phase35状态补充、新会话交接和资产索引见`docs/`。
