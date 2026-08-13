@@ -7,3 +7,5 @@ Phase34C的TP/PP模型、18个checkpoint、全部冻结预测和SHA已先由Git�
 为了可比，Phase33三模型incumbent和Phase34六模型predictor都在开target前对同一12个新窗口的原三个模型冻结了预测；对比见`analysis/phase34_vs_phase33_same_blind_comparison.csv`。Phase33原9个窗口的Phase34复评只能作为重复工程证据。
 
 证据边界：新盲测仍是BurstGPT-only，不能声称跨数据源或未见模型泛化；六模型全部进入了训练和验证。
+
+中文最终报告、Phase34状态补充、新会话交接和资产索引见`docs/`。
