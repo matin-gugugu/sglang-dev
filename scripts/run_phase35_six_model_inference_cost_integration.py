@@ -112,13 +112,15 @@ def runtime_predictions(args: argparse.Namespace, device: torch.device) -> tuple
         forbidden = [name for name in features[0] if name.startswith("target_")]
         if forbidden:
             raise RuntimeError(f"target exposed to {parallelism} runtime: {forbidden}")
-        checkpoint_paths = sorted((child / "checkpoints").glob(f"{parallelism}_top1_seed*.pt"))
+        selected_base_id = summary["selected"]["candidate_id"].split("_5fold_3seed_alpha", 1)[0]
+        inventory = read_csv(child / "analysis/checkpoint_inventory.csv")
+        checkpoint_paths = sorted(child / row["path"] for row in inventory if row["candidate_id"] == selected_base_id)
         if len(checkpoint_paths) != 3:
             raise RuntimeError(f"expected three selected {parallelism} checkpoints, got {checkpoint_paths}")
         bundles = []
         for path in checkpoint_paths:
             payload = torch.load(path, map_location="cpu", weights_only=False)
-            if payload["rank"] != 1 or len(payload["folds"]) != 5:
+            if payload["candidate_id"] != selected_base_id or len(payload["folds"]) != 5:
                 raise RuntimeError(f"invalid selected checkpoint: {path}")
             bundles.append(payload["folds"])
         prediction = phase34.infer(features, bundles, float(summary["selected"]["alpha"]), parallelism, device)
@@ -130,11 +132,11 @@ def runtime_predictions(args: argparse.Namespace, device: torch.device) -> tuple
         )
         for row in rows:
             row["runtime_schema"] = "phase35-unified-six-model-pattern-demand-v1"
-            row["checkpoint_ensemble"] = "top1_3seed_5fold_mean"
+            row["checkpoint_ensemble"] = "selected_candidate_3seed_5fold_mean"
             row["phase34_source_prediction_sha256"] = json.loads((args.phase34c_dir / "summary.json").read_text())["frozen_prediction_sha256"]
         output.extend(rows)
         audit[parallelism] = {
-            "selected_candidate_id": summary["selected"]["candidate_id"],
+            "selected_candidate_id": summary["selected"]["candidate_id"], "selected_base_candidate_id": selected_base_id,
             "alpha": summary["selected"]["alpha"],
             "feature_rows": len(features),
             "checkpoint_paths": [str(path.relative_to(args.phase34c_dir)) for path in checkpoint_paths],
@@ -442,7 +444,7 @@ def main() -> None:
         "phase34_frozen_prediction_sha_matches": source_sha_matches,
         "runtime_prediction_rows_2592": len(predictions) == 2592,
         "runtime_contains_no_target_columns": not any(name.startswith("target_") for name in predictions[0]),
-        "three_seed_fivefold_ensemble_each_direction": all(value["fold_models"] == 15 for value in runtime_audit.values()),
+        "selected_three_seed_fivefold_ensemble_each_direction": all(value["fold_models"] == 15 for value in runtime_audit.values()),
         "replay_candidate_ids_match": replay["candidate_ids_match"],
         "replay_relative_difference_below_1e_6": replay["max_scalar_relative_difference"] < 1e-6,
         "common_reference_relative_difference_below_1e_10": reference_audit["max_common_reference_relative_difference"] < 1e-10,
@@ -473,7 +475,7 @@ def main() -> None:
     write_json(args.output_dir / "logs/runtime.log", {"event": "phase35_six_model_inference_cost_integration_complete", "status": status, "completed_at_utc": datetime.now(timezone.utc).isoformat(), "repository_head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(), "python": sys.version, "numpy": np.__version__, "torch": torch.__version__, "platform": platform.platform(), "device": str(device), "training_performed": False})
     (args.output_dir / "README.md").write_text(f"""# Phase35：六模型统一推理与placement/topology连续通信代价集成
 
-本阶段没有训练或调参。统一运行时加载Phase34冻结的TP/PP top1三seed五折checkpoint，从低维target-free特征重放六模型消息直方图；{len(predictions):,}条phase预测与Phase34C冻结结果在`1e-6`相对容差内一致。随后同一份拓扑无关直方图分别代入候选连续代价曲线。
+本阶段没有训练或调参。统一运行时加载Phase34最终选中候选的TP/PP三seed五折checkpoint，从低维target-free特征重放六模型消息直方图；{len(predictions):,}条phase预测与Phase34C冻结结果在`1e-6`相对容差内一致。随后同一份拓扑无关直方图分别代入候选连续代价曲线。
 
 TP单机B200 NVLink使用Phase2物理测量的CustomAllReduce/NCCL backend-aware曲线；TP L2/L3和全部PP曲线是参数化敏感性proxy，不能包装成真实硬件时延。共同参考曲线只做数值回归，与Phase34保存cost的最大相对差为`{reference_audit['max_common_reference_relative_difference']:.3e}`。
 
