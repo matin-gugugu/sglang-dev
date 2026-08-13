@@ -1,0 +1,7 @@
+# Phase 33A：新增开发与盲确认数据合同
+
+本阶段在任何Phase33 Hfull target生成前，冻结54个新的BurstGPT正常窗口：36个训练、9个验证、9个盲确认。三个BurstGPT分段各18个；所有Phase33角色彼此请求区间互斥，并对Phase27/28/30/31/32全部历史角色设置300秒embargo。
+
+选择只使用历史侧低维统计，在P95正常中心池中做18类medoid覆盖，并用事前固定hash分配角色。TP/PP分别生成2430条新增开发feature rows和486条盲确认feature rows，覆盖三个模型、三种并行规模、三种policy与两个phase；全部不含target或完整请求列表。
+
+Mooncake在累计embargo下没有剩余完整块，因此Phase33新证据限定为BurstGPT。开发Hfull可在下一阶段生成；盲确认Hfull必须等模型、预测文件和SHA冻结后才允许一次性生成。
