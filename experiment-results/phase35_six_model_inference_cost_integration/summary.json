@@ -1,0 +1,309 @@
+{
+  "checks": {
+    "all_costs_finite_nonnegative": true,
+    "all_phase34_source_manifests_pass": true,
+    "combined_cost_rows_5184": true,
+    "common_reference_relative_difference_below_1e_10": true,
+    "communication_ranking_rows_3888": true,
+    "phase34_frozen_prediction_sha_matches": true,
+    "phase_cost_rows_10368": true,
+    "replay_candidate_ids_match": true,
+    "replay_relative_difference_below_1e_6": true,
+    "runtime_contains_no_target_columns": true,
+    "runtime_prediction_rows_2592": true,
+    "same_histogram_reused_across_placements": true,
+    "selected_three_seed_fivefold_ensemble_each_direction": true,
+    "seven_curve_contracts": true,
+    "six_scheduler_placement_curves_three_each_direction": true,
+    "teacher_used_only_after_prediction_freeze": true
+  },
+  "counts": {
+    "combined_cost_rows": 5184,
+    "metric_rows": 240,
+    "phase_cost_rows": 10368,
+    "prediction_phase_rows": 2592,
+    "ranking_rows": 3888
+  },
+  "curve_registry": [
+    {
+      "curve_kind": "numeric_validation_reference",
+      "evidence": "not_a_physical_placement_curve",
+      "formula": "5 us + payload / 100 GB/s",
+      "parallelism": "both",
+      "placement_id": "validation_common_reference_5us_100gbps",
+      "scheduler_candidate": false,
+      "topology": "reference_only"
+    },
+    {
+      "curve_kind": "physical_measurement_backend_aware",
+      "custom_knots_sha256": "b10f7324916e8d504676c1dbecb102cb68b8bb6a39d565876645b43319b42f99",
+      "evidence": "Phase2 measured CustomAllReduce intrinsic median below backend limit, NCCL median above",
+      "nccl_knots_sha256": "8826980b120d3d7c74d6b09a7a36334eb96c0c9c76198864e42c9a4e857b37ef",
+      "parallelism": "tp",
+      "placement_id": "tp_l1_single_node_b200_nvlink_measured",
+      "scheduler_candidate": true,
+      "topology": "L1_single_node_B200_NVLink"
+    },
+    {
+      "bandwidth_gbps": 100.0,
+      "curve_kind": "parameterized_collective_sensitivity",
+      "evidence": "not_physical_measurement",
+      "launch_us": 5.0,
+      "parallelism": "tp",
+      "placement_id": "tp_l2_same_rack_nominal_proxy",
+      "round_us": 4.0,
+      "saturation_mib": 1.0,
+      "scheduler_candidate": true,
+      "source": "scripts/analyze_phase17_parameterized_topology.py::PARAMETER_SCENARIOS nominal",
+      "topology": "L2_same_rack_two_node_proxy"
+    },
+    {
+      "bandwidth_gbps": 50.0,
+      "curve_kind": "parameterized_collective_sensitivity",
+      "evidence": "not_physical_measurement",
+      "launch_us": 10.0,
+      "parallelism": "tp",
+      "placement_id": "tp_l3_cross_rack_nominal_proxy",
+      "round_us": 15.0,
+      "saturation_mib": 4.0,
+      "scheduler_candidate": true,
+      "source": "scripts/analyze_phase17_parameterized_topology.py::PARAMETER_SCENARIOS nominal",
+      "topology": "L3_cross_rack_two_node_proxy"
+    },
+    {
+      "bandwidth_gbps": 300.0,
+      "curve_kind": "parameterized_p2p_sensitivity",
+      "evidence": "not_physical_measurement",
+      "launch_us": 3.0,
+      "parallelism": "pp",
+      "placement_id": "pp_l1_single_node_nominal_proxy",
+      "saturation_mib": 0.25,
+      "scheduler_candidate": true,
+      "topology": "L1_single_node_p2p_proxy"
+    },
+    {
+      "bandwidth_gbps": 100.0,
+      "curve_kind": "parameterized_p2p_sensitivity",
+      "evidence": "not_physical_measurement",
+      "launch_us": 5.0,
+      "parallelism": "pp",
+      "placement_id": "pp_l2_same_rack_nominal_proxy",
+      "saturation_mib": 1.0,
+      "scheduler_candidate": true,
+      "topology": "L2_same_rack_p2p_proxy"
+    },
+    {
+      "bandwidth_gbps": 50.0,
+      "curve_kind": "parameterized_p2p_sensitivity",
+      "evidence": "not_physical_measurement",
+      "launch_us": 10.0,
+      "parallelism": "pp",
+      "placement_id": "pp_l3_cross_rack_nominal_proxy",
+      "saturation_mib": 4.0,
+      "scheduler_candidate": true,
+      "topology": "L3_cross_rack_p2p_proxy"
+    }
+  ],
+  "device": "cuda:0",
+  "evidence": {
+    "checkpoint_replay": "frozen Phase34 engineering regression",
+    "cost_evaluation": "Phase34 already-open target repeated engineering evidence",
+    "tp_l1_curve": "physical Phase2 measurement",
+    "tp_l2_l3_and_pp_curves": "parameterized sensitivity proxy"
+  },
+  "generated_at_utc": "2026-08-13T08:03:08.378040+00:00",
+  "headline_cost_metrics": {
+    "pp/pp_l1_single_node_nominal_proxy": {
+      "cases": 648,
+      "cost_mape": 0.08975652630814056,
+      "cost_wape": 0.039463718939257604,
+      "curve_kind": "parameterized_p2p_sensitivity",
+      "evidence_set": "phase34_open_target_repeated_engineering",
+      "parallelism": "pp",
+      "phase": "total",
+      "placement_id": "pp_l1_single_node_nominal_proxy",
+      "signed_bias": 0.012019448470752998,
+      "slice_type": "overall",
+      "slice_value": "all",
+      "topology": "L1_single_node_p2p_proxy"
+    },
+    "pp/pp_l2_same_rack_nominal_proxy": {
+      "cases": 648,
+      "cost_mape": 0.10218430112564092,
+      "cost_wape": 0.04105940350410739,
+      "curve_kind": "parameterized_p2p_sensitivity",
+      "evidence_set": "phase34_open_target_repeated_engineering",
+      "parallelism": "pp",
+      "phase": "total",
+      "placement_id": "pp_l2_same_rack_nominal_proxy",
+      "signed_bias": 0.013212030464250686,
+      "slice_type": "overall",
+      "slice_value": "all",
+      "topology": "L2_same_rack_p2p_proxy"
+    },
+    "pp/pp_l3_cross_rack_nominal_proxy": {
+      "cases": 648,
+      "cost_mape": 0.12956797820777818,
+      "cost_wape": 0.04391648291028291,
+      "curve_kind": "parameterized_p2p_sensitivity",
+      "evidence_set": "phase34_open_target_repeated_engineering",
+      "parallelism": "pp",
+      "phase": "total",
+      "placement_id": "pp_l3_cross_rack_nominal_proxy",
+      "signed_bias": 0.013557964282030628,
+      "slice_type": "overall",
+      "slice_value": "all",
+      "topology": "L3_cross_rack_p2p_proxy"
+    },
+    "pp/validation_common_reference_5us_100gbps": {
+      "cases": 648,
+      "cost_mape": 0.060294707488397735,
+      "cost_wape": 0.03292605983466998,
+      "curve_kind": "numeric_validation_reference",
+      "evidence_set": "phase34_open_target_repeated_engineering",
+      "parallelism": "pp",
+      "phase": "total",
+      "placement_id": "validation_common_reference_5us_100gbps",
+      "signed_bias": 0.009612475421739227,
+      "slice_type": "overall",
+      "slice_value": "all",
+      "topology": "reference_only"
+    },
+    "tp/tp_l1_single_node_b200_nvlink_measured": {
+      "cases": 648,
+      "cost_mape": 0.07220019022492531,
+      "cost_wape": 0.060884334204099326,
+      "curve_kind": "physical_measurement_backend_aware",
+      "evidence_set": "phase34_open_target_repeated_engineering",
+      "parallelism": "tp",
+      "phase": "total",
+      "placement_id": "tp_l1_single_node_b200_nvlink_measured",
+      "signed_bias": -0.014433597495312157,
+      "slice_type": "overall",
+      "slice_value": "all",
+      "topology": "L1_single_node_B200_NVLink"
+    },
+    "tp/tp_l2_same_rack_nominal_proxy": {
+      "cases": 648,
+      "cost_mape": 0.08036806601962265,
+      "cost_wape": 0.07053870728748293,
+      "curve_kind": "parameterized_collective_sensitivity",
+      "evidence_set": "phase34_open_target_repeated_engineering",
+      "parallelism": "tp",
+      "phase": "total",
+      "placement_id": "tp_l2_same_rack_nominal_proxy",
+      "signed_bias": -0.020882082635386767,
+      "slice_type": "overall",
+      "slice_value": "all",
+      "topology": "L2_same_rack_two_node_proxy"
+    },
+    "tp/tp_l3_cross_rack_nominal_proxy": {
+      "cases": 648,
+      "cost_mape": 0.08671621467649356,
+      "cost_wape": 0.07497394676405272,
+      "curve_kind": "parameterized_collective_sensitivity",
+      "evidence_set": "phase34_open_target_repeated_engineering",
+      "parallelism": "tp",
+      "phase": "total",
+      "placement_id": "tp_l3_cross_rack_nominal_proxy",
+      "signed_bias": -0.02226323686337348,
+      "slice_type": "overall",
+      "slice_value": "all",
+      "topology": "L3_cross_rack_two_node_proxy"
+    },
+    "tp/validation_common_reference_5us_100gbps": {
+      "cases": 648,
+      "cost_mape": 0.05130426592180931,
+      "cost_wape": 0.04346235491344696,
+      "curve_kind": "numeric_validation_reference",
+      "evidence_set": "phase34_open_target_repeated_engineering",
+      "parallelism": "tp",
+      "phase": "total",
+      "placement_id": "validation_common_reference_5us_100gbps",
+      "signed_bias": -0.012892559247124681,
+      "slice_type": "overall",
+      "slice_value": "all",
+      "topology": "reference_only"
+    }
+  },
+  "objective": "frozen six-model PatternDemand inference followed by independent continuous placement/topology communication cost curves",
+  "prediction_freeze": {
+    "created_at_utc": "2026-08-13T08:03:07.522564+00:00",
+    "phase34_source_prediction_sha256": "faffe08800e6336fa9272b765ca1965d4aee806a6162255f7bd9a50d5d5b5bda",
+    "prediction_sha256": "a7f687c30ee171912245f92cb3aa886831d8a8e0364a65b2833bbf2d41cbed6b",
+    "rows": 2592,
+    "runtime_audit": {
+      "pp": {
+        "alpha": 1.0,
+        "checkpoint_paths": [
+          "pp/checkpoints/pp_top2_seed20260813.pt",
+          "pp/checkpoints/pp_top2_seed20260914.pt",
+          "pp/checkpoints/pp_top2_seed20261015.pt"
+        ],
+        "checkpoint_sha256": [
+          "cba1bdf108c86ca3eb39f448a31189c7917b80ef33610e699e46cb8b9ee0bc83",
+          "8495e5bf971cd0f19c53fc2c54d94682289d68a4d6477b4042ee7ebe4edf6748",
+          "11804ba6b10276aec62836fe8c78066efa54b37818dde591f1db3d41289eae7c"
+        ],
+        "feature_rows": 1296,
+        "fold_models": 15,
+        "selected_base_candidate_id": "pp34_c04_pp_split_retrain_policy_lr0.003_w64",
+        "selected_candidate_id": "pp34_c04_pp_split_retrain_policy_lr0.003_w64_5fold_3seed_alpha1.0"
+      },
+      "tp": {
+        "alpha": 1.0,
+        "checkpoint_paths": [
+          "tp/checkpoints/tp_top2_seed20260813.pt",
+          "tp/checkpoints/tp_top2_seed20260914.pt",
+          "tp/checkpoints/tp_top2_seed20261015.pt"
+        ],
+        "checkpoint_sha256": [
+          "3f980ca1d39b3004cd6338d30d6bffbbe4d3a19af4b21fa664f2ee56daa07695",
+          "c1f5fb3a3ef6660d2bdf0a054e880af9457eb6f3c12c97c3e13d01104c0070db",
+          "a2dfda5dd992eed341cb5eeece2b1e744171e8d04296b4f11ca0cf4281fe2e3b"
+        ],
+        "feature_rows": 1296,
+        "fold_models": 15,
+        "selected_base_candidate_id": "tp34_c17_lowdim_cost_protected_gate_model_policy_lr0.001_w32",
+        "selected_candidate_id": "tp34_c17_lowdim_cost_protected_gate_model_policy_lr0.001_w32_5fold_3seed_alpha1.0"
+      }
+    },
+    "schema_version": "phase35-runtime-prediction-freeze-v1",
+    "targets_read_before_freeze": false
+  },
+  "ranking_audit": {
+    "cases": 1296,
+    "top1_match_rate": 1.0
+  },
+  "reference_audit": {
+    "max_common_reference_relative_difference": 5.952001184154701e-16
+  },
+  "replay_audit": {
+    "candidate_ids_match": true,
+    "frozen_rows": 2592,
+    "max_differences": {
+      "predicted_calls_by_12bin_json_absolute": 0.0,
+      "predicted_calls_by_12bin_json_relative": 0.0,
+      "predicted_common_reference_cost_us_per_1000_absolute": 0.0,
+      "predicted_common_reference_cost_us_per_1000_relative": 0.0,
+      "predicted_logical_bytes_by_12bin_json_absolute": 0.0,
+      "predicted_logical_bytes_by_12bin_json_relative": 0.0,
+      "predicted_total_calls_per_1000_absolute": 0.0,
+      "predicted_total_calls_per_1000_relative": 0.0,
+      "predicted_total_logical_bytes_per_1000_absolute": 0.0,
+      "predicted_total_logical_bytes_per_1000_relative": 0.0
+    },
+    "max_scalar_relative_difference": 0.0,
+    "runtime_rows": 2592
+  },
+  "scheduler_boundary": "communication-only ranking excludes memory feasibility, compute time, resource availability, contention, and communication-compute overlap",
+  "schema_version": "phase35-six-model-inference-cost-integration-v1",
+  "source_manifest_checks": {
+    "phase34a": true,
+    "phase34c": true,
+    "phase34c_pp": true,
+    "phase34c_tp": true,
+    "phase34d": true
+  },
+  "status": "PASS"
+}

@@ -1,0 +1,84 @@
+{
+  "boundary": "Only TP L1 is a physical measurement. TP L2/L3 and all PP curves are parameterized sensitivity proxies.",
+  "curves": [
+    {
+      "curve_kind": "numeric_validation_reference",
+      "evidence": "not_a_physical_placement_curve",
+      "formula": "5 us + payload / 100 GB/s",
+      "parallelism": "both",
+      "placement_id": "validation_common_reference_5us_100gbps",
+      "scheduler_candidate": false,
+      "topology": "reference_only"
+    },
+    {
+      "curve_kind": "physical_measurement_backend_aware",
+      "custom_knots_sha256": "b10f7324916e8d504676c1dbecb102cb68b8bb6a39d565876645b43319b42f99",
+      "evidence": "Phase2 measured CustomAllReduce intrinsic median below backend limit, NCCL median above",
+      "nccl_knots_sha256": "8826980b120d3d7c74d6b09a7a36334eb96c0c9c76198864e42c9a4e857b37ef",
+      "parallelism": "tp",
+      "placement_id": "tp_l1_single_node_b200_nvlink_measured",
+      "scheduler_candidate": true,
+      "topology": "L1_single_node_B200_NVLink"
+    },
+    {
+      "bandwidth_gbps": 100.0,
+      "curve_kind": "parameterized_collective_sensitivity",
+      "evidence": "not_physical_measurement",
+      "launch_us": 5.0,
+      "parallelism": "tp",
+      "placement_id": "tp_l2_same_rack_nominal_proxy",
+      "round_us": 4.0,
+      "saturation_mib": 1.0,
+      "scheduler_candidate": true,
+      "source": "scripts/analyze_phase17_parameterized_topology.py::PARAMETER_SCENARIOS nominal",
+      "topology": "L2_same_rack_two_node_proxy"
+    },
+    {
+      "bandwidth_gbps": 50.0,
+      "curve_kind": "parameterized_collective_sensitivity",
+      "evidence": "not_physical_measurement",
+      "launch_us": 10.0,
+      "parallelism": "tp",
+      "placement_id": "tp_l3_cross_rack_nominal_proxy",
+      "round_us": 15.0,
+      "saturation_mib": 4.0,
+      "scheduler_candidate": true,
+      "source": "scripts/analyze_phase17_parameterized_topology.py::PARAMETER_SCENARIOS nominal",
+      "topology": "L3_cross_rack_two_node_proxy"
+    },
+    {
+      "bandwidth_gbps": 300.0,
+      "curve_kind": "parameterized_p2p_sensitivity",
+      "evidence": "not_physical_measurement",
+      "launch_us": 3.0,
+      "parallelism": "pp",
+      "placement_id": "pp_l1_single_node_nominal_proxy",
+      "saturation_mib": 0.25,
+      "scheduler_candidate": true,
+      "topology": "L1_single_node_p2p_proxy"
+    },
+    {
+      "bandwidth_gbps": 100.0,
+      "curve_kind": "parameterized_p2p_sensitivity",
+      "evidence": "not_physical_measurement",
+      "launch_us": 5.0,
+      "parallelism": "pp",
+      "placement_id": "pp_l2_same_rack_nominal_proxy",
+      "saturation_mib": 1.0,
+      "scheduler_candidate": true,
+      "topology": "L2_same_rack_p2p_proxy"
+    },
+    {
+      "bandwidth_gbps": 50.0,
+      "curve_kind": "parameterized_p2p_sensitivity",
+      "evidence": "not_physical_measurement",
+      "launch_us": 10.0,
+      "parallelism": "pp",
+      "placement_id": "pp_l3_cross_rack_nominal_proxy",
+      "saturation_mib": 4.0,
+      "scheduler_candidate": true,
+      "topology": "L3_cross_rack_p2p_proxy"
+    }
+  ],
+  "schema_version": "phase35-topology-curve-registry-v1"
+}
