@@ -128,7 +128,11 @@ def write_csv_gz(path: Path, rows: list[dict]) -> None:
 
 
 def write_json(path: Path, value: object) -> None:
-    path.write_text(json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
+    def numpy_value(item: object) -> object:
+        if isinstance(item, np.generic):
+            return item.item()
+        raise TypeError(f"Object of type {item.__class__.__name__} is not JSON serializable")
+    path.write_text(json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False, default=numpy_value) + "\n")
 
 
 def target_free(rows: list[dict[str, str]], name: str) -> None:
