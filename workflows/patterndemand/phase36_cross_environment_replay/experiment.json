@@ -1,0 +1,49 @@
+{
+  "schema_version": "phase36-cross-environment-replay-contract-v1",
+  "phase": "Phase36",
+  "objective": "在另一GPU环境复播Phase34冻结六模型TP/PP预测，并演练受控result commit回传",
+  "training_performed": false,
+  "teacher_or_target_read": false,
+  "required_gpu_count": 1,
+  "expected_prediction_rows": 2592,
+  "relative_tolerance": 1e-6,
+  "result_dir": "experiment-results/phase36_cross_environment_replay",
+  "pinned_inputs": [
+    {
+      "name": "phase34a_manifest",
+      "path": "experiment-results/phase34a_six_model_contract/manifest.sha256",
+      "sha256": "9607b787f67cbdef1600fc3192a8c8842cf17130c7555d138160f89aa3eb24f7",
+      "verify_manifest_directory": "experiment-results/phase34a_six_model_contract"
+    },
+    {
+      "name": "phase34c_root_manifest",
+      "path": "experiment-results/phase34c_six_model_target_free_training/manifest.sha256",
+      "sha256": "146627e56dbefdfc69daa6486b246ddd05b6c72399587667f92daee63a79f455",
+      "verify_manifest_directory": "experiment-results/phase34c_six_model_target_free_training"
+    },
+    {
+      "name": "phase34c_tp_manifest",
+      "path": "experiment-results/phase34c_six_model_target_free_training/tp/manifest.sha256",
+      "sha256": "59164d705cc20864a5beda3bd858b622e5967e403cf3aad9cf2cd81d8144cc52",
+      "verify_manifest_directory": "experiment-results/phase34c_six_model_target_free_training/tp"
+    },
+    {
+      "name": "phase34c_pp_manifest",
+      "path": "experiment-results/phase34c_six_model_target_free_training/pp/manifest.sha256",
+      "sha256": "fe76399a5011a5b35c71f88b2ff82c0123b4c9a92cbb5dcedc2549c73882cc44",
+      "verify_manifest_directory": "experiment-results/phase34c_six_model_target_free_training/pp"
+    },
+    {
+      "name": "phase34_frozen_predictions_all_versions",
+      "path": "experiment-results/phase34c_six_model_target_free_training/analysis/frozen_predictions_all_versions.csv.gz",
+      "sha256": "faffe08800e6336fa9272b765ca1965d4aee806a6162255f7bd9a50d5d5b5bda"
+    }
+  ],
+  "forbidden": [
+    "训练或修改checkpoint",
+    "读取Phase34D teacher/target",
+    "将GPU差异容差调高",
+    "修改冻结预测集",
+    "提交data、raw、权重、缓存或PID"
+  ]
+}

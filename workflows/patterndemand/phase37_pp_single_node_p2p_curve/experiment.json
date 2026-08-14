@@ -1,0 +1,78 @@
+{
+  "schema_version": "phase37-pp-single-node-p2p-curve-contract-v1",
+  "phase": "Phase37",
+  "objective": "测量与SGLang PP异步GPU张量发送原语一致的单机P2P payload-latency连续曲线",
+  "required_gpu_count": 2,
+  "training_performed": false,
+  "model_weights_required": false,
+  "measurement_scope": "tensor_only_sender_counted_logical_message",
+  "direction_policy": "每个GPU对双向分别测量；拓扑类别正式曲线在每次repeat取双向中位数的较大值，再跨repeat取中位数，禁止挑选较快方向",
+  "excluded_from_formal_curve": [
+    "CPU metadata serialization and transfer",
+    "tensor allocation",
+    "scheduler execution",
+    "communication-compute overlap"
+  ],
+  "backend": "torch.distributed.isend/irecv over NCCL device process group, matching SGLang async send_tensor_dict tensor primitive",
+  "dtype": "bfloat16",
+  "payload_bytes": [
+    4096,
+    8192,
+    16384,
+    32768,
+    38912,
+    65536,
+    131072,
+    262144,
+    524288,
+    917504,
+    1048576,
+    2097152,
+    4194304,
+    5242880,
+    8388608,
+    14680064,
+    16777216,
+    27262976,
+    33554432,
+    41943040,
+    67108864
+  ],
+  "payload_basis": "Phase34 PP Hfull已打开数据的非空12-bin每调用payload范围约4KiB至39.5MiB；使用2次幂、约P25/P50/P75/P90/P95/max锚点并扩至64MiB",
+  "warmup_iterations": 30,
+  "timed_iterations": 100,
+  "minimum_independent_repeats": 5,
+  "variance_extra_repeats_per_round": 2,
+  "maximum_independent_repeats": 9,
+  "repeat_median_cv_threshold": 0.15,
+  "retry_limit_per_process_run": 1,
+  "topology_categories": ["NVLINK_*", "PIX", "PXB", "PHB", "NODE", "SYS"],
+  "pair_selection": "每个实际存在的拓扑类别默认选择物理GPU编号字典序最小的一对；允许换成同类空闲GPU对，但必须提供理由并写decision log",
+  "interpolation": "piecewise linear over log2(payload_bytes), using unsmoothed median across repeat medians",
+  "result_dir": "experiment-results/phase37_pp_single_node_p2p_curve",
+  "pinned_inputs": [
+    {
+      "name": "sglang_group_coordinator_source",
+      "path": "python/sglang/srt/distributed/parallel_state.py",
+      "sha256": "45f6209e1c81bf732e6aa7ac1c63811f965b1aff9058b23fcf896e5cedbd0acc"
+    },
+    {
+      "name": "sglang_pp_scheduler_callsite",
+      "path": "python/sglang/srt/managers/scheduler_pp_mixin.py",
+      "sha256": "fd77b0f49618f02bb293cbcd9deab94b77fcc5ca8c879a8bf0d7636671f060c5"
+    },
+    {
+      "name": "sglang_pp_histogram_semantics",
+      "path": "python/sglang/srt/distributed/pp_comm_profile.py",
+      "sha256": "d69374f9a639da224e97ac724f5ed8f8466dc3e80849d4d5adaf5c4c84ffbc4c"
+    }
+  ],
+  "stop_and_block_if": [
+    "少于两张CUDA GPU",
+    "NCCL或P2P不可用",
+    "冻结的SGLang生产通信源文件SHA不一致",
+    "必须换通信后端或改测量语义才能运行",
+    "raw目录位于Git仓库内",
+    "需要下载模型权重或启动模型服务"
+  ]
+}
