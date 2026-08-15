@@ -1,0 +1,92 @@
+{
+  "checkpoint_loaded": false,
+  "checks": {
+    "all_cost_metrics_finite": true,
+    "all_predictions_are_frozen_pp_residual": true,
+    "cost_metric_row_count": true,
+    "histogram_metric_rows_42": true,
+    "histogram_metrics_exactly_reproduced": true,
+    "model_inventory_exact": true,
+    "no_training_gpu_checkpoint_or_prediction_recompute": true,
+    "only_physical_curves_used": true,
+    "parallel_size_inventory_exact": true,
+    "phase35_proxy_registry_preserves_nonphysical_label": true,
+    "phase37_curve_source_and_snapshot_sha_match": true,
+    "phase_cost_row_count": true,
+    "phase_inventory_exact": true,
+    "policy_inventory_exact": true,
+    "prediction_ids_unique": true,
+    "prediction_phase_rows_1296": true,
+    "prediction_target_ids_exact": true,
+    "preflight_pass": true,
+    "profile_inventory_12": true,
+    "proxy_comparison_row_count": true,
+    "saved_totals_match_12bin_vectors": true,
+    "target_ids_unique": true,
+    "target_phase_rows_1296": true,
+    "total_cost_row_count": true
+  },
+  "completed_at_utc": "2026-08-15T05:07:47.250256+00:00",
+  "counts": {
+    "cost_metric_rows": 30,
+    "curves": 1,
+    "frozen_histogram_metric_rows": 42,
+    "phase_cost_rows": 1296,
+    "prediction_phase_rows": 1296,
+    "proxy_comparison_rows": 30,
+    "target_phase_rows": 1296,
+    "total_cost_rows": 648
+  },
+  "diagnostic_overall_total_cost_wape_reference": 0.05,
+  "diagnostic_reference_is_pass_fail_gate": false,
+  "evidence_boundary": {
+    "evidence_kind": "repeated engineering cost recomputation, not a new blind confirmation",
+    "excluded": "metadata, allocation, scheduler, overlap, multi-node L2/L3, compute, memory and availability",
+    "physical_scope": "only Phase37 accepted single-node tensor-only P2P topology categories",
+    "retraining": "none; any follow-up retraining requires a new development and confirmation protocol",
+    "target_state": "Phase34D target was already opened before Phase38"
+  },
+  "followup_signal": "NO_OVERALL_TOTAL_PHYSICAL_COST_WAPE_TRIGGER_AT_5PCT_REFERENCE",
+  "histogram_invariance": {
+    "case_mismatches": [],
+    "extra_in_recomputed": [],
+    "max_absolute_difference": 5.551115123125783e-17,
+    "max_absolute_difference_by_metric": {
+      "bytes_mape": 3.9728905019295236e-17,
+      "bytes_wape": 4.937352305336949e-17,
+      "calls_mape": 2.7755575615628914e-17,
+      "calls_wape": 3.469446951953614e-17,
+      "common_reference_cost_mape": 2.7755575615628914e-17,
+      "common_reference_cost_wape": 2.7972416050126014e-17,
+      "mean_histogram_l1": 5.551115123125783e-17,
+      "mean_histogram_tv": 2.7755575615628914e-17,
+      "mean_normalized_log_payload_emd": 3.469446951953614e-17
+    },
+    "missing_from_recomputed": [],
+    "official_rows": 42,
+    "ok": true,
+    "recomputed_rows": 42,
+    "tolerance": 1e-12
+  },
+  "objective": "将Phase34冻结的六模型PP H0+DNN residual 12-bin直方图与Hfull target确定性代入Phase37已验收的单机物理P2P连续曲线，重算通信cost误差；不重放checkpoint、不训练",
+  "phase37_result_commit": "6e6c74d8433aa09bde6d8314993c97418630daf8",
+  "phase37_status": "PASS_WITH_LIMITED_TOPOLOGY",
+  "phase37_topology_categories": [
+    "NVLINK_NV18"
+  ],
+  "physical_cost_headline": [
+    {
+      "above_5pct_diagnostic_reference": false,
+      "cost_mape": 0.1359495159512931,
+      "cost_wape": 0.0447757397960609,
+      "curve_id": "pp_single_node_nvidia_b200_nvlink_nv18_measured",
+      "signed_bias": 0.012570580661042139,
+      "topology_category": "NVLINK_NV18"
+    }
+  ],
+  "prediction_recomputation_performed": false,
+  "schema_version": "phase38-pp-physical-curve-cost-recompute-result-v1",
+  "status": "PASS",
+  "training_performed": false,
+  "workflow_commit": "2a2c35bc74fe171d02fe5645cb81c73682dc2f20"
+}
