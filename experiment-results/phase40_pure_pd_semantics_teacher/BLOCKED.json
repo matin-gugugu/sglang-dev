@@ -1,0 +1,90 @@
+{
+  "created_at_utc": "2026-08-15T16:25:30.951911+00:00",
+  "evidence": {
+    "attempt": "W40-fix retry (d7bf9fb739996a060f7881b6c384279825d059b7)",
+    "blocking_stage": "run.first_formal_generate_request",
+    "contract_clause": "stop_and_block_if[3]: two distinct CUDA GPUs, Mooncake, RDMA or the SGLang router are unavailable",
+    "contract_mandated_payload": {
+      "input_ids": "list[list[int]] —— 每个 wave 一个 batch",
+      "note": "batch 提交是合同 fixed-draining wave 语义的一部分，不是可调参数",
+      "rid": "list[str] —— 每个 batch item 一个 rid",
+      "source": "run.py:383-392"
+    },
+    "environment_decision_taken": {
+      "PYTHONPATH": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/sglang-dev/python",
+      "note_for_control_side": "该步骤未写在合同里，建议控制端明确 python 侧的加载来源；Rust 侧存在同类问题且无法用环境变量解决，即本次阻塞。",
+      "scope": "仅通过环境变量让 python 侧加载仓库版 sglang；sgl_kernel / sglang_router / mooncake.engine 仍来自容器；未改动仓库任何文件。",
+      "why": "容器自带 /sgl-workspace/sglang 不含 W40 新增的 sglang/srt/disaggregation/pd_comm_profile.py（诊断作业 2393151 实测 find_spec=False），而合同 pinned_inputs 正是仓库该文件的 SHA。不设 PYTHONPATH 则采集钩子根本不存在。"
+    },
+    "evidence_that_running_router_is_not_built_from_pinned_source": [
+      "router 由 run.py 以 `python3 -m sglang_router.launch_router` 启动；诊断作业 2393151 实测 sglang_router 解析到 /usr/local/lib/python3.12/dist-packages/sglang_router/__init__.py（容器包），非仓库",
+      "router.log 中依赖 crate 路径为 /root/.cargo/registry/src/index.crates.io-.../smg-mcp-1.0.0/src/manager.rs，即镜像构建期编译，与 /lustre/.../sglang-dev/sgl-model-gateway 无关",
+      "仓库 sgl-model-gateway 只有源码（Cargo.toml version 0.3.2、src/、build.rs），无 target/ 或任何已编译产物",
+      "pd_router.rs 引用的 InputIds / StringOrArray 类型在整个仓库中均无定义，来自外部 spec crate；即请求体类型由编译期依赖决定，不由仓库这两个 pin 文件决定"
+    ],
+    "job_evidence": {
+      "diagnostic_jobs": [
+        2393151
+      ],
+      "download_job": 2393150,
+      "elapsed": "00:03:44",
+      "formal_run_job": 2393154,
+      "log": "phase40_run_2393154.log (仓库外)",
+      "node": "prenyx0110.a51.clusters.nvidia.com",
+      "state": "FAILED (exit 1)"
+    },
+    "no_formal_raw_produced": {
+      "external_raw_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/phase40_raw",
+      "note": "首个正式请求即被 router 拒绝，采集钩子未产生任何记录；无半截数据可救、也无不一致记录被删除",
+      "profile_jsonl_count": 0,
+      "server_log_count": 3
+    },
+    "observed_error": {
+      "body": "Failed to deserialize the JSON body into the target type: rid: invalid type: sequence, expected a string at line 1 column 281",
+      "endpoint": "http://127.0.0.1:39002/generate (router)",
+      "http_status": 422,
+      "raised_at": "run.py:393 -> post_json (run.py:64)",
+      "wave": "第一个 wave (single_short, repeat 0)，即首个正式请求"
+    },
+    "root_cause": "实际服务的 router 是容器镜像内预编译的 sgl-model-gateway (`smg`) 二进制，其 /generate 请求体类型把 rid 反序列化为 String，收到数组即 422。合同 pinned_inputs 里的 sgl-model-gateway/src/routers/http/pd_router.rs 与 pd_types.rs 是**仓库源码**，从未被编译；preflight 的 source_semantics_audit 只对这两个 .rs 文件做文本匹配（router_detects_input_id_batch / router_injects_room_per_batch_item 均为 true），无法察觉运行中的二进制与 pin 源码不是同一份。",
+    "unblock_options_for_control_side": [
+      "在容器镜像中提供按 pinned pd_router.rs / pd_types.rs 构建的 sgl-model-gateway，并把二进制或其构建 commit 纳入 pinned_inputs",
+      "或在合同中明确授权一次性 cargo 构建步骤（含离线 vendor 依赖方案）并规定其 provenance 记录方式",
+      "或改用不依赖 batch rid 的请求形式，但这需要同时调整 fixed-draining wave 语义与 packed_remainder 场景定义"
+    ],
+    "what_passed_before_the_block": {
+      "comment": "本次比首次 BLOCKED 前进了一大步：preflight 全过，P/D/router 三进程健康启动",
+      "decode_server_healthy": true,
+      "gpu_pair": [
+        0,
+        1
+      ],
+      "ib_device": "mlx5_4 (port1 ACTIVE, 400 Gb/sec 4X NDR)",
+      "model_config_sha256_match": true,
+      "official_model_download_verified": true,
+      "offline_enforced": {
+        "HF_HUB_OFFLINE": "1",
+        "TRANSFORMERS_OFFLINE": "1"
+      },
+      "pinned_inputs_sha256_all_match": true,
+      "prefill_server_healthy": true,
+      "preflight_status": "PASS",
+      "router_health_200": true,
+      "source_semantics_audit_all_true": true,
+      "tokenizer_loaded_vocab_size": 151643,
+      "weight_index_sha256_match": true,
+      "weight_shards_sha256_match": "5/5",
+      "weights_total_bytes": 16381516776
+    },
+    "why_not_bypassable": {
+      "build_sgl_model_gateway_from_repo": "合同 README/GPU_AGENT_PROMPT 无任何构建步骤；cargo 构建需联网拉取 crates.io 依赖，与 official_model_download.network_during_formal_execution_permitted=false 冲突；且产出的二进制不在 pinned_inputs 内，provenance 无法被控制端审计。",
+      "downgrade_transport_or_backend": "不适用；mooncake/RDMA 与两个 server 均正常，不是阻塞点。",
+      "modify_run_py_payload": "把 rid 数组改成逐条字符串、或把 wave 拆成串行单请求，等于改冻结 workflow 并改变 fixed-draining wave 的批内并发语义（packed_remainder 场景专门依赖批内 budget 拆分），违反红线『不改 workflow』。",
+      "use_non_pd_router_or_direct_prefill": "绕开 PD router 即破坏纯 PD 语义与 bootstrap_room 分配，实验目标本身失效。"
+    }
+  },
+  "phase": "PHASE40",
+  "reason": "容器预编译的sgl-model-gateway router把/generate的rid反序列化为String，拒绝合同要求的batch rid数组(422)；合同pin的pd_router.rs/pd_types.rs是仓库源码、从未编译，source_semantics_audit仅做文本匹配无法察觉二进制与pin源码不一致。preflight全过(含Qwen3-8B 7项SHA256、离线开关、P/D/router健康启动)，首个正式请求即被拒，未产生任何正式raw",
+  "schema_version": "patterndemand-workflow-blocked-v1",
+  "status": "BLOCKED"
+}
