@@ -1,0 +1,57 @@
+{
+  "created_at_utc": "2026-08-15T04:27:57.458872+00:00",
+  "evidence": {
+    "actual_machine_topology": "8x NVIDIA B200，全部28个GPU对均为NV18（若表头可解析应产生单一类别NVLINK_NV18，默认对为GPU0-GPU1）；GPU-NIC为PXB/NODE/SYS，不参与GPU对类别",
+    "blocking_stage": "preflight",
+    "checks_that_passed_before_block": {
+      "cuda_gpu_count": 8,
+      "cuda_visible_devices_unset": true,
+      "head_equals_workflow_commit": true,
+      "pinned_inputs_sha256_all_match": true,
+      "raw_dir_external_and_absent": true,
+      "result_dir_absent": true,
+      "source_semantics_audit_all_true": true,
+      "torchrun_and_nvidia_smi_present": true,
+      "worktree_clean": true
+    },
+    "env_overrides_tested_all_ineffective": [
+      "NO_COLOR=1",
+      "TERM=dumb",
+      "TERM=",
+      "env -u TERM",
+      "CLICOLOR=0"
+    ],
+    "environment": {
+      "container_image": "sglang-v0.5.15-cu130.sqsh",
+      "cuda_version_driver": "13.0",
+      "driver_version": "580.167.08",
+      "gpu": "8x NVIDIA B200 183359MiB",
+      "host": "prenyx0033.a51.clusters.nvidia.com",
+      "nccl": [
+        2,
+        28,
+        9
+      ],
+      "numpy": "2.3.5",
+      "nvidia_smi_version": "580.167.08",
+      "nvml_version": "580.167",
+      "torch": "2.11.0+cu130",
+      "torch_cuda": "13.0"
+    },
+    "header_line_repr": "'\\t\\x1b[4mGPU0\\tGPU1\\tGPU2\\tGPU3\\tGPU4\\tGPU5\\tGPU6\\tGPU7\\tNIC0\\t...\\tGPU NUMA ID\\x1b[0m'",
+    "no_measurement_performed": true,
+    "no_partial_result_directory_created": true,
+    "preflight_error": "RuntimeError: 未发现可测的单机GPU拓扑对 (preflight.py:103)",
+    "root_cause": "本节点nvidia-smi 580.167.08的`topo -m`把表头行用ANSI转义包裹（前缀ESC[4m、后缀ESC[0m），因此preflight.parse_topology的表头判定 line.split()[0]=='GPU0' 不成立；表头检测退化到第一条GPU数据行`GPU0  X  NV18 ...`，gpu_columns只解析出['GPU0']一列，成对遍历为空，pairs_by_category={}。",
+    "slurm_jobs": {
+      "nvidia_smi_color_diagnostic": 2392609,
+      "phase37_run_attempt": 2392608
+    },
+    "suggested_control_side_fix": "在控制环境重新冻结preflight.parse_topology，使其在解析前剥离ANSI转义（例如对每行先做 re.sub(r'\\x1b\\[[0-9;]*m', '', line)），或将表头判定改为对去转义后的token匹配；随后下发新的W重跑Phase37。测量语义、payload网格、方向策略和重复次数均无需改动。",
+    "why_not_bypassable": "驱动无条件输出ANSI转义（重定向到非TTY仍输出）。已验证NO_COLOR=1、TERM=dumb、TERM=空、unset TERM、CLICOLOR=0 均无效；nvidia-smi topo --help 与 nvidia-smi --help 均无禁用颜色开关。唯二可行路径为(1)修改冻结的preflight.parse_topology或(2)在PATH上放置剥离ANSI的nvidia-smi包装器——前者违反不改workflow红线，后者是对preflight所审计工具的替换且会篡改audit/nvidia_smi_topo_m.txt，均属绕过，故停止。"
+  },
+  "phase": "PHASE37",
+  "reason": "preflight阶段无法发现可测GPU拓扑对：本节点nvidia-smi 580.167.08的topo -m表头带ANSI转义，冻结的parse_topology无法识别表头；驱动无开关可关闭，绕过必须改冻结workflow或替换nvidia-smi，按合同停止",
+  "schema_version": "patterndemand-workflow-blocked-v1",
+  "status": "BLOCKED"
+}
