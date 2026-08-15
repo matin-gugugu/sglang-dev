@@ -20,7 +20,7 @@ Phase40只做纯PD：一个单GPU Prefill实例向一个单GPU Decode实例传KV
 
 ## 运行前提与命令
 
-必须从交接方给出的W40-fix创建独立retry run分支。模型固定为官方`Qwen/Qwen3-8B`的revision `b968826d9c46dd6066d109eabc6255188de91218`。允许在preflight前联网下载一次，下载完成后必须切换为离线模式；正式preflight和GPU运行不得继续联网。下载目录必须位于计算节点可见的持久化存储且在Git、raw目录、其他用户缓存和受保护实验资产之外。`--gpu-pair`使用物理GPU编号，`--ib-device`使用已验证的RDMA HCA。
+必须从交接方给出的W40-fix2创建独立retry run分支，不能从任何旧`BLOCKED`提交继续。模型固定为官方`Qwen/Qwen3-8B`的revision `b968826d9c46dd6066d109eabc6255188de91218`。允许在preflight前联网下载一次，已核验通过的同revision模型目录可以直接复用；下载完成后必须切换为离线模式，正式preflight和GPU运行不得继续联网。下载目录必须位于计算节点可见的持久化存储且在Git、raw目录、其他用户缓存和受保护实验资产之外。`--gpu-pair`使用物理GPU编号，`--ib-device`使用已验证的RDMA HCA。
 
 推荐命令如下；`/PERSISTENT/MODELS`应替换为本环境自己的持久化模型目录：
 
@@ -34,6 +34,10 @@ hf download Qwen/Qwen3-8B \
 # 从这里开始正式实验必须离线；preflight会核对config、index和5个权重分片的官方SHA-256。
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
+
+# 固定Python侧使用当前W40-fix2仓库源码；router和Mooncake仍可来自容器包，实际来源会写入审计。
+REPO_ROOT=$(git rev-parse --show-toplevel)
+export PYTHONPATH="$REPO_ROOT/python"
 ```
 
 如果环境只有旧版CLI，可用等价的`huggingface-cli download`，但repo、revision和落盘目录不得改变。不要把token写进命令、日志或Git；该公开模型正常情况下不需要token。
@@ -41,25 +45,27 @@ export TRANSFORMERS_OFFLINE=1
 ```bash
 unset CUDA_VISIBLE_DEVICES
 python3 workflows/patterndemand/phase40_pure_pd_semantics_teacher/preflight.py \
-  --expected-workflow-commit W40_FIX \
+  --expected-workflow-commit W40_FIX2 \
   --model-path "$MODEL_DIR" \
   --gpu-pair 0,1 \
   --ib-device mlx5_X \
-  --raw-dir /EXTERNAL/phase40_raw \
-  --audit-output /EXTERNAL/phase40_preflight.json
+  --raw-dir /EXTERNAL/phase40_raw_fix2 \
+  --audit-output /EXTERNAL/phase40_preflight_fix2.json
 
 python3 workflows/patterndemand/phase40_pure_pd_semantics_teacher/run.py \
-  --expected-workflow-commit W40_FIX \
+  --expected-workflow-commit W40_FIX2 \
   --model-path "$MODEL_DIR" \
   --gpu-pair 0,1 \
   --ib-device mlx5_X \
-  --raw-dir /EXTERNAL/phase40_raw \
-  --preflight-audit /EXTERNAL/phase40_preflight.json
+  --raw-dir /EXTERNAL/phase40_raw_fix2 \
+  --preflight-audit /EXTERNAL/phase40_preflight_fix2.json
 
 python3 workflows/patterndemand/phase40_pure_pd_semantics_teacher/verify.py
 ```
 
 端口冲突时可以在第一次正式请求前用`run.py`的端口参数整体替换；GPU对也可在preflight前换为同一台机器上的另一对。首条正式raw出现后，不得换backend、transport、模型、策略、GPU对、HCA、chunk、请求顺序或删除异常；失败应保存Git外证据并按`BLOCKED`回传。
+
+每个wave仍通过一个批量`input_ids`请求提交。为兼容router，请求只携带一个标量`rid`前缀；仓库版SGLang按批内顺序将其展开为`<prefix>_0`、`<prefix>_1`等，teacher使用完全相同的确定性ID。不得把wave拆成串行单请求，这个修复不改变fixed-draining、批内顺序或`packed_remainder`语义。
 
 ## Git边界
 
@@ -70,7 +76,7 @@ git add -- experiment-results/phase40_pure_pd_semantics_teacher/
 python3 workflows/patterndemand/verify_staging.py --phase phase40
 ```
 
-禁止`git add .`，禁止添加raw JSONL、完整server log、权重、缓存、PID或`data/`。R40必须是W40的单一父提交，并只改允许的正式结果目录。
+禁止`git add .`，禁止添加raw JSONL、完整server log、权重、缓存、PID或`data/`。R40必须是W40-fix2的单一父提交，并只改允许的正式结果目录。
 
 ## PASS能说明什么
 

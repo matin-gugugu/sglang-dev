@@ -9,10 +9,33 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from contracts import bin_index, build_teacher, teacher_chunks_for_wave
+from contracts import (
+    bin_index,
+    build_teacher,
+    teacher_chunks_for_wave,
+    wave_rid_prefix,
+    workload_rows,
+)
 
 
 class TestTeacher(unittest.TestCase):
+    def test_scalar_wave_rid_expansion_matches_frozen_request_ids(self):
+        contract = json.loads(
+            (Path(__file__).resolve().parent / "experiment.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        rows = [
+            row
+            for row in workload_rows(contract)
+            if row["scenario"] == "packed_remainder" and row["repeat"] == 1
+        ]
+        prefix = wave_rid_prefix("packed_remainder", 1)
+        self.assertEqual(
+            [row["rid"] for row in rows],
+            [f"{prefix}_{index}" for index in range(4)],
+        )
+
     def test_fcfs_remainder_and_continuation(self):
         requests = [
             {"scenario": "x", "repeat": 0, "rid": "a", "prompt_tokens": 1000},

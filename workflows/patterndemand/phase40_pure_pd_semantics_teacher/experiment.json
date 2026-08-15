@@ -1,9 +1,9 @@
 {
-  "schema_version": "phase40-pure-pd-semantics-teacher-contract-v1",
+  "schema_version": "phase40-pure-pd-semantics-teacher-contract-v2",
   "phase": "Phase40",
   "objective": "在纯P1-D1、fixed-draining、固定Mooncake/RDMA传输语义下，用真实SGLang GPU KV发送记录验证拓扑无关P→D 12-bin逻辑消息直方图口径，并建立可由完整请求窗口离线生成的scheduler-faithful Hfull teacher基础闭环",
   "workflow_parent_result_commit": "e5697c03fffb9f9cebdc6beb2bc667d0aae5173a",
-  "execution_model": "one local model copy loaded independently by one single-GPU prefill server and one single-GPU decode server; one router; five frozen request waves repeated three times; deterministic CPU teacher and exact alignment after GPU release",
+  "execution_model": "one local model copy loaded independently by one single-GPU prefill server and one single-GPU decode server; one router; five frozen input_ids batches repeated three times; one scalar rid prefix per batch is deterministically expanded by SGLang; deterministic CPU teacher and exact alignment after GPU release",
   "research_scope": {
     "prefill_parallelism": {"tp": 1, "pp": 1},
     "decode_parallelism": {"tp": 1, "pp": 1},
@@ -73,6 +73,8 @@
     "dynamic_chunking": false,
     "decode_radix_cache": false,
     "independent_repeats": 3,
+    "batch_rid_protocol": "submit one scalar rid prefix per input_ids batch; SGLang must expand it to <prefix>_<zero_based_batch_index>",
+    "python_source_contract": "repo_root/python must be the first PYTHONPATH entry for preflight and run; sglang_router and mooncake may remain container packages but their locations are recorded",
     "minimum_gpu_count": 2,
     "required_gpu_layout": "two distinct GPUs on one host; topology recorded but not used for a placement claim",
     "raw_storage": "profiler JSONL and full P/D/router logs remain outside Git; Git stores only hashes, counts, exact-alignment tables and aggregate 12-bin histograms"
@@ -108,6 +110,7 @@
     {"name": "sglang_pd_common_conn", "path": "python/sglang/srt/disaggregation/common/conn.py", "sha256": "f56fc337c3e0518ddf73fe93297512abfeb4cd17cfa0772184d063db25cd3c8d"},
     {"name": "sglang_mooncake_conn", "path": "python/sglang/srt/disaggregation/mooncake/conn.py", "sha256": "9106dfc8deb91662bdbac850f41612104a597b7f6a5cd15c8eb7ca17a20c8a0d"},
     {"name": "sglang_prefill_schedule_policy", "path": "python/sglang/srt/managers/schedule_policy.py", "sha256": "5a505dfbb0a6854d36180c0337fbfb98d75ecde647abc00b66a33c971e1700b3"},
+    {"name": "sglang_generate_request_io", "path": "python/sglang/srt/managers/io_struct.py", "sha256": "57dc2606c1efc34af65b62cc3074268aa80b5a017b1448349540a01578f97748"},
     {"name": "sglang_pd_arg_hook", "path": "python/sglang/srt/arg_groups/pd_disaggregation_hook.py", "sha256": "f4daac898dd151021744d8ac27cb2454da047bb9e54ced37f689917b42c7bb85"},
     {"name": "sglang_pd_profiler", "path": "python/sglang/srt/disaggregation/pd_comm_profile.py", "sha256": "d3c269bed154c966b2a82e93348ec6dd0e25612cf82ea5b171f1c3cb08ed18fd"},
     {"name": "sglang_pd_http_router", "path": "sgl-model-gateway/src/routers/http/pd_router.rs", "sha256": "92aa2df17d9366388c248d0b51a6ab21059f52dade2fc301ec6c7a62dc4316a8"},
@@ -124,6 +127,8 @@
     "the exact workflow commit is not checked out or tracked files are dirty",
     "the pinned official Qwen/Qwen3-8B revision cannot be downloaded before preflight or its config, index or five weight-shard hashes differ",
     "HF_HUB_OFFLINE=1 and TRANSFORMERS_OFFLINE=1 are not set for formal preflight and GPU execution",
+    "repo_root/python is not the first PYTHONPATH entry or sglang does not resolve from the pinned repository source",
+    "the router rejects a scalar wave rid prefix or SGLang does not expand it to the frozen <prefix>_<batch_index> request IDs",
     "two distinct CUDA GPUs, Mooncake, RDMA or the SGLang router are unavailable",
     "execution would require TP/PP greater than one, a backend fallback, staging, radix cache, overlap or changed chunk policy",
     "the model formula, source SHA, request count, per-request chunks, aggregate histograms or repeat determinism differ",

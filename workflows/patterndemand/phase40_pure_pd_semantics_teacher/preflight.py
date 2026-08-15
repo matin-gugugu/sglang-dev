@@ -166,6 +166,7 @@ def source_semantics_audit() -> dict[str, bool]:
     mooncake = (root / "python/sglang/srt/disaggregation/mooncake/conn.py").read_text(encoding="utf-8")
     schedule = (root / "python/sglang/srt/managers/schedule_policy.py").read_text(encoding="utf-8")
     profiler = (root / "python/sglang/srt/disaggregation/pd_comm_profile.py").read_text(encoding="utf-8")
+    io_struct = (root / "python/sglang/srt/managers/io_struct.py").read_text(encoding="utf-8")
     router = (root / "sgl-model-gateway/src/routers/http/pd_router.rs").read_text(encoding="utf-8")
     checks = {
         "prefill_sender_call": "req.disagg_kv_sender.send(page_indices, state_indices)" in prefill,
@@ -179,6 +180,8 @@ def source_semantics_audit() -> dict[str, bool]:
         "profiler_no_tensor_contents": '"raw_tensor_contents_saved": False' in profiler,
         "router_detects_input_id_batch": "if let Some(InputIds::Batch(batches)) = &req.input_ids" in router,
         "router_injects_room_per_batch_item": "for _ in 0..n" in router and "Value::Array(rooms.into_iter().map(Value::from).collect())" in router,
+        "generate_request_accepts_scalar_or_list_rid": "rid: Optional[Union[str, List[str]]]" in io_struct,
+        "scalar_rid_expands_by_batch_index": 'new_rids = [f"{self.rid}_{i}" for i in range(num)]' in io_struct,
     }
     if not all(checks.values()):
         raise RuntimeError({"source_semantics_checks": checks})
@@ -231,6 +234,17 @@ def run_checks(args: argparse.Namespace) -> dict[str, Any]:
     }
     if not all(offline_checks.values()):
         raise RuntimeError({"formal_execution_must_be_offline": offline_checks})
+    expected_repo_python = str((repo_root() / "python").resolve())
+    pythonpath_entries = [str(Path(row).resolve()) for row in os.environ.get("PYTHONPATH", "").split(os.pathsep) if row]
+    if not pythonpath_entries or pythonpath_entries[0] != expected_repo_python:
+        raise RuntimeError(
+            {
+                "repo_python_must_be_first_on_PYTHONPATH": {
+                    "expected": expected_repo_python,
+                    "actual": pythonpath_entries,
+                }
+            }
+        )
     raw_dir = ensure_external_raw_dir(args.raw_dir)
     if args.audit_output.resolve() == repo_root() or repo_root() in args.audit_output.resolve().parents:
         raise RuntimeError("preflight audit must remain outside Git")
@@ -238,10 +252,18 @@ def run_checks(args: argparse.Namespace) -> dict[str, Any]:
         raise RuntimeError("preflight audit must not be written inside the raw directory")
     pins = verify_pinned_inputs(contract)
     semantics = source_semantics_audit()
-    if importlib.util.find_spec("sglang_router.launch_router") is None:
+    router_spec = importlib.util.find_spec("sglang_router.launch_router")
+    if router_spec is None:
         raise RuntimeError("sglang_router.launch_router is unavailable")
-    if importlib.util.find_spec("mooncake.engine") is None:
+    mooncake_engine_spec = importlib.util.find_spec("mooncake.engine")
+    if mooncake_engine_spec is None:
         raise RuntimeError("mooncake.engine is unavailable; backend fallback is forbidden")
+    sglang_spec = importlib.util.find_spec("sglang")
+    if sglang_spec is None or sglang_spec.origin is None:
+        raise RuntimeError("sglang import is unavailable")
+    sglang_origin = str(Path(sglang_spec.origin).resolve())
+    if Path(expected_repo_python) not in Path(sglang_origin).parents:
+        raise RuntimeError({"sglang_not_loaded_from_repo_python": sglang_origin})
     import mooncake
     import torch
 
@@ -269,6 +291,14 @@ def run_checks(args: argparse.Namespace) -> dict[str, Any]:
             "mooncake_version": getattr(mooncake, "__version__", None),
             "container_image_env": {key: value for key, value in os.environ.items() if re.search(r"(IMAGE|CONTAINER|PYTORCH_VERSION)", key)},
             "formal_execution_offline": offline_checks,
+            "python_source": {
+                "PYTHONPATH_entries": pythonpath_entries,
+                "expected_repo_python": expected_repo_python,
+                "sglang_origin": sglang_origin,
+                "repo_sglang_loaded": True,
+                "sglang_router_launch_origin": router_spec.origin,
+                "mooncake_engine_origin": mooncake_engine_spec.origin,
+            },
         },
         "gpus": gpus,
     }

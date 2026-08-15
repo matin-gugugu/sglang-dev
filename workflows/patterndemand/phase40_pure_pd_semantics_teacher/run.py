@@ -29,7 +29,14 @@ from common import (
     verify_pinned_inputs,
     write_json,
 )
-from contracts import build_teacher, histogram_rows, read_jsonl, workload_rows, write_csv
+from contracts import (
+    build_teacher,
+    histogram_rows,
+    read_jsonl,
+    wave_rid_prefix,
+    workload_rows,
+    write_csv,
+)
 from preflight import model_contract, parse_gpu_pair
 
 
@@ -259,6 +266,17 @@ def launch_and_run(args: argparse.Namespace) -> dict[str, Any]:
     }
     if not all(offline_checks.values()):
         raise RuntimeError({"formal_execution_must_be_offline": offline_checks})
+    expected_repo_python = str((repo_root() / "python").resolve())
+    pythonpath_entries = [str(Path(row).resolve()) for row in os.environ.get("PYTHONPATH", "").split(os.pathsep) if row]
+    if not pythonpath_entries or pythonpath_entries[0] != expected_repo_python:
+        raise RuntimeError(
+            {
+                "repo_python_must_be_first_on_PYTHONPATH": {
+                    "expected": expected_repo_python,
+                    "actual": pythonpath_entries,
+                }
+            }
+        )
     raw_dir = args.raw_dir.resolve()
     if not raw_dir.is_dir() or any(raw_dir.iterdir()):
         raise RuntimeError(f"raw directory must exist and be empty at run start: {raw_dir}")
@@ -382,7 +400,10 @@ def launch_and_run(args: argparse.Namespace) -> dict[str, Any]:
                 wave.sort(key=lambda row: row["request_index"])
                 payload = {
                     "input_ids": [[int(row["input_token_id"])] * int(row["prompt_tokens"]) for row in wave],
-                    "rid": [row["rid"] for row in wave],
+                    # The Rust router accepts one scalar rid. SGLang expands it
+                    # deterministically to <prefix>_<batch_index> without
+                    # changing the input_ids batch or its admission order.
+                    "rid": wave_rid_prefix(scenario, repeat),
                     "sampling_params": {
                         "temperature": 0.0,
                         "max_new_tokens": int(contract["measurement_contract"]["max_new_tokens"]),
@@ -457,6 +478,7 @@ def launch_and_run(args: argparse.Namespace) -> dict[str, Any]:
             "decode_physical_gpu": args.gpu_pair[1],
             "ib_device": args.ib_device,
             "transport": "rdma",
+            "batch_rid_protocol": "one scalar wave prefix expanded by SGLang to <prefix>_<batch_index>",
         },
     )
     manifest = raw_manifest(raw_dir, evidence["gpu_events"])

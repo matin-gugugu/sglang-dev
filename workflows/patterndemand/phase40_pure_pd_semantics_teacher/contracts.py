@@ -27,6 +27,15 @@ BIN_EDGES_BYTES = [
 ]
 
 
+def wave_rid_prefix(scenario: str, repeat: int) -> str:
+    """Return the scalar batch rid accepted by the router.
+
+    SGLang expands this prefix to ``<prefix>_<batch_index>`` while preserving
+    the original input_ids batch and its fixed-draining admission order.
+    """
+    return f"p40::{scenario}::rep{repeat}"
+
+
 def workload_rows(contract: dict[str, Any]) -> list[dict[str, Any]]:
     rows = []
     repeats = int(contract["measurement_contract"]["independent_repeats"])
@@ -40,7 +49,7 @@ def workload_rows(contract: dict[str, Any]) -> list[dict[str, Any]]:
                         "scenario": scenario["name"],
                         "repeat": repeat,
                         "request_index": request_index,
-                        "rid": f"p40::{scenario['name']}::rep{repeat}::req{request_index}",
+                        "rid": f"{wave_rid_prefix(scenario['name'], repeat)}_{request_index}",
                         "prompt_tokens": int(prompt_tokens),
                         "max_new_tokens": max_new_tokens,
                         "input_token_id": token_id,
