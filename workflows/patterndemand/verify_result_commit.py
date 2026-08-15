@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""在控制环境验证GPU Agent回传的单个result commit。"""
+"""在控制环境验证执行Agent回传的单个result commit。"""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from common import repo_root, run_git
 PHASE_PREFIX = {
     "phase36": "experiment-results/phase36_cross_environment_replay/",
     "phase37": "experiment-results/phase37_pp_single_node_p2p_curve/",
+    "phase38": "experiment-results/phase38_pp_physical_curve_cost_recompute/",
 }
 
 

@@ -15,6 +15,7 @@ from common import repo_root, write_blocked
 OUTPUTS = {
     "phase36": repo_root() / "experiment-results/phase36_cross_environment_replay",
     "phase37": repo_root() / "experiment-results/phase37_pp_single_node_p2p_curve",
+    "phase38": repo_root() / "experiment-results/phase38_pp_physical_curve_cost_recompute",
 }
 
 

@@ -1,0 +1,179 @@
+{
+  "schema_version": "phase38-pp-physical-curve-cost-recompute-contract-v1",
+  "phase": "Phase38",
+  "objective": "将Phase34冻结的六模型PP H0+DNN residual 12-bin直方图与Hfull target确定性代入Phase37已验收的单机物理P2P连续曲线，重算通信cost误差；不重放checkpoint、不训练",
+  "execution_scope": "CPU-only deterministic post-processing after the Phase37 result commit has been accepted and ff-only integrated",
+  "required_gpu_count": 0,
+  "training_performed": false,
+  "checkpoint_loading_permitted": false,
+  "prediction_recomputation_permitted": false,
+  "parallelism": "pp",
+  "prediction_filter": {
+    "prediction_set": "phase34_blind_new",
+    "method": "h0_plus_dnn_residual",
+    "parallelism": "pp"
+  },
+  "target_filter": {
+    "parallelism": "pp"
+  },
+  "expected_prediction_phase_rows": 1296,
+  "expected_target_phase_rows": 1296,
+  "expected_total_cases": 648,
+  "expected_phase34_histogram_metric_rows": 42,
+  "expected_profiles": 12,
+  "expected_models": [
+    "deepseek-v2-lite",
+    "qwen3-8b",
+    "qwen3-30b-a3b",
+    "llama-3.2-3b-instruct",
+    "qwen2.5-14b-instruct",
+    "mixtral-8x7b-instruct-v0.1"
+  ],
+  "expected_parallel_sizes": [
+    2,
+    4,
+    8
+  ],
+  "expected_policies": [
+    "mb1",
+    "mb4",
+    "mb16"
+  ],
+  "expected_phases": [
+    "prefill",
+    "decode"
+  ],
+  "phase34_pp_bin_edges_bytes": [
+    4096.0,
+    13777.246867516858,
+    46340.95001184158,
+    155871.75497763665,
+    524288.0,
+    1763487.5990421579,
+    5931641.601515722,
+    19951584.63713749,
+    67108864.0,
+    225726412.6773962,
+    759250124.9940125,
+    2553802833.553599,
+    8589934592.0
+  ],
+  "pinned_inputs": [
+    {
+      "name": "phase34c_frozen_pp_predictions",
+      "path": "experiment-results/phase34c_six_model_target_free_training/pp/analysis/frozen_predictions.csv.gz",
+      "sha256": "4fc00d2f2378c065f29db74eb5c138455b99f4727802888a1eb4b71ab6e320bb",
+      "verify_manifest_directory": "experiment-results/phase34c_six_model_target_free_training/pp"
+    },
+    {
+      "name": "phase34d_opened_hfull_targets",
+      "path": "experiment-results/phase34d_six_model_blind_evaluation/labels/phase34_blind_six_model_hfull_targets.csv.gz",
+      "sha256": "ebe0b83adcd94ca3a474d04f8ae7e8d5c32cba0121482f340e5c85ef6f5ab161",
+      "verify_manifest_directory": "experiment-results/phase34d_six_model_blind_evaluation"
+    },
+    {
+      "name": "phase34d_official_histogram_metrics",
+      "path": "experiment-results/phase34d_six_model_blind_evaluation/analysis/aggregate_metrics.csv",
+      "sha256": "bce14bd53f4759ca5cc7ca50422bc40661d71c5e961dfd945d78820dd757f01a"
+    },
+    {
+      "name": "phase35_cost_metrics",
+      "path": "experiment-results/phase35_six_model_inference_cost_integration/analysis/cost_metrics.csv",
+      "sha256": "05dc0cd375e10d57812b00208b0f4afba5a2b7aa48ff2e8998cea9ddeb0763a7",
+      "verify_manifest_directory": "experiment-results/phase35_six_model_inference_cost_integration"
+    },
+    {
+      "name": "phase35_curve_registry",
+      "path": "experiment-results/phase35_six_model_inference_cost_integration/contracts/topology_curve_registry.json",
+      "sha256": "30efc4cc30ec50ca52c0a1272d56cf6ebda8ce2db261922688e7478d849705d4"
+    }
+  ],
+  "phase37_result_dir": "experiment-results/phase37_pp_single_node_p2p_curve",
+  "phase37_curve_path": "experiment-results/phase37_pp_single_node_p2p_curve/curves/pp_single_node_p2p_knots.json",
+  "accepted_phase37_statuses": [
+    "PASS",
+    "PASS_WITH_RUNTIME_VARIANCE",
+    "PASS_WITH_LIMITED_TOPOLOGY",
+    "PASS_WITH_RUNTIME_VARIANCE_AND_LIMITED_TOPOLOGY"
+  ],
+  "required_phase37_curve_contract": {
+    "schema_version": "phase37-pp-single-node-p2p-curves-v1",
+    "curve_evidence": "physical_measurement",
+    "metadata_overhead_included": false,
+    "topology_scope": "single_node",
+    "measurement_scope": "tensor_only_sender_counted_logical_message",
+    "backend": "torch.distributed.isend/irecv over NCCL device process group, matching SGLang async send_tensor_dict tensor primitive",
+    "direction_policy": "每个GPU对双向分别测量；拓扑类别正式曲线在每次repeat取双向中位数的较大值，再跨repeat取中位数，禁止挑选较快方向",
+    "interpolation": "piecewise linear over log2(payload_bytes), using unsmoothed median across repeat medians",
+    "required_payload_bytes": [
+      4096,
+      8192,
+      16384,
+      32768,
+      38912,
+      65536,
+      131072,
+      262144,
+      524288,
+      917504,
+      1048576,
+      2097152,
+      4194304,
+      5242880,
+      8388608,
+      14680064,
+      16777216,
+      27262976,
+      33554432,
+      41943040,
+      67108864
+    ]
+  },
+  "cost_semantics": {
+    "per_bin_payload_bytes": "logical_bytes / logical_calls when calls > 1e-12",
+    "curve_lookup": "piecewise linear in log2(payload_bytes), clamped to the first or last physical knot outside the measured range",
+    "per_bin_cost_us_per_1000": "logical_calls_per_1000 * interpolated_latency_us",
+    "phase_cost": "sum of 12 per-bin costs",
+    "total_cost": "prefill cost + decode cost",
+    "sender_counting": "sender-only logical messages, identical to the Phase34 histogram and Phase37 measurement contract",
+    "metadata_overhead": "excluded because Phase37 is tensor-only"
+  },
+  "metrics": [
+    "cost_mape",
+    "cost_wape",
+    "signed_bias"
+  ],
+  "metric_slices": [
+    "overall",
+    "model",
+    "policy"
+  ],
+  "diagnostic_overall_total_cost_wape_reference": 0.05,
+  "diagnostic_reference_is_pass_fail_gate": false,
+  "phase35_proxy_baseline_placement_id": "pp_l1_single_node_nominal_proxy",
+  "phase35_proxy_required_curve_kind": "parameterized_p2p_sensitivity",
+  "phase35_proxy_required_evidence": "not_physical_measurement",
+  "evidence_set": "phase34_open_target_repeated_engineering_with_phase37_physical_curve",
+  "result_dir": "experiment-results/phase38_pp_physical_curve_cost_recompute",
+  "result_status": "PASS means deterministic integrity and contract checks passed; it does not mean every physical cost WAPE is below 5%",
+  "claim_boundary": [
+    "Phase38 does not create new predictions and therefore calls/bytes/TV/EMD must remain the Phase34 frozen values",
+    "Phase34D target was already opened, so physical-cost metrics are repeated engineering evidence rather than a new blind test",
+    "Only topology categories physically measured and accepted in Phase37 may be labeled physical",
+    "No end-to-end metadata, allocation, scheduler, overlap, multi-node, L2, or L3 cost is measured here",
+    "Any retraining proposal must use a new development and confirmation protocol; Phase34D targets cannot be reused to claim a new blind result"
+  ],
+  "stop_and_block_if": [
+    "Phase37 result commit has not been accepted and ff-only integrated before W38",
+    "Phase37 summary status is not accepted or its result manifest fails",
+    "Phase37 curve evidence, backend scope, interpolation, payload grid, or topology scope differs from the frozen contract",
+    "Phase34 or Phase35 pinned input SHA/manifest differs",
+    "running requires a GPU, checkpoint, model weights, raw trace, or training",
+    "the formal result directory already exists"
+  ],
+  "fail_if": [
+    "prediction and target example_id sets are not exactly equal after the frozen filters",
+    "Phase34 histogram metrics cannot be reproduced within absolute tolerance 1e-12",
+    "cost rows, metric rows, curve evidence, or finite-value checks violate the deterministic result contract"
+  ]
+}

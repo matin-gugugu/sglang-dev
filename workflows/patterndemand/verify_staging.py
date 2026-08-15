@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GPU Agent提交前检查暂存区仅含对应Phase结果目录。"""
+"""执行Agent提交前检查暂存区仅含对应Phase结果目录。"""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from common import load_json, repo_root, validate_staged_allowlist, verify_resul
 PHASES = {
     "phase36": "experiment-results/phase36_cross_environment_replay/",
     "phase37": "experiment-results/phase37_pp_single_node_p2p_curve/",
+    "phase38": "experiment-results/phase38_pp_physical_curve_cost_recompute/",
 }
 
 
