@@ -17,9 +17,12 @@ from contracts import read_csv
 def finalize(output: Path) -> dict:
     state = load_json(output / "audit/runtime_state.json")
     contract = load_json(output / "contracts/experiment.json")
+    smoke = load_json(output / "audit/compatibility_smoke.json")
     alignment = read_csv(output / "analysis/gpu_teacher_alignment.csv")
     if not all(state["checks"].values()):
         raise RuntimeError({"phase40_checks": state["checks"]})
+    if smoke.get("status") != "PASS" or not all(smoke.get("checks", {}).values()):
+        raise RuntimeError({"phase40_compatibility_smoke": smoke})
     overall = next(row for row in alignment if row["scenario"] == "overall")
     summary = {
         "schema_version": "phase40-pure-pd-semantics-teacher-result-v1",
@@ -30,6 +33,12 @@ def finalize(output: Path) -> dict:
         "counts": state["counts"],
         "overall_alignment": overall,
         "runtime_kv_bytes_per_page": state["runtime_kv_bytes_per_page"],
+        "compatibility_smoke": {
+            "status": smoke["status"],
+            "attention_backend": smoke["attention_backend"],
+            "page_size_tokens": smoke["observed"][0]["page_size_tokens"],
+            "sender_chunks": smoke["matching_sender_chunks"],
+        },
         "checks": state["checks"],
         "training_performed": False,
         "checkpoint_loaded": False,
@@ -45,7 +54,8 @@ def finalize(output: Path) -> dict:
     (output / "README.md").write_text(
         "# Phase40：纯PD语义与Hfull teacher基础闭环\n\n"
         "最终状态：`PASS`。本阶段只运行纯`P1→D1`，P和D内部均为`TP=1、PP=1`；"
-        "固定Mooncake/RDMA、FCFS、4096-token chunk并关闭cache与overlap。\n\n"
+        "固定FlashInfer attention、page size 1、Mooncake/RDMA、FCFS、4096-token chunk并关闭cache与overlap。"
+        "正式raw前的独立P→D smoke已完成1个真实sender chunk且没有传输错误。\n\n"
         f"共执行`{state['counts']['requests']}`个请求、`{state['counts']['gpu_logical_chunks']}`个真实sender-side逻辑KV chunk；"
         f"CPU teacher生成`{state['counts']['teacher_logical_chunks']}`个chunk，"
         f"逐请求精确匹配`{state['counts']['exact_requests']}/{state['counts']['requests']}`。"

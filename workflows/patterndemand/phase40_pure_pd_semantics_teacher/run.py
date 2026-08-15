@@ -19,6 +19,7 @@ from typing import Any
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 from common import (
+    ensure_external_raw_dir,
     environment_record,
     load_json,
     repo_root,
@@ -110,6 +111,242 @@ def raw_manifest(raw_dir: Path, event_count: int) -> dict[str, Any]:
         "profiler_event_count": event_count,
         "files": files,
     }
+
+
+def build_server_commands(
+    *,
+    contract: dict[str, Any],
+    model_path: Path,
+    ib_device: str,
+    prefill_port: int,
+    decode_port: int,
+    router_port: int,
+    bootstrap_port: int,
+) -> dict[str, list[str]]:
+    measurement = contract["measurement_contract"]
+    attention_backend = contract["backend_contract"]["inference_attention_backend"]
+    common_server = [
+        sys.executable,
+        "-m",
+        "sglang.launch_server",
+        "--model-path",
+        str(model_path.resolve()),
+        "--tp",
+        "1",
+        "--pp-size",
+        "1",
+        "--dtype",
+        "bfloat16",
+        "--kv-cache-dtype",
+        "auto",
+        "--attention-backend",
+        attention_backend,
+        "--page-size",
+        str(measurement["page_size_tokens"]),
+        "--schedule-policy",
+        measurement["schedule_policy"],
+        "--chunked-prefill-size",
+        str(measurement["chunked_prefill_tokens"]),
+        "--max-prefill-tokens",
+        str(measurement["max_prefill_tokens"]),
+        "--max-running-requests",
+        str(measurement["max_running_requests"]),
+        "--context-length",
+        str(measurement["context_length"]),
+        "--mem-fraction-static",
+        str(measurement["mem_fraction_static"]),
+        "--disable-radix-cache",
+        "--disable-overlap-schedule",
+        "--disaggregation-transfer-backend",
+        contract["backend_contract"]["sglang_transfer_backend"],
+        "--disaggregation-ib-device",
+        ib_device,
+        "--disaggregation-bootstrap-port",
+        str(bootstrap_port),
+        "--host",
+        "127.0.0.1",
+    ]
+    return {
+        "prefill": [*common_server, "--disaggregation-mode", "prefill", "--port", str(prefill_port)],
+        "decode": [*common_server, "--disaggregation-mode", "decode", "--port", str(decode_port)],
+        "router": [
+            sys.executable,
+            "-m",
+            "sglang_router.launch_router",
+            "--pd-disaggregation",
+            "--prefill",
+            f"http://127.0.0.1:{prefill_port}",
+            "--decode",
+            f"http://127.0.0.1:{decode_port}",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(router_port),
+        ],
+    }
+
+
+def validate_smoke_events(
+    contract: dict[str, Any], model: dict[str, Any], raw_events: list[dict[str, Any]]
+) -> dict[str, Any]:
+    smoke = contract["compatibility_smoke_contract"]
+    request = smoke["request"]
+    expected_rid = f"{request['rid_prefix']}_0"
+    events = [row for row in raw_events if row.get("rid") == expected_rid]
+    expected_bytes_per_page = int(model["derived"]["kv_bytes_per_page"])
+    expected_page_count = int(smoke["expected_kv_page_count"])
+    checks = {
+        "exactly_one_sender_chunk": len(events) == int(smoke["expected_sender_chunks"]),
+        "no_unexpected_profile_records": len(raw_events) == len(events),
+        "mooncake_sender": all(row.get("backend") == smoke["expected_transfer_backend"] for row in events),
+        "page_size_one": all(int(row.get("page_size_tokens", -1)) == int(smoke["expected_page_size_tokens"]) for row in events),
+        "page_count_exact": all(int(row.get("kv_page_count", -1)) == expected_page_count for row in events),
+        "bytes_per_page_exact": all(int(row.get("kv_bytes_per_page", -1)) == expected_bytes_per_page for row in events),
+        "logical_bytes_exact": all(int(row.get("logical_bytes", -1)) == expected_page_count * expected_bytes_per_page for row in events),
+        "state_payload_zero": all(int(row.get("state_logical_bytes", -1)) == 0 for row in events),
+        "no_tensor_contents": all(row.get("raw_tensor_contents_saved") is False for row in events),
+    }
+    return {
+        "expected_rid": expected_rid,
+        "profile_records_total": len(raw_events),
+        "matching_sender_chunks": len(events),
+        "checks": checks,
+        "observed": [
+            {
+                key: row.get(key)
+                for key in (
+                    "rid",
+                    "backend",
+                    "page_size_tokens",
+                    "kv_page_count",
+                    "kv_bytes_per_page",
+                    "logical_bytes",
+                    "state_logical_bytes",
+                )
+            }
+            for row in events
+        ],
+    }
+
+
+def run_compatibility_smoke(
+    args: argparse.Namespace,
+    contract: dict[str, Any],
+    model: dict[str, Any],
+    base_env: dict[str, str],
+    formal_raw_dir: Path,
+) -> dict[str, Any]:
+    smoke_dir = ensure_external_raw_dir(args.smoke_dir)
+    if smoke_dir.exists():
+        raise RuntimeError(f"smoke directory must not already exist: {smoke_dir}")
+    if smoke_dir == formal_raw_dir or smoke_dir in formal_raw_dir.parents or formal_raw_dir in smoke_dir.parents:
+        raise RuntimeError("smoke directory and formal raw directory must be disjoint")
+    smoke_dir.mkdir(parents=True, exist_ok=False)
+    profile_dir = smoke_dir / "profile"
+    log_dir = smoke_dir / "server_logs"
+    profile_dir.mkdir()
+    log_dir.mkdir()
+    commands = build_server_commands(
+        contract=contract,
+        model_path=args.model_path,
+        ib_device=args.ib_device,
+        prefill_port=args.smoke_prefill_port,
+        decode_port=args.smoke_decode_port,
+        router_port=args.smoke_router_port,
+        bootstrap_port=args.smoke_bootstrap_port,
+    )
+    processes: list[subprocess.Popen] = []
+    handles = []
+    started_at = utc_now()
+    response: Any = None
+    try:
+        prefill_env = dict(base_env)
+        prefill_env["CUDA_VISIBLE_DEVICES"] = str(args.gpu_pair[0])
+        prefill_env["SGLANG_PD_COMM_PROFILE_DIR"] = str(profile_dir)
+        prefill_env["SGLANG_PD_COMM_PROFILE_RUN_ID"] = "phase40_compat_smoke"
+        decode_env = dict(base_env)
+        decode_env["CUDA_VISIBLE_DEVICES"] = str(args.gpu_pair[1])
+        for name, env in (("prefill", prefill_env), ("decode", decode_env)):
+            handle = (log_dir / f"{name}.log").open("w", encoding="utf-8")
+            handles.append(handle)
+            process = subprocess.Popen(
+                commands[name], cwd=repo_root(), env=env, stdout=handle, stderr=subprocess.STDOUT, text=True
+            )
+            processes.append(process)
+        wait_http(f"http://127.0.0.1:{args.smoke_prefill_port}/health", processes[0], args.startup_timeout)
+        wait_http(f"http://127.0.0.1:{args.smoke_decode_port}/health", processes[1], args.startup_timeout)
+        router_handle = (log_dir / "router.log").open("w", encoding="utf-8")
+        handles.append(router_handle)
+        router = subprocess.Popen(
+            commands["router"], cwd=repo_root(), env=base_env, stdout=router_handle, stderr=subprocess.STDOUT, text=True
+        )
+        processes.append(router)
+        wait_http(f"http://127.0.0.1:{args.smoke_router_port}/health", router, 120)
+        smoke_request = contract["compatibility_smoke_contract"]["request"]
+        response = post_json(
+            f"http://127.0.0.1:{args.smoke_router_port}/generate",
+            {
+                "input_ids": [[int(contract["measurement_contract"]["input_token_id"])] * int(smoke_request["prompt_tokens"])],
+                "rid": smoke_request["rid_prefix"],
+                "sampling_params": {
+                    "temperature": 0.0,
+                    "max_new_tokens": int(smoke_request["max_new_tokens"]),
+                    "ignore_eos": True,
+                },
+                "stream": False,
+            },
+        )
+        if isinstance(response, dict) and response.get("error"):
+            raise RuntimeError({"compatibility_smoke_response": response})
+    finally:
+        terminate_processes(processes)
+        for handle in handles:
+            handle.close()
+
+    paths = sorted(profile_dir.glob("*.jsonl"))
+    raw_events = read_jsonl(paths) if paths else []
+    evidence = validate_smoke_events(contract, model, raw_events)
+    log_text = "\n".join(path.read_text(encoding="utf-8", errors="replace") for path in sorted(log_dir.glob("*.log")))
+    forbidden_errors = (
+        "Failed to send kv chunk",
+        "Failed to get kvcache from prefill instance",
+        "remote mooncake session",
+    )
+    evidence["checks"].update(
+        {
+            "request_returned": response is not None,
+            "no_transfer_error_in_logs": not any(pattern in log_text for pattern in forbidden_errors),
+            "formal_raw_still_empty": formal_raw_dir.is_dir() and not any(formal_raw_dir.iterdir()),
+        }
+    )
+    evidence.update(
+        {
+            "schema_version": "phase40-compatibility-smoke-v1",
+            "status": "PASS" if all(evidence["checks"].values()) else "FAIL",
+            "started_at_utc": started_at,
+            "finished_at_utc": utc_now(),
+            "external_smoke_dir": str(smoke_dir),
+            "attention_backend": contract["backend_contract"]["inference_attention_backend"],
+            "transfer_backend": contract["backend_contract"]["sglang_transfer_backend"],
+            "transport": contract["backend_contract"]["transport"],
+            "transport_environment": {
+                "MOONCAKE_PROTOCOL": base_env.get("MOONCAKE_PROTOCOL"),
+                "MC_FORCE_TCP": base_env.get("MC_FORCE_TCP"),
+                "MC_FORCE_MNNVL": base_env.get("MC_FORCE_MNNVL"),
+                "MC_INTRANODE_NVLINK": base_env.get("MC_INTRANODE_NVLINK"),
+                "SGLANG_MOONCAKE_CUSTOM_MEM_POOL": base_env.get("SGLANG_MOONCAKE_CUSTOM_MEM_POOL"),
+            },
+            "gpu_pair": list(args.gpu_pair),
+            "ib_device": args.ib_device,
+            "commands": {
+                name: redacted_command(command, args.model_path.resolve()) for name, command in commands.items()
+            },
+            "external_manifest": raw_manifest(smoke_dir, len(raw_events)),
+        }
+    )
+    if not all(evidence["checks"].values()):
+        raise RuntimeError({"compatibility_smoke_failed": evidence})
+    return evidence
 
 
 def compare_events(
@@ -290,76 +527,43 @@ def launch_and_run(args: argparse.Namespace) -> dict[str, Any]:
         "ib_device": preflight.get("ib", {}).get("device") == args.ib_device,
         "model_path": preflight.get("model_contract", {}).get("model_path") == str(args.model_path.resolve()),
         "model_config_sha": preflight.get("model_contract", {}).get("config_sha256") == current_model["config_sha256"],
+        "attention_backend": preflight.get("attention_backend", {}).get("required")
+        == contract["backend_contract"]["inference_attention_backend"],
+        "flashinfer_available": preflight.get("attention_backend", {}).get("sglang_reports_available") is True,
+        "attention_page_size": preflight.get("attention_backend", {}).get("required_page_size_tokens")
+        == contract["measurement_contract"]["page_size_tokens"],
     }
     if not all(preflight_checks.values()):
         raise RuntimeError({"preflight_mismatch": preflight_checks})
 
+    base_env = dict(os.environ)
+    base_env.pop("MC_FORCE_TCP", None)
+    base_env.pop("MC_FORCE_MNNVL", None)
+    base_env.pop("MC_INTRANODE_NVLINK", None)
+    base_env.pop("SGLANG_MOONCAKE_CUSTOM_MEM_POOL", None)
+    base_env["MOONCAKE_PROTOCOL"] = "rdma"
+    base_env["SGLANG_DISAGG_STAGING_BUFFER"] = "0"
+    base_env.pop("SGLANG_PD_COMM_PROFILE_DIR", None)
+    base_env.pop("SGLANG_PD_COMM_PROFILE_RUN_ID", None)
+    base_env.pop("SGLANG_PP_COMM_PROFILE_DIR", None)
+    base_env.pop("SGLANG_PP_COMM_PROFILE_RUN_ID", None)
+    smoke_evidence = run_compatibility_smoke(args, contract, current_model, base_env, raw_dir)
     profile_dir = raw_dir / "profile"
     log_dir = raw_dir / "server_logs"
     profile_dir.mkdir(parents=True)
     log_dir.mkdir(parents=True)
-    base_env = dict(os.environ)
-    base_env.pop("MC_FORCE_TCP", None)
-    base_env["MOONCAKE_PROTOCOL"] = "rdma"
-    base_env["SGLANG_DISAGG_STAGING_BUFFER"] = "0"
-    base_env.pop("SGLANG_PP_COMM_PROFILE_DIR", None)
-    base_env.pop("SGLANG_PP_COMM_PROFILE_RUN_ID", None)
-
-    common_server = [
-        sys.executable,
-        "-m",
-        "sglang.launch_server",
-        "--model-path",
-        str(args.model_path.resolve()),
-        "--tp",
-        "1",
-        "--pp-size",
-        "1",
-        "--dtype",
-        "bfloat16",
-        "--kv-cache-dtype",
-        "auto",
-        "--page-size",
-        "1",
-        "--schedule-policy",
-        "fcfs",
-        "--chunked-prefill-size",
-        "4096",
-        "--max-prefill-tokens",
-        "4096",
-        "--max-running-requests",
-        "64",
-        "--context-length",
-        str(contract["measurement_contract"]["context_length"]),
-        "--mem-fraction-static",
-        str(contract["measurement_contract"]["mem_fraction_static"]),
-        "--disable-radix-cache",
-        "--disable-overlap-schedule",
-        "--disaggregation-transfer-backend",
-        "mooncake",
-        "--disaggregation-ib-device",
-        args.ib_device,
-        "--disaggregation-bootstrap-port",
-        str(args.bootstrap_port),
-        "--host",
-        "127.0.0.1",
-    ]
-    prefill_command = [*common_server, "--disaggregation-mode", "prefill", "--port", str(args.prefill_port)]
-    decode_command = [*common_server, "--disaggregation-mode", "decode", "--port", str(args.decode_port)]
-    router_command = [
-        sys.executable,
-        "-m",
-        "sglang_router.launch_router",
-        "--pd-disaggregation",
-        "--prefill",
-        f"http://127.0.0.1:{args.prefill_port}",
-        "--decode",
-        f"http://127.0.0.1:{args.decode_port}",
-        "--host",
-        "127.0.0.1",
-        "--port",
-        str(args.router_port),
-    ]
+    command_map = build_server_commands(
+        contract=contract,
+        model_path=args.model_path,
+        ib_device=args.ib_device,
+        prefill_port=args.prefill_port,
+        decode_port=args.decode_port,
+        router_port=args.router_port,
+        bootstrap_port=args.bootstrap_port,
+    )
+    prefill_command = command_map["prefill"]
+    decode_command = command_map["decode"]
+    router_command = command_map["router"]
     commands = {
         "prefill": redacted_command(prefill_command, args.model_path.resolve()),
         "decode": redacted_command(decode_command, args.model_path.resolve()),
@@ -467,6 +671,7 @@ def launch_and_run(args: argparse.Namespace) -> dict[str, Any]:
     environment["ib"] = preflight["ib"]
     write_json(output / "audit/environment.json", environment)
     write_json(output / "audit/source_semantics.json", preflight["source_semantics"])
+    write_json(output / "audit/compatibility_smoke.json", smoke_evidence)
     write_json(
         output / "audit/server_launch.json",
         {
@@ -478,6 +683,15 @@ def launch_and_run(args: argparse.Namespace) -> dict[str, Any]:
             "decode_physical_gpu": args.gpu_pair[1],
             "ib_device": args.ib_device,
             "transport": "rdma",
+            "transport_environment": {
+                "MOONCAKE_PROTOCOL": base_env.get("MOONCAKE_PROTOCOL"),
+                "MC_FORCE_TCP": base_env.get("MC_FORCE_TCP"),
+                "MC_FORCE_MNNVL": base_env.get("MC_FORCE_MNNVL"),
+                "MC_INTRANODE_NVLINK": base_env.get("MC_INTRANODE_NVLINK"),
+                "SGLANG_MOONCAKE_CUSTOM_MEM_POOL": base_env.get("SGLANG_MOONCAKE_CUSTOM_MEM_POOL"),
+            },
+            "attention_backend": contract["backend_contract"]["inference_attention_backend"],
+            "page_size_tokens": contract["measurement_contract"]["page_size_tokens"],
             "batch_rid_protocol": "one scalar wave prefix expanded by SGLang to <prefix>_<batch_index>",
         },
     )
@@ -507,6 +721,7 @@ def launch_and_run(args: argparse.Namespace) -> dict[str, Any]:
             "histogram_rows": len(histograms),
             "external_raw_files": manifest["file_count"],
             "external_raw_bytes": manifest["bytes"],
+            "compatibility_smoke_sender_chunks": smoke_evidence["matching_sender_chunks"],
         },
         "runtime_kv_bytes_per_page": evidence["runtime_kv_bytes_per_page"],
         "repeat_signatures": evidence["repeat_signatures"],
@@ -533,16 +748,30 @@ def main() -> None:
     parser.add_argument("--gpu-pair", type=parse_gpu_pair, required=True)
     parser.add_argument("--ib-device", required=True)
     parser.add_argument("--raw-dir", type=Path, required=True)
+    parser.add_argument("--smoke-dir", type=Path, required=True)
     parser.add_argument("--preflight-audit", type=Path, required=True)
     parser.add_argument("--prefill-port", type=int, default=39000)
     parser.add_argument("--decode-port", type=int, default=39001)
     parser.add_argument("--router-port", type=int, default=39002)
     parser.add_argument("--bootstrap-port", type=int, default=39003)
+    parser.add_argument("--smoke-prefill-port", type=int, default=39100)
+    parser.add_argument("--smoke-decode-port", type=int, default=39101)
+    parser.add_argument("--smoke-router-port", type=int, default=39102)
+    parser.add_argument("--smoke-bootstrap-port", type=int, default=39103)
     parser.add_argument("--startup-timeout", type=int, default=900)
     args = parser.parse_args()
-    ports = {args.prefill_port, args.decode_port, args.router_port, args.bootstrap_port}
-    if len(ports) != 4 or any(port <= 1024 or port > 65535 for port in ports):
-        raise RuntimeError("Phase40 requires four distinct non-privileged valid ports")
+    ports = {
+        args.prefill_port,
+        args.decode_port,
+        args.router_port,
+        args.bootstrap_port,
+        args.smoke_prefill_port,
+        args.smoke_decode_port,
+        args.smoke_router_port,
+        args.smoke_bootstrap_port,
+    }
+    if len(ports) != 8 or any(port <= 1024 or port > 65535 for port in ports):
+        raise RuntimeError("Phase40 requires eight distinct non-privileged valid formal/smoke ports")
     print(json.dumps(launch_and_run(args), ensure_ascii=False, indent=2))
 
 

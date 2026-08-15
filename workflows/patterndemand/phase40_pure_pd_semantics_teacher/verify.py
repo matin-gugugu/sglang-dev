@@ -34,6 +34,8 @@ def main() -> None:
     workload = load_json(output / "contracts/workload_contract.json")
     freeze = load_json(output / "audit/input_freeze.json")
     environment = load_json(output / "audit/environment.json")
+    smoke = load_json(output / "audit/compatibility_smoke.json")
+    server_launch = load_json(output / "audit/server_launch.json")
     raw = load_json(output / "audit/raw_manifest.json")
     state = load_json(output / "audit/runtime_state.json")
     summary = load_json(output / "summary.json")
@@ -73,6 +75,14 @@ def main() -> None:
         "invariants_exact": len(invariants) == 5 and all(row["exact"] == "True" for row in invariants),
         "formula_consistent": model["derived"]["kv_bytes_per_page"] == model["derived"]["kv_bytes_per_token"] * model["structure"]["page_size_tokens"],
         "pure_pd_gpu_pair": len(environment.get("gpu_pair", [])) == 2 and environment["gpu_pair"][0] != environment["gpu_pair"][1],
+        "compatibility_smoke_pass": smoke.get("status") == "PASS" and all(smoke.get("checks", {}).values()),
+        "compatibility_smoke_one_chunk": int(smoke.get("matching_sender_chunks", 0)) == int(workflow["compatibility_smoke_contract"]["expected_sender_chunks"]),
+        "compatibility_smoke_backend": smoke.get("attention_backend") == workflow["backend_contract"]["inference_attention_backend"],
+        "compatibility_smoke_page_one": all(int(row.get("page_size_tokens", -1)) == int(workflow["measurement_contract"]["page_size_tokens"]) for row in smoke.get("observed", [])),
+        "compatibility_smoke_rdma_env": smoke.get("transport_environment", {}).get("MOONCAKE_PROTOCOL") == "rdma" and all(smoke.get("transport_environment", {}).get(name) is None for name in ("MC_FORCE_TCP", "MC_FORCE_MNNVL", "MC_INTRANODE_NVLINK", "SGLANG_MOONCAKE_CUSTOM_MEM_POOL")),
+        "formal_server_backend_pinned": server_launch.get("attention_backend") == workflow["backend_contract"]["inference_attention_backend"],
+        "formal_server_page_one": int(server_launch.get("page_size_tokens", -1)) == int(workflow["measurement_contract"]["page_size_tokens"]),
+        "formal_server_rdma_env": server_launch.get("transport_environment", {}).get("MOONCAKE_PROTOCOL") == "rdma" and all(server_launch.get("transport_environment", {}).get(name) is None for name in ("MC_FORCE_TCP", "MC_FORCE_MNNVL", "MC_INTRANODE_NVLINK", "SGLANG_MOONCAKE_CUSTOM_MEM_POOL")),
         "raw_external": raw.get("raw_committed_to_git") is False and int(raw.get("profiler_event_count", 0)) > 0,
         "no_raw_jsonl_in_result": not list(output.rglob("*.jsonl")),
         "no_training": summary.get("training_performed") is False,

@@ -167,6 +167,9 @@ def source_semantics_audit() -> dict[str, bool]:
     schedule = (root / "python/sglang/srt/managers/schedule_policy.py").read_text(encoding="utf-8")
     profiler = (root / "python/sglang/srt/disaggregation/pd_comm_profile.py").read_text(encoding="utf-8")
     io_struct = (root / "python/sglang/srt/managers/io_struct.py").read_text(encoding="utf-8")
+    server_args = (root / "python/sglang/srt/server_args.py").read_text(encoding="utf-8")
+    overrides = (root / "python/sglang/srt/arg_groups/overrides.py").read_text(encoding="utf-8")
+    attention_registry = (root / "python/sglang/srt/layers/attention/attention_registry.py").read_text(encoding="utf-8")
     router = (root / "sgl-model-gateway/src/routers/http/pd_router.rs").read_text(encoding="utf-8")
     checks = {
         "prefill_sender_call": "req.disagg_kv_sender.send(page_indices, state_indices)" in prefill,
@@ -182,6 +185,10 @@ def source_semantics_audit() -> dict[str, bool]:
         "router_injects_room_per_batch_item": "for _ in 0..n" in router and "Value::Array(rooms.into_iter().map(Value::from).collect())" in router,
         "generate_request_accepts_scalar_or_list_rid": "rid: Optional[Union[str, List[str]]]" in io_struct,
         "scalar_rid_expands_by_batch_index": 'new_rids = [f"{self.rid}_{i}" for i in range(num)]' in io_struct,
+        "attention_backend_cli_contract": "attention_backend: A[" in server_args and "choices=ATTENTION_BACKEND_CHOICES" in server_args,
+        "flashinfer_attention_registered": '@register_attention_backend("flashinfer")' in attention_registry,
+        "trtllm_mha_rejects_page_one": "TensorRT-LLM MHA only supports page_size of 16, 32 or 64" in overrides,
+        "flashinfer_not_in_page_snap_clause": 'view.attention_backend == "trtllm_mha"' in overrides and 'view.attention_backend == "flashinfer"' not in overrides[overrides.index("def _mla_backend_page_constraints"):overrides.index("def _mla_kv_cache_dtype_checks")],
     }
     if not all(checks.values()):
         raise RuntimeError({"source_semantics_checks": checks})
@@ -261,19 +268,25 @@ def run_checks(args: argparse.Namespace) -> dict[str, Any]:
     sglang_spec = importlib.util.find_spec("sglang")
     if sglang_spec is None or sglang_spec.origin is None:
         raise RuntimeError("sglang import is unavailable")
+    flashinfer_spec = importlib.util.find_spec("flashinfer")
+    if flashinfer_spec is None or flashinfer_spec.origin is None:
+        raise RuntimeError("flashinfer is unavailable; the frozen page-size-1 attention backend cannot be used")
     sglang_origin = str(Path(sglang_spec.origin).resolve())
     if Path(expected_repo_python) not in Path(sglang_origin).parents:
         raise RuntimeError({"sglang_not_loaded_from_repo_python": sglang_origin})
     import mooncake
     import torch
+    from sglang.srt.utils import is_flashinfer_available
 
     if not torch.cuda.is_available() or torch.cuda.device_count() < 2:
         raise RuntimeError("Phase40 requires at least two visible CUDA GPUs")
+    if not is_flashinfer_available():
+        raise RuntimeError("SGLang reports FlashInfer unavailable")
     model = model_contract(args.model_path.resolve(), contract)
     gpus = gpu_audit(args.gpu_pair)
     ib = ib_audit(args.ib_device)
     return {
-        "schema_version": "phase40-preflight-v1",
+        "schema_version": "phase40-preflight-v2",
         "status": "PASS",
         "captured_at_utc": utc_now(),
         "workflow_commit": head,
@@ -283,6 +296,13 @@ def run_checks(args: argparse.Namespace) -> dict[str, Any]:
         "ib": ib,
         "model_contract": model,
         "source_semantics": semantics,
+        "attention_backend": {
+            "required": contract["backend_contract"]["inference_attention_backend"],
+            "fallback_permitted": contract["backend_contract"]["inference_attention_backend_fallback_permitted"],
+            "module_origin": str(Path(flashinfer_spec.origin).resolve()),
+            "sglang_reports_available": True,
+            "required_page_size_tokens": contract["measurement_contract"]["page_size_tokens"],
+        },
         "pinned_inputs": pins,
         "environment": {
             "python": sys.version,

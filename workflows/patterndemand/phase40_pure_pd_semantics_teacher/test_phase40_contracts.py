@@ -78,6 +78,55 @@ class TestOfficialModelDownload(unittest.TestCase):
         self.assertFalse(download["network_during_formal_execution_permitted"])
 
 
+class TestCompatibilitySmoke(unittest.TestCase):
+    def setUp(self):
+        self.contract = json.loads(
+            (Path(__file__).resolve().parent / "experiment.json").read_text(encoding="utf-8")
+        )
+        self.model = {"derived": {"kv_bytes_per_page": 147456}}
+
+    def test_server_command_pins_flashinfer_and_page_one(self):
+        from run import build_server_commands
+
+        commands = build_server_commands(
+            contract=self.contract,
+            model_path=Path("/model"),
+            ib_device="mlx5_test",
+            prefill_port=39000,
+            decode_port=39001,
+            router_port=39002,
+            bootstrap_port=39003,
+        )
+        for name in ("prefill", "decode"):
+            command = commands[name]
+            self.assertEqual(command[command.index("--attention-backend") + 1], "flashinfer")
+            self.assertEqual(command[command.index("--page-size") + 1], "1")
+
+    def test_smoke_requires_one_real_page_size_one_sender_chunk(self):
+        from run import validate_smoke_events
+
+        row = {
+            "rid": "p40::compat_smoke_0",
+            "backend": "MooncakeKVSender",
+            "page_size_tokens": 1,
+            "kv_page_count": 64,
+            "kv_bytes_per_page": 147456,
+            "logical_bytes": 64 * 147456,
+            "state_logical_bytes": 0,
+            "raw_tensor_contents_saved": False,
+        }
+        evidence = validate_smoke_events(self.contract, self.model, [row])
+        self.assertTrue(all(evidence["checks"].values()))
+        wrong_page = dict(row, page_size_tokens=64, kv_bytes_per_page=64 * 147456)
+        rejected = validate_smoke_events(self.contract, self.model, [wrong_page])
+        self.assertFalse(rejected["checks"]["page_size_one"])
+        self.assertFalse(rejected["checks"]["bytes_per_page_exact"])
+        unexpected = validate_smoke_events(
+            self.contract, self.model, [row, dict(row, rid="unexpected")]
+        )
+        self.assertFalse(unexpected["checks"]["no_unexpected_profile_records"])
+
+
 class TestProfiler(unittest.TestCase):
     def test_profile_is_disabled_by_default_and_records_only_metadata(self):
         profile_path = (
