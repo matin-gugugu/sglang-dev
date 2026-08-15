@@ -1,0 +1,283 @@
+{
+  "accepted_result_statuses": [
+    "PASS",
+    "PASS_WITH_RUNTIME_VARIANCE",
+    "PASS_WITH_PLACEMENT_VARIANCE",
+    "PASS_WITH_RUNTIME_AND_PLACEMENT_VARIANCE"
+  ],
+  "checkpoint_loading_permitted": false,
+  "claim_boundary": [
+    "Phase39 is repeated engineering evidence because Phase34D targets are already open; it is not a new blind confirmation",
+    "The physical label applies only to frozen placements and the exact tensor-only communication primitives measured",
+    "Placement ranking is communication-only and excludes compute, memory feasibility, queueing, availability, metadata and overlap",
+    "TP/PP size and execution policy are predictor inputs and are never selected by the Phase39 placement evaluator",
+    "Proxy rows remain comparison-only and may not be relabeled as physical measurements"
+  ],
+  "diagnostic_cost_wape_reference": 0.05,
+  "diagnostic_reference_is_pass_fail_gate": false,
+  "execution_model": "one workflow with external topology inventory, 24 auditable distributed GPU measurement shards, then deterministic CPU aggregation and placement validation",
+  "expected_cost_metric_rows": 234,
+  "expected_decision_metric_rows": 24,
+  "expected_histogram_metric_rows": 84,
+  "expected_measurement_cases": 12,
+  "expected_measurement_shards": 24,
+  "expected_phase_cost_rows": 7776,
+  "expected_physical_curves": 12,
+  "expected_placement_decision_rows": 1296,
+  "expected_placement_ranking_rows": 3888,
+  "expected_prediction_phase_rows": 2592,
+  "expected_proxy_comparison_rows": 180,
+  "expected_target_phase_rows": 2592,
+  "expected_total_cases": 1296,
+  "expected_total_cost_rows": 3888,
+  "measurement_contract": {
+    "cross_replica_relative_spread_diagnostic_threshold": 0.25,
+    "curve_replica_policy": "median across repeats within each frozen placement replica, then maximum across required placement replicas; never select the faster placement",
+    "dtype": "bfloat16",
+    "extra_repeats_per_round": 2,
+    "interpolation": "piecewise linear over log2(payload_bytes) using unsmoothed physical knots",
+    "maximum_independent_repeats": 9,
+    "minimum_independent_repeats": 5,
+    "payload_basis": "retain all Phase37 knots, extend down to 256 B to audit Phase38 low clamps, and extend to 256 MiB for high-payload coverage",
+    "payload_bytes": [
+      256,
+      512,
+      1024,
+      2048,
+      4096,
+      8192,
+      16384,
+      32768,
+      38912,
+      65536,
+      131072,
+      262144,
+      524288,
+      917504,
+      1048576,
+      2097152,
+      4194304,
+      5242880,
+      8388608,
+      14680064,
+      16777216,
+      27262976,
+      33554432,
+      41943040,
+      67108864,
+      134217728,
+      268435456
+    ],
+    "pp_backend": "torch.distributed.isend/irecv over NCCL device process group, matching SGLang async send_tensor_dict GPU tensor primitive",
+    "pp_scope": "tensor_only_sender_counted_logical_message; both directions; per-repeat curve value is the slower direction",
+    "raw_storage": "all per-iteration and per-rank samples remain outside Git; Git stores only compact knots, audits, hashes and metrics",
+    "repeat_median_cv_threshold": 0.15,
+    "timed_iterations": 100,
+    "tp_backend": "SGLang GroupCoordinator.all_reduce dynamic production dispatch; single-node may use CustomAllReduce, multi-node must record the actual NCCL-compatible fallback",
+    "tp_scope": "representative-rank logical collective input; max completion across ranks",
+    "warmup_iterations": 30
+  },
+  "minimum_placement_replicas_per_case": 2,
+  "model_weights_required": false,
+  "objective": "在测量前冻结L1/L2/L3 placement定义，以SGLang生产通信原语实测TP/PP多拓扑连续曲线，建立物理曲线库，并用Phase34冻结H0+DNN residual直方图验证communication-only placement排序与regret",
+  "parallel_configuration_is_input": true,
+  "phase": "Phase39",
+  "phase34_bin_edges_bytes": [
+    4096.0,
+    13777.246867516858,
+    46340.95001184158,
+    155871.75497763665,
+    524288.0,
+    1763487.5990421579,
+    5931641.601515722,
+    19951584.63713749,
+    67108864.0,
+    225726412.6773962,
+    759250124.9940125,
+    2553802833.553599,
+    8589934592.0
+  ],
+  "pinned_inputs": [
+    {
+      "name": "phase34c_tp_frozen_predictions",
+      "path": "experiment-results/phase34c_six_model_target_free_training/tp/analysis/frozen_predictions.csv.gz",
+      "sha256": "a2b4d04adc7a0311179fd46d805cfcf13cdc0382f5a89d8da632d0e2143a554d",
+      "verify_manifest_directory": "experiment-results/phase34c_six_model_target_free_training/tp"
+    },
+    {
+      "name": "phase34c_pp_frozen_predictions",
+      "path": "experiment-results/phase34c_six_model_target_free_training/pp/analysis/frozen_predictions.csv.gz",
+      "sha256": "4fc00d2f2378c065f29db74eb5c138455b99f4727802888a1eb4b71ab6e320bb",
+      "verify_manifest_directory": "experiment-results/phase34c_six_model_target_free_training/pp"
+    },
+    {
+      "name": "phase34d_hfull_targets",
+      "path": "experiment-results/phase34d_six_model_blind_evaluation/labels/phase34_blind_six_model_hfull_targets.csv.gz",
+      "sha256": "ebe0b83adcd94ca3a474d04f8ae7e8d5c32cba0121482f340e5c85ef6f5ab161",
+      "verify_manifest_directory": "experiment-results/phase34d_six_model_blind_evaluation"
+    },
+    {
+      "name": "phase34d_histogram_metrics",
+      "path": "experiment-results/phase34d_six_model_blind_evaluation/analysis/aggregate_metrics.csv",
+      "sha256": "bce14bd53f4759ca5cc7ca50422bc40661d71c5e961dfd945d78820dd757f01a"
+    },
+    {
+      "name": "phase35_cost_metrics",
+      "path": "experiment-results/phase35_six_model_inference_cost_integration/analysis/cost_metrics.csv",
+      "sha256": "05dc0cd375e10d57812b00208b0f4afba5a2b7aa48ff2e8998cea9ddeb0763a7",
+      "verify_manifest_directory": "experiment-results/phase35_six_model_inference_cost_integration"
+    },
+    {
+      "name": "phase35_curve_registry",
+      "path": "experiment-results/phase35_six_model_inference_cost_integration/contracts/topology_curve_registry.json",
+      "sha256": "30efc4cc30ec50ca52c0a1272d56cf6ebda8ce2db261922688e7478d849705d4"
+    },
+    {
+      "name": "phase2_tp_l1_nccl_knots",
+      "path": "experiment-results/phase2/summary_l1_curve/collective_cost_knots.json",
+      "sha256": "8826980b120d3d7c74d6b09a7a36334eb96c0c9c76198864e42c9a4e857b37ef"
+    },
+    {
+      "name": "phase2_tp_l1_custom_knots",
+      "path": "experiment-results/phase2/summary_l1_custom_kernel_curve/custom_kernel_cost_knots.json",
+      "sha256": "b10f7324916e8d504676c1dbecb102cb68b8bb6a39d565876645b43319b42f99"
+    },
+    {
+      "name": "phase37_pp_l1_curve",
+      "path": "experiment-results/phase37_pp_single_node_p2p_curve/curves/pp_single_node_p2p_knots.json",
+      "sha256": "a56ef8bb203907cb5f7c29ecf8c3349a7df74354d7a04704c3da6a4632db36bc",
+      "verify_manifest_directory": "experiment-results/phase37_pp_single_node_p2p_curve"
+    },
+    {
+      "name": "phase38_summary",
+      "path": "experiment-results/phase38_pp_physical_curve_cost_recompute/summary.json",
+      "sha256": "07dcdcb15b8e5a0d4016db25e0e7c8be50f7d2818e9b0449161421ff82ebf8f1",
+      "verify_manifest_directory": "experiment-results/phase38_pp_physical_curve_cost_recompute"
+    },
+    {
+      "name": "sglang_parallel_state",
+      "path": "python/sglang/srt/distributed/parallel_state.py",
+      "sha256": "45f6209e1c81bf732e6aa7ac1c63811f965b1aff9058b23fcf896e5cedbd0acc"
+    },
+    {
+      "name": "sglang_communication_op",
+      "path": "python/sglang/srt/distributed/communication_op.py",
+      "sha256": "ade95b6eff386e6fe67c3603c07f8d3ea3f1a9891378ea75956c3b0393d435ef"
+    },
+    {
+      "name": "sglang_pp_histogram_semantics",
+      "path": "python/sglang/srt/distributed/pp_comm_profile.py",
+      "sha256": "d69374f9a639da224e97ac724f5ed8f8466dc3e80849d4d5adaf5c4c84ffbc4c"
+    }
+  ],
+  "prediction_filter": {
+    "method": "h0_plus_dnn_residual",
+    "prediction_set": "phase34_blind_new"
+  },
+  "prediction_recomputation_permitted": false,
+  "required_measurement_matrix": [
+    {
+      "case_key": "pp_l1",
+      "op": "p2p_send_recv",
+      "parallelism": "pp",
+      "topology_level": "L1",
+      "world_size": 2
+    },
+    {
+      "case_key": "pp_l2",
+      "op": "p2p_send_recv",
+      "parallelism": "pp",
+      "topology_level": "L2",
+      "world_size": 2
+    },
+    {
+      "case_key": "pp_l3",
+      "op": "p2p_send_recv",
+      "parallelism": "pp",
+      "topology_level": "L3",
+      "world_size": 2
+    },
+    {
+      "case_key": "tp2_l1",
+      "op": "sglang_tp_all_reduce",
+      "parallelism": "tp",
+      "topology_level": "L1",
+      "world_size": 2
+    },
+    {
+      "case_key": "tp2_l2",
+      "op": "sglang_tp_all_reduce",
+      "parallelism": "tp",
+      "topology_level": "L2",
+      "world_size": 2
+    },
+    {
+      "case_key": "tp2_l3",
+      "op": "sglang_tp_all_reduce",
+      "parallelism": "tp",
+      "topology_level": "L3",
+      "world_size": 2
+    },
+    {
+      "case_key": "tp4_l1",
+      "op": "sglang_tp_all_reduce",
+      "parallelism": "tp",
+      "topology_level": "L1",
+      "world_size": 4
+    },
+    {
+      "case_key": "tp4_l2",
+      "op": "sglang_tp_all_reduce",
+      "parallelism": "tp",
+      "topology_level": "L2",
+      "world_size": 4
+    },
+    {
+      "case_key": "tp4_l3",
+      "op": "sglang_tp_all_reduce",
+      "parallelism": "tp",
+      "topology_level": "L3",
+      "world_size": 4
+    },
+    {
+      "case_key": "tp8_l1",
+      "op": "sglang_tp_all_reduce",
+      "parallelism": "tp",
+      "topology_level": "L1",
+      "world_size": 8
+    },
+    {
+      "case_key": "tp8_l2",
+      "op": "sglang_tp_all_reduce",
+      "parallelism": "tp",
+      "topology_level": "L2",
+      "world_size": 8
+    },
+    {
+      "case_key": "tp8_l3",
+      "op": "sglang_tp_all_reduce",
+      "parallelism": "tp",
+      "topology_level": "L3",
+      "world_size": 8
+    }
+  ],
+  "result_dir": "experiment-results/phase39_tp_pp_l1_l3_physical_placement_validation",
+  "scheduler_decision_scope": "placement/topology only; never choose TP or PP size",
+  "schema_version": "phase39-tp-pp-l1-l3-physical-placement-contract-v1",
+  "stop_and_block_if": [
+    "the topology plan is not frozen before raw measurement or derives L1/L2/L3 labels from benchmark speed",
+    "any required matrix case or either required placement replica is unavailable",
+    "the environment cannot launch the exact SGLang TP all-reduce or PP NCCL P2P primitive",
+    "raw samples would be stored inside Git",
+    "pinned inputs, R38 ancestry, production communication source SHA or result manifests differ",
+    "running requires model weights, checkpoint replay, inference or training"
+  ],
+  "topology_classification_policy": "host/rack/fabric identity and placement membership must be frozen before the first benchmark record; labels may not be inferred from measured latency or bandwidth",
+  "topology_definitions": {
+    "L1": "single node; every participating rank is on the same host",
+    "L2": "exactly two distinct hosts in the same rack; ranks are evenly split across hosts",
+    "L3": "exactly two distinct hosts in different racks; ranks are evenly split across hosts"
+  },
+  "training_performed": false,
+  "workflow_parent_result_commit": "ca6d52a291585b052737e8309f6da1a33fbb382b"
+}
