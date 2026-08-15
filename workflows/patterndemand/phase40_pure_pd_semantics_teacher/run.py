@@ -167,7 +167,15 @@ def build_server_commands(
         "127.0.0.1",
     ]
     return {
-        "prefill": [*common_server, "--disaggregation-mode", "prefill", "--port", str(prefill_port)],
+        "prefill": [
+            *common_server,
+            "--disaggregation-mode",
+            "prefill",
+            "--optimistic-prefill-retries",
+            "0",
+            "--port",
+            str(prefill_port),
+        ],
         "decode": [*common_server, "--disaggregation-mode", "decode", "--port", str(decode_port)],
         "router": [
             sys.executable,
@@ -190,26 +198,76 @@ def validate_smoke_events(
     contract: dict[str, Any], model: dict[str, Any], raw_events: list[dict[str, Any]]
 ) -> dict[str, Any]:
     smoke = contract["compatibility_smoke_contract"]
-    request = smoke["request"]
-    expected_rid = f"{request['rid_prefix']}_0"
-    events = [row for row in raw_events if row.get("rid") == expected_rid]
+    transport = smoke["transport_request"]
+    transport_rid = f"{transport['rid_prefix']}_0"
+    probe = smoke["admission_probe"]
+    expected_segments: dict[str, list[tuple[int, int]]] = {transport_rid: [(0, 64)]}
+    admission_rids = []
+    for repeat in range(int(probe["repeats"])):
+        for request_index, segments in enumerate(
+            probe["expected_segments_by_request_index"]
+        ):
+            rid = f"{probe['rid_prefix_base']}{repeat}_{request_index}"
+            admission_rids.append(rid)
+            expected_segments[rid] = [
+                (int(segment[0]), int(segment[1])) for segment in segments
+            ]
+    expected_rids = set(expected_segments)
+    events = [row for row in raw_events if row.get("rid") in expected_rids]
+    events_by_rid = {rid: [] for rid in expected_rids}
+    for row in sorted(events, key=lambda item: int(item.get("sequence", -1))):
+        events_by_rid[row["rid"]].append(row)
+    actual_segments = {
+        rid: [
+            (int(row.get("page_start", -1)), int(row.get("page_end", -1)))
+            for row in rows
+        ]
+        for rid, rows in events_by_rid.items()
+    }
     expected_bytes_per_page = int(model["derived"]["kv_bytes_per_page"])
     expected_page_count = int(smoke["expected_kv_page_count"])
+    transport_events = events_by_rid[transport_rid]
+    admission_signatures = []
+    for repeat in range(int(probe["repeats"])):
+        admission_signatures.append(
+            [
+                actual_segments[f"{probe['rid_prefix_base']}{repeat}_{request_index}"]
+                for request_index in range(len(probe["prompt_tokens"]))
+            ]
+        )
     checks = {
-        "exactly_one_sender_chunk": len(events) == int(smoke["expected_sender_chunks"]),
+        "exactly_one_transport_sender_chunk": len(transport_events)
+        == int(smoke["expected_transport_sender_chunks"]),
+        "sender_chunks_total_exact": len(events)
+        == int(smoke["expected_sender_chunks_total"]),
         "no_unexpected_profile_records": len(raw_events) == len(events),
         "mooncake_sender": all(row.get("backend") == smoke["expected_transfer_backend"] for row in events),
         "page_size_one": all(int(row.get("page_size_tokens", -1)) == int(smoke["expected_page_size_tokens"]) for row in events),
-        "page_count_exact": all(int(row.get("kv_page_count", -1)) == expected_page_count for row in events),
+        "transport_page_count_exact": all(int(row.get("kv_page_count", -1)) == expected_page_count for row in transport_events),
         "bytes_per_page_exact": all(int(row.get("kv_bytes_per_page", -1)) == expected_bytes_per_page for row in events),
-        "logical_bytes_exact": all(int(row.get("logical_bytes", -1)) == expected_page_count * expected_bytes_per_page for row in events),
+        "logical_bytes_formula_exact": all(int(row.get("logical_bytes", -1)) == int(row.get("kv_page_count", -2)) * expected_bytes_per_page for row in events),
+        "admission_segments_exact": all(
+            actual_segments[rid] == expected_segments[rid] for rid in admission_rids
+        ),
+        "admission_repeats_exact": all(
+            signature == admission_signatures[0]
+            for signature in admission_signatures[1:]
+        ),
         "state_payload_zero": all(int(row.get("state_logical_bytes", -1)) == 0 for row in events),
         "no_tensor_contents": all(row.get("raw_tensor_contents_saved") is False for row in events),
     }
     return {
-        "expected_rid": expected_rid,
+        "transport_expected_rid": transport_rid,
+        "admission_expected_segments": {
+            rid: [list(segment) for segment in segments]
+            for rid, segments in expected_segments.items()
+            if rid in admission_rids
+        },
         "profile_records_total": len(raw_events),
         "matching_sender_chunks": len(events),
+        "transport_sender_chunks": len(transport_events),
+        "admission_sender_chunks": sum(len(events_by_rid[rid]) for rid in admission_rids),
+        "admission_signatures": admission_signatures,
         "checks": checks,
         "observed": [
             {
@@ -217,6 +275,8 @@ def validate_smoke_events(
                 for key in (
                     "rid",
                     "backend",
+                    "page_start",
+                    "page_end",
                     "page_size_tokens",
                     "kv_page_count",
                     "kv_bytes_per_page",
@@ -258,7 +318,7 @@ def run_compatibility_smoke(
     processes: list[subprocess.Popen] = []
     handles = []
     started_at = utc_now()
-    response: Any = None
+    responses: list[Any] = []
     try:
         prefill_env = dict(base_env)
         prefill_env["CUDA_VISIBLE_DEVICES"] = str(args.gpu_pair[0])
@@ -282,15 +342,16 @@ def run_compatibility_smoke(
         )
         processes.append(router)
         wait_http(f"http://127.0.0.1:{args.smoke_router_port}/health", router, 120)
-        smoke_request = contract["compatibility_smoke_contract"]["request"]
+        smoke_contract = contract["compatibility_smoke_contract"]
+        transport_request = smoke_contract["transport_request"]
         response = post_json(
             f"http://127.0.0.1:{args.smoke_router_port}/generate",
             {
-                "input_ids": [[int(contract["measurement_contract"]["input_token_id"])] * int(smoke_request["prompt_tokens"])],
-                "rid": smoke_request["rid_prefix"],
+                "input_ids": [[int(contract["measurement_contract"]["input_token_id"])] * int(transport_request["prompt_tokens"])],
+                "rid": transport_request["rid_prefix"],
                 "sampling_params": {
                     "temperature": 0.0,
-                    "max_new_tokens": int(smoke_request["max_new_tokens"]),
+                    "max_new_tokens": int(transport_request["max_new_tokens"]),
                     "ignore_eos": True,
                 },
                 "stream": False,
@@ -298,6 +359,36 @@ def run_compatibility_smoke(
         )
         if isinstance(response, dict) and response.get("error"):
             raise RuntimeError({"compatibility_smoke_response": response})
+        responses.append(response)
+        admission_probe = smoke_contract["admission_probe"]
+        for repeat in range(int(admission_probe["repeats"])):
+            response = post_json(
+                f"http://127.0.0.1:{args.smoke_router_port}/generate",
+                {
+                    "input_ids": [
+                        [int(contract["measurement_contract"]["input_token_id"])]
+                        * int(prompt_tokens)
+                        for prompt_tokens in admission_probe["prompt_tokens"]
+                    ],
+                    "rid": f"{admission_probe['rid_prefix_base']}{repeat}",
+                    "sampling_params": {
+                        "temperature": 0.0,
+                        "max_new_tokens": int(
+                            contract["measurement_contract"]["max_new_tokens"]
+                        ),
+                        "ignore_eos": True,
+                    },
+                    "stream": False,
+                },
+            )
+            if isinstance(response, dict) and response.get("error"):
+                raise RuntimeError(
+                    {
+                        "compatibility_admission_smoke_repeat": repeat,
+                        "response": response,
+                    }
+                )
+            responses.append(response)
     finally:
         terminate_processes(processes)
         for handle in handles:
@@ -314,14 +405,15 @@ def run_compatibility_smoke(
     )
     evidence["checks"].update(
         {
-            "request_returned": response is not None,
+            "all_smoke_waves_returned": len(responses)
+            == 1 + int(contract["compatibility_smoke_contract"]["admission_probe"]["repeats"]),
             "no_transfer_error_in_logs": not any(pattern in log_text for pattern in forbidden_errors),
             "formal_raw_still_empty": formal_raw_dir.is_dir() and not any(formal_raw_dir.iterdir()),
         }
     )
     evidence.update(
         {
-            "schema_version": "phase40-compatibility-smoke-v1",
+            "schema_version": "phase40-compatibility-smoke-v2",
             "status": "PASS" if all(evidence["checks"].values()) else "FAIL",
             "started_at_utc": started_at,
             "finished_at_utc": utc_now(),
@@ -331,10 +423,19 @@ def run_compatibility_smoke(
             "transport": contract["backend_contract"]["transport"],
             "transport_environment": {
                 "MOONCAKE_PROTOCOL": base_env.get("MOONCAKE_PROTOCOL"),
+                "WITH_NVIDIA_PEERMEM": base_env.get("WITH_NVIDIA_PEERMEM"),
                 "MC_FORCE_TCP": base_env.get("MC_FORCE_TCP"),
                 "MC_FORCE_MNNVL": base_env.get("MC_FORCE_MNNVL"),
                 "MC_INTRANODE_NVLINK": base_env.get("MC_INTRANODE_NVLINK"),
                 "SGLANG_MOONCAKE_CUSTOM_MEM_POOL": base_env.get("SGLANG_MOONCAKE_CUSTOM_MEM_POOL"),
+            },
+            "admission_environment": {
+                "SGLANG_PD_BOOTSTRAP_BATCH_BARRIER": base_env.get(
+                    "SGLANG_PD_BOOTSTRAP_BATCH_BARRIER"
+                ),
+                "SGLANG_TEST_FORCE_OPTIMISTIC_PREFILL_RETRY_PROB": base_env.get(
+                    "SGLANG_TEST_FORCE_OPTIMISTIC_PREFILL_RETRY_PROB"
+                ),
             },
             "gpu_pair": list(args.gpu_pair),
             "ib_device": args.ib_device,
@@ -532,6 +633,18 @@ def launch_and_run(args: argparse.Namespace) -> dict[str, Any]:
         "flashinfer_available": preflight.get("attention_backend", {}).get("sglang_reports_available") is True,
         "attention_page_size": preflight.get("attention_backend", {}).get("required_page_size_tokens")
         == contract["measurement_contract"]["page_size_tokens"],
+        "atomic_batch_dispatch": preflight.get("admission_contract", {}).get(
+            "batched_input_ids_single_dispatch"
+        )
+        is True,
+        "bootstrap_batch_barrier": preflight.get("admission_contract", {}).get(
+            "bootstrap_batch_barrier_env"
+        )
+        == contract["measurement_contract"]["bootstrap_batch_barrier_env"],
+        "optimistic_prefill_retries_zero": preflight.get("admission_contract", {}).get(
+            "optimistic_prefill_retries"
+        )
+        == 0,
     }
     if not all(preflight_checks.values()):
         raise RuntimeError({"preflight_mismatch": preflight_checks})
@@ -542,7 +655,10 @@ def launch_and_run(args: argparse.Namespace) -> dict[str, Any]:
     base_env.pop("MC_INTRANODE_NVLINK", None)
     base_env.pop("SGLANG_MOONCAKE_CUSTOM_MEM_POOL", None)
     base_env["MOONCAKE_PROTOCOL"] = "rdma"
+    base_env["WITH_NVIDIA_PEERMEM"] = "0"
     base_env["SGLANG_DISAGG_STAGING_BUFFER"] = "0"
+    base_env["SGLANG_PD_BOOTSTRAP_BATCH_BARRIER"] = "1"
+    base_env.pop("SGLANG_TEST_FORCE_OPTIMISTIC_PREFILL_RETRY_PROB", None)
     base_env.pop("SGLANG_PD_COMM_PROFILE_DIR", None)
     base_env.pop("SGLANG_PD_COMM_PROFILE_RUN_ID", None)
     base_env.pop("SGLANG_PP_COMM_PROFILE_DIR", None)
@@ -685,10 +801,19 @@ def launch_and_run(args: argparse.Namespace) -> dict[str, Any]:
             "transport": "rdma",
             "transport_environment": {
                 "MOONCAKE_PROTOCOL": base_env.get("MOONCAKE_PROTOCOL"),
+                "WITH_NVIDIA_PEERMEM": base_env.get("WITH_NVIDIA_PEERMEM"),
                 "MC_FORCE_TCP": base_env.get("MC_FORCE_TCP"),
                 "MC_FORCE_MNNVL": base_env.get("MC_FORCE_MNNVL"),
                 "MC_INTRANODE_NVLINK": base_env.get("MC_INTRANODE_NVLINK"),
                 "SGLANG_MOONCAKE_CUSTOM_MEM_POOL": base_env.get("SGLANG_MOONCAKE_CUSTOM_MEM_POOL"),
+            },
+            "admission_environment": {
+                "SGLANG_PD_BOOTSTRAP_BATCH_BARRIER": base_env.get(
+                    "SGLANG_PD_BOOTSTRAP_BATCH_BARRIER"
+                ),
+                "SGLANG_TEST_FORCE_OPTIMISTIC_PREFILL_RETRY_PROB": base_env.get(
+                    "SGLANG_TEST_FORCE_OPTIMISTIC_PREFILL_RETRY_PROB"
+                ),
             },
             "attention_backend": contract["backend_contract"]["inference_attention_backend"],
             "page_size_tokens": contract["measurement_contract"]["page_size_tokens"],

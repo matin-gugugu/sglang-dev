@@ -101,30 +101,93 @@ class TestCompatibilitySmoke(unittest.TestCase):
             command = commands[name]
             self.assertEqual(command[command.index("--attention-backend") + 1], "flashinfer")
             self.assertEqual(command[command.index("--page-size") + 1], "1")
+        prefill = commands["prefill"]
+        self.assertEqual(
+            prefill[prefill.index("--optimistic-prefill-retries") + 1], "0"
+        )
 
-    def test_smoke_requires_one_real_page_size_one_sender_chunk(self):
+    def smoke_events(self):
+        smoke = self.contract["compatibility_smoke_contract"]
+        probe = smoke["admission_probe"]
+        segments = {
+            f"{smoke['transport_request']['rid_prefix']}_0": [(0, 64)],
+        }
+        for repeat in range(int(probe["repeats"])):
+            for request_index, expected in enumerate(
+                probe["expected_segments_by_request_index"]
+            ):
+                segments[
+                    f"{probe['rid_prefix_base']}{repeat}_{request_index}"
+                ] = [tuple(segment) for segment in expected]
+        rows = []
+        for rid, request_segments in segments.items():
+            for page_start, page_end in request_segments:
+                page_count = page_end - page_start
+                rows.append(
+                    {
+                        "sequence": len(rows),
+                        "rid": rid,
+                        "backend": "MooncakeKVSender",
+                        "page_start": page_start,
+                        "page_end": page_end,
+                        "page_size_tokens": 1,
+                        "kv_page_count": page_count,
+                        "kv_bytes_per_page": 147456,
+                        "logical_bytes": page_count * 147456,
+                        "state_logical_bytes": 0,
+                        "raw_tensor_contents_saved": False,
+                    }
+                )
+        return rows
+
+    def test_smoke_requires_transport_and_repeated_atomic_admission(self):
         from run import validate_smoke_events
 
-        row = {
-            "rid": "p40::compat_smoke_0",
-            "backend": "MooncakeKVSender",
-            "page_size_tokens": 1,
-            "kv_page_count": 64,
-            "kv_bytes_per_page": 147456,
-            "logical_bytes": 64 * 147456,
-            "state_logical_bytes": 0,
-            "raw_tensor_contents_saved": False,
-        }
-        evidence = validate_smoke_events(self.contract, self.model, [row])
+        rows = self.smoke_events()
+        evidence = validate_smoke_events(self.contract, self.model, rows)
         self.assertTrue(all(evidence["checks"].values()))
-        wrong_page = dict(row, page_size_tokens=64, kv_bytes_per_page=64 * 147456)
-        rejected = validate_smoke_events(self.contract, self.model, [wrong_page])
+        self.assertEqual(evidence["transport_sender_chunks"], 1)
+        self.assertEqual(evidence["admission_sender_chunks"], 10)
+
+        wrong_page = [dict(row) for row in rows]
+        wrong_page[0].update(page_size_tokens=64, kv_bytes_per_page=64 * 147456)
+        rejected = validate_smoke_events(self.contract, self.model, wrong_page)
         self.assertFalse(rejected["checks"]["page_size_one"])
         self.assertFalse(rejected["checks"]["bytes_per_page_exact"])
+
+        wrong_admission = [dict(row) for row in rows]
+        target = next(
+            row
+            for row in wrong_admission
+            if row["rid"] == "p40::admission_smoke::rep1_3"
+            and row["page_start"] == 0
+        )
+        target["page_end"] = 2000
+        target["kv_page_count"] = 2000
+        target["logical_bytes"] = 2000 * 147456
+        admission_rejected = validate_smoke_events(
+            self.contract, self.model, wrong_admission
+        )
+        self.assertFalse(admission_rejected["checks"]["admission_segments_exact"])
+        self.assertFalse(admission_rejected["checks"]["admission_repeats_exact"])
+
         unexpected = validate_smoke_events(
-            self.contract, self.model, [row, dict(row, rid="unexpected")]
+            self.contract,
+            self.model,
+            [*rows, dict(rows[0], sequence=len(rows), rid="unexpected")],
         )
         self.assertFalse(unexpected["checks"]["no_unexpected_profile_records"])
+
+    def test_source_contract_pins_atomic_batch_barrier_default_off(self):
+        from preflight import source_semantics_audit
+
+        checks = source_semantics_audit()
+        self.assertTrue(checks["pretokenized_batch_uses_batch_dispatch"])
+        self.assertTrue(checks["batch_tokenized_request_single_dispatch"])
+        self.assertTrue(checks["scheduler_handles_batch_before_admission"])
+        self.assertTrue(checks["bootstrap_barrier_env_declared"])
+        self.assertTrue(checks["bootstrap_barrier_waits_for_all"])
+        self.assertTrue(checks["bootstrap_barrier_requires_whole_batch_capacity"])
 
 
 class TestProfiler(unittest.TestCase):

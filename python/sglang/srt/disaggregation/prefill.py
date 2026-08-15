@@ -336,6 +336,50 @@ class PrefillBootstrapQueue:
             self.scheduler.attn_tp_cpu_group,
         )
 
+        if envs.SGLANG_PD_BOOTSTRAP_BATCH_BARRIER.get():
+            if rids_to_check is not None:
+                raise RuntimeError(
+                    "SGLANG_PD_BOOTSTRAP_BATCH_BARRIER only supports PP=1"
+                )
+            unexpected = [
+                poll
+                for poll in polls
+                if poll
+                not in (KVPoll.Failed, KVPoll.Bootstrapping, KVPoll.WaitingForInput)
+            ]
+            if unexpected:
+                raise RuntimeError(
+                    f"Unexpected bootstrap poll states under batch barrier: {unexpected}"
+                )
+            failed_indices = [
+                index for index, poll in enumerate(polls) if poll == KVPoll.Failed
+            ]
+            if failed_indices:
+                failed_reqs = [self.queue[index] for index in failed_indices]
+                for req in failed_reqs:
+                    self.scheduler.handle_bootstrap_failure(req)
+                failed_index_set = set(failed_indices)
+                self.queue = [
+                    req
+                    for index, req in enumerate(self.queue)
+                    if index not in failed_index_set
+                ]
+                if return_failed_reqs:
+                    return [], failed_reqs
+                return []
+            if any(poll == KVPoll.Bootstrapping for poll in polls):
+                return ([], []) if return_failed_reqs else []
+            if any(should_force_retry(req) for req in self.queue):
+                raise RuntimeError(
+                    "forced optimistic retry is incompatible with the bootstrap batch barrier"
+                )
+            available = self.req_to_metadata_buffer_idx_allocator.available_size()
+            if available < len(self.queue):
+                raise RuntimeError(
+                    "bootstrap batch barrier requires metadata capacity for the whole batch: "
+                    f"required={len(self.queue)}, available={available}"
+                )
+
         for i, (req, poll) in enumerate(zip(self.queue, polls)):
             if (
                 rids_to_check is not None

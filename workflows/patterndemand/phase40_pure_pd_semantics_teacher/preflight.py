@@ -167,9 +167,12 @@ def source_semantics_audit() -> dict[str, bool]:
     schedule = (root / "python/sglang/srt/managers/schedule_policy.py").read_text(encoding="utf-8")
     profiler = (root / "python/sglang/srt/disaggregation/pd_comm_profile.py").read_text(encoding="utf-8")
     io_struct = (root / "python/sglang/srt/managers/io_struct.py").read_text(encoding="utf-8")
+    tokenizer_manager = (root / "python/sglang/srt/managers/tokenizer_manager.py").read_text(encoding="utf-8")
+    scheduler = (root / "python/sglang/srt/managers/scheduler.py").read_text(encoding="utf-8")
     server_args = (root / "python/sglang/srt/server_args.py").read_text(encoding="utf-8")
     overrides = (root / "python/sglang/srt/arg_groups/overrides.py").read_text(encoding="utf-8")
     attention_registry = (root / "python/sglang/srt/layers/attention/attention_registry.py").read_text(encoding="utf-8")
+    environ = (root / "python/sglang/srt/environ.py").read_text(encoding="utf-8")
     router = (root / "sgl-model-gateway/src/routers/http/pd_router.rs").read_text(encoding="utf-8")
     checks = {
         "prefill_sender_call": "req.disagg_kv_sender.send(page_indices, state_indices)" in prefill,
@@ -185,6 +188,12 @@ def source_semantics_audit() -> dict[str, bool]:
         "router_injects_room_per_batch_item": "for _ in 0..n" in router and "Value::Array(rooms.into_iter().map(Value::from).collect())" in router,
         "generate_request_accepts_scalar_or_list_rid": "rid: Optional[Union[str, List[str]]]" in io_struct,
         "scalar_rid_expands_by_batch_index": 'new_rids = [f"{self.rid}_{i}" for i in range(num)]' in io_struct,
+        "pretokenized_batch_uses_batch_dispatch": "(not self._batch_has_text(batch_size, requests))" in tokenizer_manager and "self._send_batch_request(tokenized_objs)" in tokenizer_manager,
+        "batch_tokenized_request_single_dispatch": "batch_req = BatchTokenizedGenerateReqInput(batch=tokenized_objs)" in tokenizer_manager and "self._dispatch_to_scheduler(batch_req)" in tokenizer_manager,
+        "scheduler_handles_batch_before_admission": "def handle_batch_generate_request(" in scheduler and "for tokenized_req in recv_req:" in scheduler,
+        "bootstrap_barrier_env_declared": "SGLANG_PD_BOOTSTRAP_BATCH_BARRIER = EnvBool(False)" in environ,
+        "bootstrap_barrier_waits_for_all": "if envs.SGLANG_PD_BOOTSTRAP_BATCH_BARRIER.get():" in prefill and "if any(poll == KVPoll.Bootstrapping for poll in polls):" in prefill,
+        "bootstrap_barrier_requires_whole_batch_capacity": "bootstrap batch barrier requires metadata capacity for the whole batch" in prefill,
         "attention_backend_cli_contract": "attention_backend: A[" in server_args and "choices=ATTENTION_BACKEND_CHOICES" in server_args,
         "flashinfer_attention_registered": '@register_attention_backend("flashinfer")' in attention_registry,
         "trtllm_mha_rejects_page_one": "TensorRT-LLM MHA only supports page_size of 16, 32 or 64" in overrides,
@@ -302,6 +311,12 @@ def run_checks(args: argparse.Namespace) -> dict[str, Any]:
             "module_origin": str(Path(flashinfer_spec.origin).resolve()),
             "sglang_reports_available": True,
             "required_page_size_tokens": contract["measurement_contract"]["page_size_tokens"],
+        },
+        "admission_contract": {
+            "batched_input_ids_single_dispatch": True,
+            "bootstrap_batch_barrier_required": True,
+            "bootstrap_batch_barrier_env": contract["measurement_contract"]["bootstrap_batch_barrier_env"],
+            "optimistic_prefill_retries": contract["measurement_contract"]["optimistic_prefill_retries"],
         },
         "pinned_inputs": pins,
         "environment": {

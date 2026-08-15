@@ -37,7 +37,9 @@ def finalize(output: Path) -> dict:
             "status": smoke["status"],
             "attention_backend": smoke["attention_backend"],
             "page_size_tokens": smoke["observed"][0]["page_size_tokens"],
-            "sender_chunks": smoke["matching_sender_chunks"],
+            "transport_sender_chunks": smoke["transport_sender_chunks"],
+            "admission_sender_chunks": smoke["admission_sender_chunks"],
+            "sender_chunks_total": smoke["matching_sender_chunks"],
         },
         "checks": state["checks"],
         "training_performed": False,
@@ -55,7 +57,7 @@ def finalize(output: Path) -> dict:
         "# Phase40：纯PD语义与Hfull teacher基础闭环\n\n"
         "最终状态：`PASS`。本阶段只运行纯`P1→D1`，P和D内部均为`TP=1、PP=1`；"
         "固定FlashInfer attention、page size 1、Mooncake/RDMA、FCFS、4096-token chunk并关闭cache与overlap。"
-        "正式raw前的独立P→D smoke已完成1个真实sender chunk且没有传输错误。\n\n"
+        "正式raw前的独立P→D smoke已完成1个真实transport sender chunk及两次精确的多请求原子放行探针，且没有传输错误。\n\n"
         f"共执行`{state['counts']['requests']}`个请求、`{state['counts']['gpu_logical_chunks']}`个真实sender-side逻辑KV chunk；"
         f"CPU teacher生成`{state['counts']['teacher_logical_chunks']}`个chunk，"
         f"逐请求精确匹配`{state['counts']['exact_requests']}/{state['counts']['requests']}`。"

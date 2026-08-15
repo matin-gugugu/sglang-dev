@@ -330,6 +330,11 @@ class Envs:
     SGLANG_DISAGG_PREFILL_EARLY_SEND_CACHED_PREFIX = EnvBool(True)
     SGLANG_DISAGGREGATION_ALL_CP_RANKS_TRANSFER = EnvBool(False)
     SGLANG_DISAGGREGATION_FORCE_QUERY_PREFILL_DP_RANK = EnvBool(False)
+    # Experiment-only fixed-draining control: when enabled, a prefill bootstrap
+    # queue releases its current atomic request batch only after every request
+    # has completed bootstrap. The default remains the production behavior of
+    # releasing each ready request independently.
+    SGLANG_PD_BOOTSTRAP_BATCH_BARRIER = EnvBool(False)
 
     # Scheduler: others:
     # in seconds. Set if you observe high memory accumulation over a long serving period.
