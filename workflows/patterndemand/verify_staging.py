@@ -17,6 +17,7 @@ PHASES = {
     "phase37": "experiment-results/phase37_pp_single_node_p2p_curve/",
     "phase38": "experiment-results/phase38_pp_physical_curve_cost_recompute/",
     "phase39": "experiment-results/phase39_tp_pp_l1_l3_physical_placement_validation/",
+    "phase40": "experiment-results/phase40_pure_pd_semantics_teacher/",
 }
 
 

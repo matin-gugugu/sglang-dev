@@ -249,6 +249,7 @@ class PrefillBootstrapQueue:
             dest_tp_ranks=dest_tp_ranks,
             pp_rank=self.pp_rank,
         )
+        req.disagg_kv_sender.profile_rid = str(req.rid)
         self._process_req(req)
         req.pending_bootstrap = True
         return True

@@ -25,6 +25,7 @@ from sglang.srt.disaggregation.base.conn import (
     KVTransferMetric,
     StateType,
 )
+from sglang.srt.disaggregation.pd_comm_profile import record_send as record_pd_send
 from sglang.srt.disaggregation.utils import (
     DisaggregationMode,
     filter_kv_indices_for_cp_rank,
@@ -781,6 +782,7 @@ class CommonKVSender(BaseKVSender):
         self._transfer_metric = KVTransferMetric()
         self._transfer_num_kv_indices = 0
         self._transfer_num_state_indices = 0
+        self.profile_rid: Optional[str] = None
         # inner state
         self.curr_idx = 0
         self.init_time: Optional[float] = None
@@ -860,6 +862,18 @@ class CommonKVSender(BaseKVSender):
             for component_indices in state_indices:
                 if component_indices is not None:
                     self._transfer_num_state_indices += len(component_indices)
+        record_pd_send(
+            rid=self.profile_rid,
+            bootstrap_room=self.bootstrap_room,
+            backend=type(self).__name__,
+            page_start=self.curr_idx - len(kv_indices),
+            page_end=self.curr_idx,
+            kv_page_count=len(kv_indices),
+            kv_bytes_per_page=self.kv_mgr.kv_item_lens_sum,
+            state_indices=state_indices,
+            state_bytes_per_index=self.kv_mgr.state_item_lens_sum,
+            page_size_tokens=self.kv_mgr.kv_args.page_size,
+        )
 
     def _prepare_send_indices(
         self,

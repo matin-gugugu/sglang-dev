@@ -163,7 +163,7 @@ def refresh_manifest(directory: Path) -> None:
 
 def validate_result_tree(directory: Path) -> dict[str, Any]:
     forbidden_names = {"PID", "pid", "core", "core.dump"}
-    forbidden_suffixes = {".pid", ".pt", ".pth", ".ckpt", ".bin", ".safetensors"}
+    forbidden_suffixes = {".pid", ".pt", ".pth", ".ckpt", ".bin", ".safetensors", ".jsonl"}
     forbidden_parts = {"__pycache__", "cache", "raw_samples", "raw_trace", "model_weights"}
     violations = []
     files = []
@@ -246,7 +246,7 @@ def validate_staged_allowlist(allowed_prefix: str) -> dict[str, Any]:
     forbidden = [
         path
         for path in paths
-        if Path(path).suffix.lower() in {".pid", ".pt", ".pth", ".ckpt", ".safetensors"}
+        if Path(path).suffix.lower() in {".pid", ".pt", ".pth", ".ckpt", ".safetensors", ".jsonl"}
         or any(part.lower() in {"data", "raw_samples", "raw_trace", "cache"} for part in Path(path).parts)
     ]
     return {"ok": bool(paths) and not invalid and not forbidden, "paths": paths, "invalid": invalid, "forbidden": forbidden}

@@ -18,6 +18,7 @@ PHASE_PREFIX = {
     "phase37": "experiment-results/phase37_pp_single_node_p2p_curve/",
     "phase38": "experiment-results/phase38_pp_physical_curve_cost_recompute/",
     "phase39": "experiment-results/phase39_tp_pp_l1_l3_physical_placement_validation/",
+    "phase40": "experiment-results/phase40_pure_pd_semantics_teacher/",
 }
 
 
@@ -41,7 +42,7 @@ def main() -> None:
     forbidden = [
         path
         for path in paths
-        if Path(path).suffix.lower() in {".pid", ".pt", ".pth", ".ckpt", ".safetensors"}
+        if Path(path).suffix.lower() in {".pid", ".pt", ".pth", ".ckpt", ".safetensors", ".jsonl"}
         or any(part.lower() in {"data", "raw_samples", "raw_trace", "cache"} for part in Path(path).parts)
     ]
     if forbidden:

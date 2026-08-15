@@ -1,0 +1,110 @@
+{
+  "schema_version": "phase40-pure-pd-semantics-teacher-contract-v1",
+  "phase": "Phase40",
+  "objective": "在纯P1-D1、fixed-draining、固定Mooncake/RDMA传输语义下，用真实SGLang GPU KV发送记录验证拓扑无关P→D 12-bin逻辑消息直方图口径，并建立可由完整请求窗口离线生成的scheduler-faithful Hfull teacher基础闭环",
+  "workflow_parent_result_commit": "e5697c03fffb9f9cebdc6beb2bc667d0aae5173a",
+  "execution_model": "one local model copy loaded independently by one single-GPU prefill server and one single-GPU decode server; one router; five frozen request waves repeated three times; deterministic CPU teacher and exact alignment after GPU release",
+  "research_scope": {
+    "prefill_parallelism": {"tp": 1, "pp": 1},
+    "decode_parallelism": {"tp": 1, "pp": 1},
+    "target_channel": "P_to_D_KV_only",
+    "predictor_output": "topology-independent 12-bin sender-counted logical KV-chunk calls and logical bytes per 1000 requests",
+    "teacher_input": "complete ordered request list for offline label generation only",
+    "future_predictor_input": "low-dimensional history profile, model KV structure, fixed P strategy, fixed D strategy and fixed transfer policy",
+    "not_in_scope": ["TP or PP inside P/D", "training", "six-model expansion", "physical communication curves", "placement", "scheduler resource decisions", "online arrivals", "PD compute or queueing latency"]
+  },
+  "backend_contract": {
+    "sglang_transfer_backend": "mooncake",
+    "transport": "rdma",
+    "backend_fallback_permitted": false,
+    "staging_buffer": false,
+    "sender_counted_only": true,
+    "logical_message_unit": "one post-TP/CP-filter CommonKVSender.send KV chunk for one request",
+    "logical_bytes_unit": "kv_page_count times the sum of per-page K/V bytes across all local layers, plus state bytes if any",
+    "excluded": ["bootstrap/control metadata", "receiver duplicate", "Mooncake per-layer descriptors", "NIC packets", "transport headers", "latency"]
+  },
+  "model_contract": {
+    "required_model_type": "qwen3",
+    "required_architecture": "Qwen3ForCausalLM",
+    "required_structure": {"hidden_size": 4096, "num_attention_heads": 32, "num_key_value_heads": 8, "num_hidden_layers": 36, "head_dim": 128},
+    "required_non_mla": true,
+    "required_local_model_path": true,
+    "network_download_permitted": false,
+    "dtype": "bfloat16",
+    "kv_cache_dtype": "auto_resolving_to_bfloat16",
+    "weight_files_in_git_permitted": false
+  },
+  "measurement_contract": {
+    "schedule_policy": "fcfs",
+    "arrival_semantics": "fixed-draining wave; the next wave is submitted only after the prior wave fully returns",
+    "chunked_prefill_tokens": 4096,
+    "max_prefill_tokens": 4096,
+    "page_size_tokens": 1,
+    "max_running_requests": 64,
+    "context_length": 16384,
+    "mem_fraction_static": 0.8,
+    "max_new_tokens": 2,
+    "input_token_id": 42,
+    "ignore_eos": true,
+    "temperature": 0.0,
+    "radix_cache": false,
+    "overlap_schedule": false,
+    "dynamic_chunking": false,
+    "decode_radix_cache": false,
+    "independent_repeats": 3,
+    "minimum_gpu_count": 2,
+    "required_gpu_layout": "two distinct GPUs on one host; topology recorded but not used for a placement claim",
+    "raw_storage": "profiler JSONL and full P/D/router logs remain outside Git; Git stores only hashes, counts, exact-alignment tables and aggregate 12-bin histograms"
+  },
+  "workload_scenarios": [
+    {"name": "single_short", "purpose": "one unchunked small transfer", "prompt_tokens": [64]},
+    {"name": "single_exact_chunk", "purpose": "exactly one full chunk", "prompt_tokens": [4096]},
+    {"name": "single_cross_chunk", "purpose": "one-token continuation beyond the chunk boundary", "prompt_tokens": [4097]},
+    {"name": "packed_remainder", "purpose": "FCFS batch remainder splits the last request", "prompt_tokens": [1000, 1000, 1000, 2000]},
+    {"name": "mixed_burst", "purpose": "mixed short/medium/long requests and repeated chunk continuation", "prompt_tokens": [32, 257, 1024, 4095, 4096, 4097, 8193, 12289]}
+  ],
+  "phase34_bin_edges_bytes": [4096.0, 13777.246867516858, 46340.95001184158, 155871.75497763665, 524288.0, 1763487.5990421579, 5931641.601515722, 19951584.63713749, 67108864.0, 225726412.6773962, 759250124.9940125, 2553802833.553599, 8589934592.0],
+  "acceptance_gates": {
+    "expected_requests": 45,
+    "expected_scenarios": 5,
+    "expected_repeats_per_scenario": 3,
+    "request_level_exact_match_required": true,
+    "aggregate_calls_absolute_error_required": 0,
+    "aggregate_logical_bytes_absolute_error_required": 0,
+    "histogram_calls_l1_required": 0.0,
+    "histogram_bytes_l1_required": 0.0,
+    "repeat_histograms_must_be_exact": true,
+    "kv_bytes_per_page_formula_must_match_runtime": true,
+    "state_payload_must_be_zero": true
+  },
+  "expected_histogram_rows": 72,
+  "expected_alignment_rows": 6,
+  "result_dir": "experiment-results/phase40_pure_pd_semantics_teacher",
+  "accepted_result_statuses": ["PASS"],
+  "pinned_inputs": [
+    {"name": "phase39_summary", "path": "experiment-results/phase39_tp_pp_l1_l3_physical_placement_validation/summary.json", "sha256": "8e973f01261e34f2cd2014aaf671c87a33a5e0dd71f70309c189b3bbda3a6a1e", "verify_manifest_directory": "experiment-results/phase39_tp_pp_l1_l3_physical_placement_validation"},
+    {"name": "sglang_pd_prefill", "path": "python/sglang/srt/disaggregation/prefill.py", "sha256": "be0f67da64a6070de09d066c02a0ffa5f8ed7e06902d1b6fe16ad8c17fd4d753"},
+    {"name": "sglang_pd_common_conn", "path": "python/sglang/srt/disaggregation/common/conn.py", "sha256": "f56fc337c3e0518ddf73fe93297512abfeb4cd17cfa0772184d063db25cd3c8d"},
+    {"name": "sglang_mooncake_conn", "path": "python/sglang/srt/disaggregation/mooncake/conn.py", "sha256": "9106dfc8deb91662bdbac850f41612104a597b7f6a5cd15c8eb7ca17a20c8a0d"},
+    {"name": "sglang_prefill_schedule_policy", "path": "python/sglang/srt/managers/schedule_policy.py", "sha256": "5a505dfbb0a6854d36180c0337fbfb98d75ecde647abc00b66a33c971e1700b3"},
+    {"name": "sglang_pd_arg_hook", "path": "python/sglang/srt/arg_groups/pd_disaggregation_hook.py", "sha256": "f4daac898dd151021744d8ac27cb2454da047bb9e54ced37f689917b42c7bb85"},
+    {"name": "sglang_pd_profiler", "path": "python/sglang/srt/disaggregation/pd_comm_profile.py", "sha256": "d3c269bed154c966b2a82e93348ec6dd0e25612cf82ea5b171f1c3cb08ed18fd"},
+    {"name": "sglang_pd_http_router", "path": "sgl-model-gateway/src/routers/http/pd_router.rs", "sha256": "92aa2df17d9366388c248d0b51a6ab21059f52dade2fc301ec6c7a62dc4316a8"},
+    {"name": "sglang_pd_http_types", "path": "sgl-model-gateway/src/routers/http/pd_types.rs", "sha256": "2c10c66b0fc0769388a5178d4c0cfb7a1be609d4479c783c91580b8e9b9f9950"}
+  ],
+  "claim_boundary": [
+    "PASS proves the frozen P1-D1 Mooncake logical-byte and chunk-call teacher matches representative SGLang GPU execution exactly",
+    "Phase40 is a semantic and teacher foundation, not a trained low-dimensional PD predictor and not a six-model generalization result",
+    "The logical histogram is topology independent; Phase40 does not establish a physical Mooncake cost curve",
+    "The conclusion applies to the frozen non-MLA Qwen3-8B-class model contract, FCFS fixed-draining policy, disabled caches/overlap and exact source commit",
+    "Full request lists remain offline teacher inputs and are not authorized as deployed predictor inputs"
+  ],
+  "stop_and_block_if": [
+    "the exact workflow commit is not checked out or tracked files are dirty",
+    "a local Qwen3ForCausalLM model is unavailable or would require a network download",
+    "two distinct CUDA GPUs, Mooncake, RDMA or the SGLang router are unavailable",
+    "execution would require TP/PP greater than one, a backend fallback, staging, radix cache, overlap or changed chunk policy",
+    "the model formula, source SHA, request count, per-request chunks, aggregate histograms or repeat determinism differ",
+    "raw trace, logs, model weights, cache, PID or protected data would enter Git"
+  ]
+}
