@@ -29,10 +29,31 @@
     "required_structure": {"hidden_size": 4096, "num_attention_heads": 32, "num_key_value_heads": 8, "num_hidden_layers": 36, "head_dim": 128},
     "required_non_mla": true,
     "required_local_model_path": true,
-    "network_download_permitted": false,
+    "network_download_permitted": true,
     "dtype": "bfloat16",
     "kv_cache_dtype": "auto_resolving_to_bfloat16",
     "weight_files_in_git_permitted": false
+  },
+  "official_model_download": {
+    "permission_scope": "model acquisition before preflight only; formal preflight and GPU execution must set HF_HUB_OFFLINE=1 and TRANSFORMERS_OFFLINE=1",
+    "repo_id": "Qwen/Qwen3-8B",
+    "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "source_url": "https://huggingface.co/Qwen/Qwen3-8B/tree/b968826d9c46dd6066d109eabc6255188de91218",
+    "license": "Apache-2.0",
+    "download_destination": "a persistent compute-node-visible directory outside Git, raw directories, caches owned by other users and protected experiment assets",
+    "config_sha256": "f7c4eadfbbf522470667b797a3c89be2524832d2d599797248dc304fff447c30",
+    "weight_index_file": "model.safetensors.index.json",
+    "weight_index_sha256": "f9fdbcb91c23971c13ec5d5f2573d2349e8f61f2f049371ec699281748fdb1bc",
+    "weight_shards": [
+      {"name": "model-00001-of-00005.safetensors", "bytes": 3996250744, "sha256": "31d6a825ae35f11fb85b195b4c42c146c051e446433125a215336abdf95cbf5f"},
+      {"name": "model-00002-of-00005.safetensors", "bytes": 3993160032, "sha256": "5991236cea6fe21f3d43cab0f0e84448734fbbe0789816202989f2ddc9d18282"},
+      {"name": "model-00003-of-00005.safetensors", "bytes": 3959604768, "sha256": "c5185c4794be2d8a9784d5753c9922db38df478ce11f9ed0b415b7304d896836"},
+      {"name": "model-00004-of-00005.safetensors", "bytes": 3187841392, "sha256": "b5ee7de71fbf17db3d5704e0c8f2bc7d005ca9e1d7ca2aeb19827b0cfcaa917a"},
+      {"name": "model-00005-of-00005.safetensors", "bytes": 1244659840, "sha256": "20c2d6366ab85c90786ccdd829cd2b9e7d30ef3b2ebbb998280e7e4014b542ff"}
+    ],
+    "weights_total_bytes": 16381516776,
+    "weight_hash_verification_required": true,
+    "network_during_formal_execution_permitted": false
   },
   "measurement_contract": {
     "schedule_policy": "fcfs",
@@ -96,12 +117,13 @@
     "PASS proves the frozen P1-D1 Mooncake logical-byte and chunk-call teacher matches representative SGLang GPU execution exactly",
     "Phase40 is a semantic and teacher foundation, not a trained low-dimensional PD predictor and not a six-model generalization result",
     "The logical histogram is topology independent; Phase40 does not establish a physical Mooncake cost curve",
-    "The conclusion applies to the frozen non-MLA Qwen3-8B-class model contract, FCFS fixed-draining policy, disabled caches/overlap and exact source commit",
+    "The conclusion applies to official Qwen/Qwen3-8B revision b968826d9c46dd6066d109eabc6255188de91218, the frozen non-MLA model contract, FCFS fixed-draining policy, disabled caches/overlap and exact source commit",
     "Full request lists remain offline teacher inputs and are not authorized as deployed predictor inputs"
   ],
   "stop_and_block_if": [
     "the exact workflow commit is not checked out or tracked files are dirty",
-    "a local Qwen3ForCausalLM model is unavailable or would require a network download",
+    "the pinned official Qwen/Qwen3-8B revision cannot be downloaded before preflight or its config, index or five weight-shard hashes differ",
+    "HF_HUB_OFFLINE=1 and TRANSFORMERS_OFFLINE=1 are not set for formal preflight and GPU execution",
     "two distinct CUDA GPUs, Mooncake, RDMA or the SGLang router are unavailable",
     "execution would require TP/PP greater than one, a backend fallback, staging, radix cache, overlap or changed chunk policy",
     "the model formula, source SHA, request count, per-request chunks, aggregate histograms or repeat determinism differ",

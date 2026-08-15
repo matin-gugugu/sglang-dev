@@ -51,6 +51,7 @@ def model_contract(model_path: Path, contract: dict[str, Any]) -> dict[str, Any]
         "model_type_qwen3": config.get("model_type") == required["required_model_type"],
         "architecture_qwen3_causal_lm": required["required_architecture"] in architectures,
         "non_mla": config.get("kv_lora_rank") is None,
+        "torch_dtype_bfloat16": config.get("torch_dtype") == required["dtype"],
         "token_id_valid": int(contract["measurement_contract"]["input_token_id"]) < int(config.get("vocab_size", 0)),
     }
     numeric_names = (
@@ -85,8 +86,39 @@ def model_contract(model_path: Path, contract: dict[str, Any]) -> dict[str, Any]
     index_candidates = sorted(path.name for path in model_path.glob("*.index.json"))
     if not weight_candidates and not index_candidates:
         raise RuntimeError("local model directory has no visible weight or weight-index files")
+    official = contract["official_model_download"]
+    expected_shards = official["weight_shards"]
+    artifact_checks = {
+        "config_sha256": sha256(config_path) == official["config_sha256"],
+        "weight_index_present": (model_path / official["weight_index_file"]).is_file(),
+        "weight_shard_names_exact": weight_candidates == sorted(row["name"] for row in expected_shards),
+    }
+    index_path = model_path / official["weight_index_file"]
+    artifact_checks["weight_index_sha256"] = (
+        index_path.is_file() and sha256(index_path) == official["weight_index_sha256"]
+    )
+    verified_shards = []
+    for expected in expected_shards:
+        path = model_path / expected["name"]
+        actual_bytes = path.stat().st_size if path.is_file() else None
+        actual_sha256 = sha256(path) if path.is_file() and actual_bytes == expected["bytes"] else None
+        exact = actual_bytes == expected["bytes"] and actual_sha256 == expected["sha256"]
+        artifact_checks[f"weight_{expected['name']}"] = exact
+        verified_shards.append(
+            {
+                "name": expected["name"],
+                "bytes": actual_bytes,
+                "sha256": actual_sha256,
+                "exact": exact,
+            }
+        )
+    artifact_checks["weights_total_bytes"] = (
+        sum(int(row["bytes"] or 0) for row in verified_shards) == official["weights_total_bytes"]
+    )
+    if not all(artifact_checks.values()):
+        raise RuntimeError({"official_model_artifact_checks": artifact_checks})
     return {
-        "schema_version": "phase40-local-model-contract-v1",
+        "schema_version": "phase40-official-model-contract-v2",
         "model_path": str(model_path),
         "config_path": str(config_path),
         "config_sha256": sha256(config_path),
@@ -108,10 +140,20 @@ def model_contract(model_path: Path, contract: dict[str, Any]) -> dict[str, Any]
             "kv_bytes_per_page": kv_bytes_per_token * page_size,
             "formula": "num_layers * 2(K,V) * num_kv_heads * head_dim * bf16_bytes * page_size",
         },
-        "weight_inventory_only": {
+        "weight_inventory": {
             "weight_file_count": len(weight_candidates),
             "weight_index_count": len(index_candidates),
-            "files_hashed_or_copied": False,
+            "files_hashed_or_copied": True,
+        },
+        "official_source": {
+            "repo_id": official["repo_id"],
+            "revision": official["revision"],
+            "source_url": official["source_url"],
+            "config_sha256": official["config_sha256"],
+            "weight_index_sha256": official["weight_index_sha256"],
+            "verified_shards": verified_shards,
+            "weights_total_bytes": official["weights_total_bytes"],
+            "artifact_checks": artifact_checks,
         },
         "checks": checks,
     }
@@ -183,6 +225,12 @@ def run_checks(args: argparse.Namespace) -> dict[str, Any]:
         raise RuntimeError(f"formal result directory already exists: {expected_output}")
     if os.environ.get("CUDA_VISIBLE_DEVICES"):
         raise RuntimeError("unset CUDA_VISIBLE_DEVICES before Phase40 preflight")
+    offline_checks = {
+        "HF_HUB_OFFLINE": os.environ.get("HF_HUB_OFFLINE") == "1",
+        "TRANSFORMERS_OFFLINE": os.environ.get("TRANSFORMERS_OFFLINE") == "1",
+    }
+    if not all(offline_checks.values()):
+        raise RuntimeError({"formal_execution_must_be_offline": offline_checks})
     raw_dir = ensure_external_raw_dir(args.raw_dir)
     if args.audit_output.resolve() == repo_root() or repo_root() in args.audit_output.resolve().parents:
         raise RuntimeError("preflight audit must remain outside Git")
@@ -220,6 +268,7 @@ def run_checks(args: argparse.Namespace) -> dict[str, Any]:
             "cuda": torch.version.cuda,
             "mooncake_version": getattr(mooncake, "__version__", None),
             "container_image_env": {key: value for key, value in os.environ.items() if re.search(r"(IMAGE|CONTAINER|PYTORCH_VERSION)", key)},
+            "formal_execution_offline": offline_checks,
         },
         "gpus": gpus,
     }

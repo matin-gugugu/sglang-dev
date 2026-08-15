@@ -253,6 +253,12 @@ def launch_and_run(args: argparse.Namespace) -> dict[str, Any]:
         raise RuntimeError(f"formal result directory exists: {output}")
     if os.environ.get("CUDA_VISIBLE_DEVICES"):
         raise RuntimeError("unset CUDA_VISIBLE_DEVICES before Phase40 run")
+    offline_checks = {
+        "HF_HUB_OFFLINE": os.environ.get("HF_HUB_OFFLINE") == "1",
+        "TRANSFORMERS_OFFLINE": os.environ.get("TRANSFORMERS_OFFLINE") == "1",
+    }
+    if not all(offline_checks.values()):
+        raise RuntimeError({"formal_execution_must_be_offline": offline_checks})
     raw_dir = args.raw_dir.resolve()
     if not raw_dir.is_dir() or any(raw_dir.iterdir()):
         raise RuntimeError(f"raw directory must exist and be empty at run start: {raw_dir}")

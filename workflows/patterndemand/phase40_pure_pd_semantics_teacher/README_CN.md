@@ -20,21 +20,37 @@ Phase40只做纯PD：一个单GPU Prefill实例向一个单GPU Decode实例传KV
 
 ## 运行前提与命令
 
-必须从交接方给出的W40创建独立run分支。模型必须是环境中已经存在的本地`Qwen3ForCausalLM`目录；不得联网下载。`--gpu-pair`使用物理GPU编号，`--ib-device`使用已验证的RDMA HCA。
+必须从交接方给出的W40-fix创建独立retry run分支。模型固定为官方`Qwen/Qwen3-8B`的revision `b968826d9c46dd6066d109eabc6255188de91218`。允许在preflight前联网下载一次，下载完成后必须切换为离线模式；正式preflight和GPU运行不得继续联网。下载目录必须位于计算节点可见的持久化存储且在Git、raw目录、其他用户缓存和受保护实验资产之外。`--gpu-pair`使用物理GPU编号，`--ib-device`使用已验证的RDMA HCA。
+
+推荐命令如下；`/PERSISTENT/MODELS`应替换为本环境自己的持久化模型目录：
+
+```bash
+MODEL_DIR=/PERSISTENT/MODELS/Qwen3-8B-b968826d
+mkdir -p "$MODEL_DIR"
+hf download Qwen/Qwen3-8B \
+  --revision b968826d9c46dd6066d109eabc6255188de91218 \
+  --local-dir "$MODEL_DIR"
+
+# 从这里开始正式实验必须离线；preflight会核对config、index和5个权重分片的官方SHA-256。
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+```
+
+如果环境只有旧版CLI，可用等价的`huggingface-cli download`，但repo、revision和落盘目录不得改变。不要把token写进命令、日志或Git；该公开模型正常情况下不需要token。
 
 ```bash
 unset CUDA_VISIBLE_DEVICES
 python3 workflows/patterndemand/phase40_pure_pd_semantics_teacher/preflight.py \
-  --expected-workflow-commit W40 \
-  --model-path /LOCAL/QWEN3_8B \
+  --expected-workflow-commit W40_FIX \
+  --model-path "$MODEL_DIR" \
   --gpu-pair 0,1 \
   --ib-device mlx5_X \
   --raw-dir /EXTERNAL/phase40_raw \
   --audit-output /EXTERNAL/phase40_preflight.json
 
 python3 workflows/patterndemand/phase40_pure_pd_semantics_teacher/run.py \
-  --expected-workflow-commit W40 \
-  --model-path /LOCAL/QWEN3_8B \
+  --expected-workflow-commit W40_FIX \
+  --model-path "$MODEL_DIR" \
   --gpu-pair 0,1 \
   --ib-device mlx5_X \
   --raw-dir /EXTERNAL/phase40_raw \

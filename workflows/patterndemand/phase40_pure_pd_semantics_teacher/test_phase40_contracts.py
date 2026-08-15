@@ -33,6 +33,28 @@ class TestTeacher(unittest.TestCase):
         self.assertEqual(bin_index(8589934592 * 2), 11)
 
 
+class TestOfficialModelDownload(unittest.TestCase):
+    def test_pinned_revision_and_weight_inventory_are_self_consistent(self):
+        contract = json.loads(
+            (Path(__file__).resolve().parent / "experiment.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        download = contract["official_model_download"]
+        self.assertEqual(download["repo_id"], "Qwen/Qwen3-8B")
+        self.assertEqual(
+            download["revision"],
+            "b968826d9c46dd6066d109eabc6255188de91218",
+        )
+        self.assertEqual(len(download["weight_shards"]), 5)
+        self.assertEqual(
+            sum(row["bytes"] for row in download["weight_shards"]),
+            download["weights_total_bytes"],
+        )
+        self.assertTrue(contract["model_contract"]["network_download_permitted"])
+        self.assertFalse(download["network_during_formal_execution_permitted"])
+
+
 class TestProfiler(unittest.TestCase):
     def test_profile_is_disabled_by_default_and_records_only_metadata(self):
         profile_path = (
