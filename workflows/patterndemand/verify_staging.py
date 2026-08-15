@@ -16,6 +16,7 @@ PHASES = {
     "phase36": "experiment-results/phase36_cross_environment_replay/",
     "phase37": "experiment-results/phase37_pp_single_node_p2p_curve/",
     "phase38": "experiment-results/phase38_pp_physical_curve_cost_recompute/",
+    "phase39": "experiment-results/phase39_tp_pp_l1_l3_physical_placement_validation/",
 }
 
 
@@ -27,7 +28,22 @@ def main() -> None:
     output = repo_root() / prefix
     staging = validate_staged_allowlist(prefix)
     blocked = (output / "BLOCKED.json").is_file()
-    result = {"staging": staging, "blocked": blocked}
+    actual_result_paths = {
+        str(path.relative_to(repo_root()))
+        for path in output.rglob("*")
+        if path.is_file()
+    }
+    staged_result_paths = set(staging["paths"])
+    staging_completeness = {
+        "ok": staged_result_paths == actual_result_paths,
+        "missing_from_staging": sorted(actual_result_paths - staged_result_paths),
+        "unexpected_in_staging": sorted(staged_result_paths - actual_result_paths),
+    }
+    result = {
+        "staging": staging,
+        "staging_completeness": staging_completeness,
+        "blocked": blocked,
+    }
     if not blocked:
         result["result_manifest"] = verify_result_manifest(output)
         summary = load_json(output / "summary.json")
@@ -36,7 +52,7 @@ def main() -> None:
             raise RuntimeError(result)
     elif not (output / "manifest.sha256").is_file():
         raise RuntimeError("BLOCKED结果也必须生成manifest.sha256")
-    if not staging["ok"]:
+    if not staging["ok"] or not staging_completeness["ok"]:
         raise RuntimeError(result)
     print(json.dumps({"status": "PASS", **result}, ensure_ascii=False, indent=2))
 

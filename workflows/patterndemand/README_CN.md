@@ -21,10 +21,11 @@ workflow commit W
   -> 原环境验证R的父提交、路径和manifest
 ```
 
-当前三个workflow：
+当前四个workflow：
 
 - `phase36_cross_environment_replay`：一张GPU即可，不训练、不读teacher，复播Phase34冻结的六模型TP/PP直方图并演练commit回传。
 - `phase37_pp_single_node_p2p_curve`：至少两张GPU，实测单机PP GPU P2P连续曲线；raw逐次样本保存在仓库外，只提交紧凑曲线与审计。
 - `phase38_pp_physical_curve_cost_recompute`：Phase37结果验收并合入后，在CPU上将Phase34冻结PP直方图与Hfull target确定性代入物理P2P曲线；不加载checkpoint、不重训。本workflow只有在R37合入后才能提交形成W38，以保持固定W36/W37的ff-only结果链。
+- `phase39_tp_pp_l1_l3_physical_placement_validation`：在测量前冻结L1/L2/L3 host/rack/rank placement，以24个分布式shard补全TP2/4/8与PP的物理曲线矩阵；随后在CPU上完成冻结直方图卷积、proxy对照及communication-only placement agreement/regret验证。raw仍在Git外，TP/PP size始终是输入而不是调度决策。
 
 完整交接见`PatternDemand跨环境GPU执行交接_Phase36_Phase37.md`。
