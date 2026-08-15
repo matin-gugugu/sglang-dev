@@ -1,0 +1,36 @@
+{
+  "backend": "torch.distributed.isend/irecv over NCCL device process group, matching SGLang async send_tensor_dict tensor primitive",
+  "checks": {
+    "all_data_validation_pass": true,
+    "all_selected_topology_categories_measured": true,
+    "cuda_peer_access_status_recorded": true,
+    "minimum_repeats_complete": true,
+    "no_training_or_model_weights": true,
+    "raw_samples_external_to_git": true,
+    "source_and_backend_contract_pass": true
+  },
+  "claim_boundary": "本阶段只形成单机物理P2P tensor-only曲线；尚未代入冻结消息直方图，也不评价PatternDemand cost精度",
+  "completed_at_utc": "2026-08-15T04:54:47.780398+00:00",
+  "directions_measured_per_pair": 2,
+  "high_variance_points": 0,
+  "measurement_scope": "tensor_only_sender_counted_logical_message",
+  "objective": "测量与SGLang PP异步GPU张量发送原语一致的单机P2P payload-latency连续曲线",
+  "payload_points_per_curve": 21,
+  "records": 210,
+  "repeat_count": 5,
+  "schema_version": "phase37-pp-single-node-p2p-result-v1",
+  "selected_pairs": {
+    "NVLINK_NV18": {
+      "gpus": [
+        0,
+        1
+      ],
+      "raw_link": "NV18"
+    }
+  },
+  "status": "PASS_WITH_LIMITED_TOPOLOGY",
+  "topology_categories_measured": [
+    "NVLINK_NV18"
+  ],
+  "workflow_commit": "d7d2efdab55f61f42be98d62d4460d4756fd25fa"
+}
