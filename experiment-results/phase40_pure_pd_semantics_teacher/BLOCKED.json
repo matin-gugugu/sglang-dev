@@ -1,0 +1,133 @@
+{
+  "created_at_utc": "2026-08-15T17:55:51.261158+00:00",
+  "evidence": {
+    "attempt": "W40-fix3 retry #3 (b3adb699bc6beb7615475be2db7146cfcbe2f522)",
+    "blocking_finding": {
+      "both_sides_affected": true,
+      "capability_probe_job_2393207": {
+        "dev_infiniband_present": true,
+        "interpretation": "锁页内存无限制，IB 设备节点齐备，唯独 GPUDirect peer-memory 模块不可见 —— 与 EFAULT 现象一致。",
+        "kernel_modules": {
+          "ib_core": "present",
+          "mlx5_ib": "present",
+          "nv_peer_mem": "absent",
+          "nvidia_peermem": "absent"
+        },
+        "mooncake_TransferEngine_importable": true,
+        "node": "prenyx0281.a51.clusters.nvidia.com",
+        "torch_cuda_ok": true,
+        "ulimit_locked_memory": "unlimited",
+        "uverbs_nodes": [
+          "rdma_cm",
+          "uverbs4",
+          "uverbs7",
+          "uverbs10",
+          "uverbs13",
+          "uverbs14",
+          "uverbs15"
+        ]
+      },
+      "errno": "14 = EFAULT",
+      "explains_earlier_confusion": "此前两轮中『内置 PD warmup 成功但正式请求失败』的矛盾由此解释：注册失败只发生在部分内存区域（日志显示 5 个线程各自失败于不同地址），4-token warmup 命中了注册成功的区域，64-token / 9437184 字节的传输落到未注册区域。W40-fix3 README 所写『服务 health 或内置 warmup 成功本身不再算作传输可用证据』已被本次实测证实。",
+      "id": "B",
+      "rdma_device_itself_is_healthy": {
+        "GID_index": 0,
+        "LID": 331,
+        "conclusion": "链路与设备可用，失败点是内存注册，不是 fabric",
+        "device": "mlx5_4",
+        "port_state": "4: ACTIVE, 400 Gb/sec (4X NDR)",
+        "transfer_engine_rpc": "P2P handshake listening 正常建立"
+      },
+      "resulting_symptom": {
+        "decode": "KVTransferError(...): Failed to get kvcache from prefill instance, it might be dead",
+        "http": "500 prefill_internal_error，router 重试 5 次后放弃",
+        "prefill": "KVTransferError(...): Decode instance could be dead, remote mooncake session 10.52.32.230:15182 is not alive"
+      },
+      "root_cause": "容器内 GPUDirect RDMA 的 peer-memory 支持缺失，因此把 KV cache 所在的 CUDA 显存注册给 HCA 时 ibv_reg_mr 返回 EFAULT。",
+      "server_log_evidence": [
+        "E0815 10:48:03.302397 rdma_context.cpp:346] Failed to register memory 0x7ff352000000: Bad address [14]",
+        "E0815 10:48:03.302418 rdma_transport.cpp:257] Failed to register memory region with context 0",
+        "（decode 侧同样：E0815 10:48:26.464197 rdma_context.cpp:346] Failed to register memory 0x7ff2ec000000: Bad address [14]）"
+      ],
+      "title": "Mooncake RDMA 无法注册显存：ibv_reg_mr 返回 EFAULT"
+    },
+    "blocking_stage": "run.compatibility_smoke",
+    "contract_authorized_retries_considered": {
+      "different_gpu_pair_same_host": "不适用：peer-memory 模块在整机层面缺失，换 GPU 对不改变注册能力。",
+      "different_hca_with_new_preflight": "不适用：ibv_reg_mr 失败发生在 rdma_context 的设备上下文层，8 个 HCA 共用同一 GPUDirect 机制，换 HCA 必然同样 EFAULT。为不浪费 GPU 分配，未逐一试探。",
+      "fresh_smoke_dir_and_free_ports": "不适用：失败发生在 RDMA 内存注册，与端口无关。",
+      "why_not_attempted": "以上三条均由 job 2393207 的能力探测直接排除，属于有依据的判断而非省略步骤。"
+    },
+    "contract_clause": "stop_and_block_if: 'the isolated compatibility smoke does not complete exactly one real Mooncake P-to-D sender chunk before formal raw'; 亦命中 'two distinct CUDA GPUs, Mooncake, RDMA or the SGLang router are unavailable'（RDMA 不具备注册显存的能力）",
+    "job_evidence": {
+      "elapsed": "00:03:53",
+      "formal_run_job": 2393205,
+      "log": "phase40_fix3_run_2393205.log (仓库外)",
+      "node": "prenyx0109.a51.clusters.nvidia.com",
+      "rdma_capability_probe_job": 2393207,
+      "reproduced_on_nodes": [
+        "prenyx0127 (W40-fix2, IB 10.52.33.8)",
+        "prenyx0109 (W40-fix3, IB 10.52.32.230)"
+      ],
+      "state": "FAILED (exit 1)"
+    },
+    "preflight_passed": {
+      "flashinfer_available": true,
+      "model_artifacts_sha256_all_match": true,
+      "offline_enforced": true,
+      "pinned_inputs_count": 14,
+      "pinned_inputs_sha256_all_match": true,
+      "python_source_contract_enforced": true,
+      "source_semantics_all_true": true,
+      "source_semantics_checks": 17,
+      "status": "PASS"
+    },
+    "resolved_by_this_workflow_commit": {
+      "finding_A_page_size_override": {
+        "contract_expected": {
+          "expected_attention_backend": "flashinfer",
+          "expected_kv_page_count": 64,
+          "expected_transfer_backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 147456,
+          "page_size_tokens": 1
+        },
+        "evidence_source": "smoke profile jsonl（仓库外）",
+        "note": "上一轮 trtllm_mha 把 page_size 从 1 snap 到 64（kv_bytes_per_page 9437184）的问题已被 --attention-backend flashinfer 完全消除，日志中不再出现 'changing page_size from 1 to 64'。",
+        "observed": {
+          "attention_backend": "flashinfer",
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 147456,
+          "kv_page_count": 64,
+          "page_size_tokens": 1,
+          "rid": "p40::compat_smoke_0",
+          "server_args_page_size": 1
+        },
+        "status": "RESOLVED"
+      }
+    },
+    "smoke_gate_worked_as_designed": {
+      "formal_raw_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/phase40_raw_fix3",
+      "formal_raw_file_count": 0,
+      "formal_raw_must_remain_empty_until_pass": "满足",
+      "note": "5 条记录对应 router 的 5 次重试，均为同一 rid p40::compat_smoke_0；smoke 未 PASS，因此本次没有写入任何正式 raw，也未触发『首条正式 raw 后不得更换 GPU 对/HCA』的锁定。",
+      "smoke_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/phase40_smoke_fix3_attempt1",
+      "smoke_expected_sender_chunks": 1,
+      "smoke_profile_records": 5
+    },
+    "unblock_options_for_control_side": [
+      "在计算节点加载 nvidia_peermem（或等价的 GPUDirect peer-memory / dmabuf 注册路径），使 ibv_reg_mr 能注册 CUDA 显存 —— 需集群管理员操作",
+      "或改用支持 dmabuf 注册的 mooncake / 驱动组合，并把该能力要求写入 preflight（建议在 preflight 增加一次真实的小块显存 ibv_reg_mr 探测，使这类环境缺失在 preflight 阶段即暴露，而不是等到 smoke）",
+      "若集群短期无法提供 GPUDirect，则需控制端决定是否放宽 transport 合同 —— 但这会改变 Phase40 的 claim_boundary，属于语义决定，执行端不得自行选择"
+    ],
+    "why_not_bypassable": {
+      "load_kernel_module": "加载 nvidia_peermem 需要计算节点 root 权限，执行端无此权限，且属于改变环境能力而非实验参数。",
+      "relax_smoke_gate": "smoke 门本身就是控制端为区分传输可用性与语义问题而加的闸；放宽它等于降容差（红线 #4）。",
+      "run_p_and_d_on_same_gpu": "违反 minimum_gpu_count=2 与 required_gpu_layout。",
+      "switch_transport_to_tcp_or_nixl": "合同 backend_contract.transport=rdma 且 backend_fallback_permitted=false；GPU_AGENT_PROMPT 明确『不得用NIXL/TCP/fake替代』。"
+    }
+  },
+  "phase": "PHASE40",
+  "reason": "Mooncake RDMA无法注册显存：P/D两侧ibv_reg_mr均返回EFAULT(Failed to register memory ... Bad address [14])，容器内nvidia_peermem/nv_peer_mem缺失即GPUDirect peer-memory不可用(ulimit -l unlimited、IB设备与端口均正常，排除锁页与fabric)。合同新增的compatibility smoke门按设计在正式raw写入前拦截，正式raw保持0文件。上一轮的page_size被trtllm_mha覆盖问题已由--attention-backend flashinfer修复并经smoke raw证实(page_size_tokens=1, kv_bytes_per_page=147456, kv_page_count=64)",
+  "schema_version": "patterndemand-workflow-blocked-v1",
+  "status": "BLOCKED"
+}
