@@ -17,6 +17,9 @@ sys.path.insert(0, str(HERE.parent))
 from common import ensure_external_raw_dir, load_json, repo_root, require_clean_before_run, require_expected_head, verify_pinned_inputs
 
 
+ANSI_ESCAPE = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+
+
 def normalize_link(label: str) -> str | None:
     if label.startswith("NV") and label[2:].isdigit():
         return f"NVLINK_{label}"
@@ -26,7 +29,11 @@ def normalize_link(label: str) -> str | None:
 
 
 def parse_topology(text: str) -> dict:
-    lines = [line.rstrip() for line in text.splitlines() if line.strip()]
+    # nvidia-smi 580.167.08 may wrap the topo header in SGR sequences even
+    # when stdout is redirected. Strip terminal control sequences only for
+    # parsing while preserving the original text in the returned audit.
+    normalized_text = ANSI_ESCAPE.sub("", text)
+    lines = [line.rstrip() for line in normalized_text.splitlines() if line.strip()]
     header = next((line.split() for line in lines if line.split() and line.split()[0] == "GPU0"), None)
     if not header:
         raise RuntimeError("无法解析nvidia-smi topo -m表头")
