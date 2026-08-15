@@ -1,0 +1,3 @@
+# PHASE40：执行阻塞
+
+本次没有生成正式实验结果。阻塞原因：WITH_NVIDIA_PEERMEM=0(dmabuf注册)彻底解决传输阻塞：smoke门PASS、P/D传输错误归零、45/45请求完成、74条sender chunk、总逻辑字节精确相等、page_size=1与字节公式全部正确。新阻塞是SGLang prefill batch组装跨repeat不确定：teacher未被证伪(多请求场景3次repeat中2次与teacher逐值一致)，偏离的是mixed_burst rep0与packed_remainder rep1共6个请求(45-39)；根因是一个wave的多请求经一次HTTP batch提交但入队时刻与scheduler tick存在竞态，先到的一部分偶尔被单独组成更早的batch使后续请求获得全新4096预算窗口。与repeat_histograms_must_be_exact=true不相容，重跑无法满足

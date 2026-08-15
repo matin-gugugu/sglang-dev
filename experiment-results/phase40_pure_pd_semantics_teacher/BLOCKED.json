@@ -1,0 +1,291 @@
+{
+  "created_at_utc": "2026-08-15T18:49:37.793142+00:00",
+  "evidence": {
+    "attempt": "W40-fix3 retry#2 (fix3b) — 加 WITH_NVIDIA_PEERMEM=0 后的完整执行",
+    "blocking_finding": {
+      "IMPORTANT_teacher_is_correct": "teacher 未被证伪。多请求场景中 3 次 repeat 有 2 次与 teacher 逐值精确一致，偏离的是另外 1 次的 GPU 行为。",
+      "checks": {
+        "aggregate_bytes_exact": true,
+        "aggregate_calls_exact": false,
+        "all_requests_exact": false,
+        "all_requests_have_gpu_events": true,
+        "backend_mooncake_sender_only": true,
+        "exact_requests": 39,
+        "gpu_events": 74,
+        "histogram_bytes_exact": false,
+        "histogram_calls_exact": false,
+        "no_tensor_contents": true,
+        "page_size_one": true,
+        "repeat_histograms_exact": false,
+        "request_count_45": true,
+        "runtime_formula_exact": true,
+        "runtime_kv_bytes_per_page": 147456,
+        "state_payload_zero": true,
+        "teacher_events": 75,
+        "total_requests": 45
+      },
+      "clean_split": "3 个单请求场景（single_short / single_exact_chunk / single_cross_chunk）teacher 100% 精确且三次 repeat 逐值一致；2 个多请求场景各有 1 次 repeat 偏离",
+      "deviating_repeats": {
+        "mixed_burst": "rep0（5 个请求 idx3..7 不符）",
+        "packed_remainder": "rep1（1 个请求 idx3 不符）",
+        "tally": "5 + 1 = 6 = 45 - 39，与 exact_requests 对账一致"
+      },
+      "mechanism": {
+        "control_group": {
+          "reading": "单请求场景不存在 batch 组装歧义，三次 repeat 逐值一致",
+          "single_cross_chunk_4097": [
+            [
+              [
+                [
+                  0,
+                  4096
+                ],
+                [
+                  4096,
+                  4097
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  0,
+                  4096
+                ],
+                [
+                  4096,
+                  4097
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  0,
+                  4096
+                ],
+                [
+                  4096,
+                  4097
+                ]
+              ]
+            ]
+          ]
+        },
+        "mixed_burst_first_chunk_page_end": {
+          "prompt_tokens": [
+            32,
+            257,
+            1024,
+            4095,
+            4096,
+            4097,
+            8193,
+            12289
+          ],
+          "reading": "rep1/rep2 的 2783/2784 正是 teacher 预测值；rep0 的 2815/2816 = 4096-(257+1024)，即 idx0(32 token) 未参与该预算窗口，已在更早 batch 中单独 prefill",
+          "rep0": [
+            32,
+            257,
+            1024,
+            2815,
+            2816,
+            2816,
+            2815,
+            2814
+          ],
+          "rep1": [
+            32,
+            257,
+            1024,
+            2783,
+            2784,
+            2784,
+            2783,
+            2782
+          ],
+          "rep2": [
+            32,
+            257,
+            1024,
+            2783,
+            2784,
+            2784,
+            2783,
+            2782
+          ],
+          "teacher_expectation_idx3": 2783
+        },
+        "packed_remainder_segments": {
+          "prompt_tokens": [
+            1000,
+            1000,
+            1000,
+            2000
+          ],
+          "reading": "rep0/rep2 中 idx0-2 占用 3000，idx3 首块只剩 1096 故切两块；rep1 中 idx0-2 已在更早 batch 完成，idx3 独占完整预算故一块吃下 2000",
+          "rep0": [
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1096
+              ],
+              [
+                1096,
+                2000
+              ]
+            ]
+          ],
+          "rep1": [
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                2000
+              ]
+            ]
+          ],
+          "rep2": [
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1096
+              ],
+              [
+                1096,
+                2000
+              ]
+            ]
+          ]
+        },
+        "summary": "一个 wave 的多个请求经一次 HTTP batch 提交，但 tokenize/入队到达 scheduler 的时刻不同步；scheduler 每个 tick 用队列里当时存在的请求组 prefill batch，因此偶尔把先到的一部分单独组成一个更早的 batch，后续请求随之获得一个全新的 4096 chunk 预算窗口。"
+      },
+      "per_scenario": {
+        "mixed_burst": {
+          "reproducible_across_repeats": false,
+          "requests_per_repeat": 8
+        },
+        "packed_remainder": {
+          "reproducible_across_repeats": false,
+          "requests_per_repeat": 4
+        },
+        "single_cross_chunk": {
+          "reproducible_across_repeats": true,
+          "requests_per_repeat": 1
+        },
+        "single_exact_chunk": {
+          "reproducible_across_repeats": true,
+          "requests_per_repeat": 1
+        },
+        "single_short": {
+          "reproducible_across_repeats": true,
+          "requests_per_repeat": 1
+        }
+      },
+      "positive_signals": [
+        "aggregate_bytes_exact=True：总逻辑字节精确相等（20941701120），kv_bytes_per_page 公式、page_size=1 语义与传输总量全部正确",
+        "page_size_one=True 且 runtime_formula_exact=True：W40-fix3 的 flashinfer pin 完全生效",
+        "3 个单请求场景构成已验证的精确闭环基线，可作为后续合同的确定性子集"
+      ],
+      "title": "SGLang prefill batch 组装跨 repeat 不确定，与 repeat_histograms_must_be_exact=true 不相容",
+      "total_logical_bytes_gpu": 20941701120
+    },
+    "blocking_stage": "run.teacher_gpu_alignment",
+    "contract_clause": "acceptance_gates: request_level_exact_match_required / aggregate_calls_absolute_error_required=0 / histogram_*_l1_required=0.0 / repeat_histograms_must_be_exact=true；accepted_result_statuses 仅 PASS",
+    "job_evidence": {
+      "elapsed": "00:04:50",
+      "job": 2393237,
+      "log": "phase40_fix3b_run_2393237.log",
+      "node": "prenyx0051",
+      "preserved": "raw、smoke、日志全部原样保留，未删除任何不一致记录",
+      "raw_dir": "phase40_raw_fix3b（74 条 chunk + 3 份 server log）",
+      "smoke_dir": "phase40_smoke_fix3_attempt2（1 条 chunk + 3 份 server log）",
+      "state": "FAILED (exit 1)"
+    },
+    "transport_blocker_RESOLVED": {
+      "cluster_design": "本集群故意不装 nvidia_peermem，靠 NVIDIA open driver + dmabuf 提供 GPUDirect RDMA；同机 TRT-LLM disagg 能跑是因为 UCX 默认探测 dmabuf",
+      "evidence": {
+        "compat_smoke": "PASS，恰好 1 条 MooncakeKVSender chunk",
+        "formal_requests_completed": "45/45",
+        "formal_sender_chunks": 74,
+        "transfer_errors_decode": 0,
+        "transfer_errors_prefill": 0
+      },
+      "fix": "WITH_NVIDIA_PEERMEM=0（无 MC_ 前缀；该 mooncake build 默认 true）",
+      "independent_validation": "仓库外 p40probe/：8 张 NDR HCA 上 ibv_reg_mr(显存) 全 FAIL errno=14 / ibv_reg_dmabuf_mr 全 OK；主机内存 ibv_reg_mr OK 作对照；端到端 GPU0->GPU1 RDMA write 64MB 逐字节校验通过",
+      "mechanism": "RdmaContext::registerMemoryRegionInternal 对 CU_MEMORYTYPE_DEVICE 改走 cuMemGetHandleForAddressRange + ibv_reg_dmabuf_mr，不再用需要 nvidia_peermem 的 ibv_reg_mr_iova2",
+      "not_in_contract": "该变量未写入合同，属执行端环境决定，须控制端审阅是否固化（同 W40-fix2 对 PYTHONPATH 的处理）",
+      "scope": "仅为环境变量配置，未改动任何冻结参数：backend 仍 mooncake、transport 仍 rdma、数据路径仍是 IB 上的 RDMA write；sglang 代码中无任何位置读写该变量"
+    },
+    "unblock_options_for_control_side": [
+      "使提交侧确定性化：保证一个 wave 的全部请求在 scheduler 组 batch 前均已入队（例如先提交后放行、或增加入队屏障），从而消除竞态 —— 这是最贴近合同原意的方向",
+      "或调整 scheduler 侧参数（如 scheduler-recv-interval）使批组装边界可预期，并将该参数写入 measurement_contract 与 source_semantics_audit",
+      "或把 batch 组装纳入 teacher 的状态空间（teacher 需要知道实际 batch 划分），但这会让 teacher 不再是纯离线可生成的 —— 与 Phase40『完整请求窗口离线生成标签』的目标冲突，须权衡",
+      "或把 repeat_histograms_must_be_exact 从逐 chunk 边界精确放宽为总字节+总调用精确 —— 本次总字节已精确，但这会改变 claim_boundary，属语义决定",
+      "建议无论选哪条，都保留 3 个单请求场景作为已验证基线"
+    ],
+    "why_not_bypassable": {
+      "drop_deviating_repeats": "删异常是红线 #4；且这两次偏离正是合同设计要检验的 FCFS 批内拆分行为。",
+      "modify_teacher": "teacher 在 contracts.py 中属冻结 workflow，且本次数据显示它并未出错，不存在可改之处（红线 #1）。",
+      "relax_tolerance": "提高容差或放宽 exact 匹配是红线 #4。",
+      "rerun_until_all_three_agree": "偏离源于到达时刻与 scheduler tick 的竞态，属固有不确定性；重跑只会得到另一组分布。且正式 raw 已产生，合同禁止此后更换 GPU 对/HCA/策略/请求顺序/重复数。"
+    }
+  },
+  "phase": "PHASE40",
+  "reason": "WITH_NVIDIA_PEERMEM=0(dmabuf注册)彻底解决传输阻塞：smoke门PASS、P/D传输错误归零、45/45请求完成、74条sender chunk、总逻辑字节精确相等、page_size=1与字节公式全部正确。新阻塞是SGLang prefill batch组装跨repeat不确定：teacher未被证伪(多请求场景3次repeat中2次与teacher逐值一致)，偏离的是mixed_burst rep0与packed_remainder rep1共6个请求(45-39)；根因是一个wave的多请求经一次HTTP batch提交但入队时刻与scheduler tick存在竞态，先到的一部分偶尔被单独组成更早的batch使后续请求获得全新4096预算窗口。与repeat_histograms_must_be_exact=true不相容，重跑无法满足",
+  "schema_version": "patterndemand-workflow-blocked-v1",
+  "status": "BLOCKED"
+}
