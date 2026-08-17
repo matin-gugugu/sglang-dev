@@ -1,0 +1,61 @@
+{
+  "branch": "run/phase40-nvidia-a51-20260816-w40fix4",
+  "captured_at_utc": "2026-08-17T04:15:16.887737+00:00",
+  "container_image_env": {
+    "SGLANG_IMAGE_TAG": "lmsysorg/sglang:v0.5.15"
+  },
+  "cuda": "13.0",
+  "cuda_visible_devices": null,
+  "executable": "/usr/bin/python3",
+  "formal_execution_offline": {
+    "HF_HUB_OFFLINE": true,
+    "TRANSFORMERS_OFFLINE": true
+  },
+  "gpu_pair": [
+    0,
+    1
+  ],
+  "gpu_topology_text": "\t\u001b[4mGPU0\tGPU1\tGPU2\tGPU3\tGPU4\tGPU5\tGPU6\tGPU7\tNIC0\tNIC1\tNIC2\tNIC3\tNIC4\tNIC5\tNIC6\tNIC7\tCPU Affinity\tNUMA Affinity\tGPU NUMA ID\u001b[0m\nGPU0\t X \tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\tPXB\tNODE\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\t0-55,112-167\t0\t\tN/A\nGPU1\tNV18\t X \tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\tNODE\tPXB\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\t0-55,112-167\t0\t\tN/A\nGPU2\tNV18\tNV18\t X \tNV18\tNV18\tNV18\tNV18\tNV18\tNODE\tNODE\tPXB\tNODE\tSYS\tSYS\tSYS\tSYS\t0-55,112-167\t0\t\tN/A\nGPU3\tNV18\tNV18\tNV18\t X \tNV18\tNV18\tNV18\tNV18\tNODE\tNODE\tNODE\tPXB\tSYS\tSYS\tSYS\tSYS\t0-55,112-167\t0\t\tN/A\nGPU4\tNV18\tNV18\tNV18\tNV18\t X \tNV18\tNV18\tNV18\tSYS\tSYS\tSYS\tSYS\tPXB\tNODE\tNODE\tNODE\t56-111,168-223\t1\t\tN/A\nGPU5\tNV18\tNV18\tNV18\tNV18\tNV18\t X \tNV18\tNV18\tSYS\tSYS\tSYS\tSYS\tNODE\tPXB\tNODE\tNODE\t56-111,168-223\t1\t\tN/A\nGPU6\tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\t X \tNV18\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\tPXB\tNODE\t56-111,168-223\t1\t\tN/A\nGPU7\tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\t X \tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\tNODE\tPXB\t56-111,168-223\t1\t\tN/A\nNIC0\tPXB\tNODE\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\t X \tNODE\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\t\t\t\t\nNIC1\tNODE\tPXB\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\tNODE\t X \tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\t\t\t\t\nNIC2\tNODE\tNODE\tPXB\tNODE\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\t X \tNODE\tSYS\tSYS\tSYS\tSYS\t\t\t\t\nNIC3\tNODE\tNODE\tNODE\tPXB\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\tNODE\t X \tSYS\tSYS\tSYS\tSYS\t\t\t\t\nNIC4\tSYS\tSYS\tSYS\tSYS\tPXB\tNODE\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\t X \tNODE\tNODE\tNODE\t\t\t\t\nNIC5\tSYS\tSYS\tSYS\tSYS\tNODE\tPXB\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\tNODE\t X \tNODE\tNODE\t\t\t\t\nNIC6\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\tPXB\tNODE\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\t X \tNODE\t\t\t\t\nNIC7\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\tNODE\tPXB\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\tNODE\t X \t\t\t\t\n\nLegend:\n\n  X    = Self\n  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)\n  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node\n  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)\n  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)\n  PIX  = Connection traversing at most a single PCIe bridge\n  NV#  = Connection traversing a bonded set of # NVLinks\n\nNIC Legend:\n\n  NIC0: mlx5_4\n  NIC1: mlx5_7\n  NIC2: mlx5_8\n  NIC3: mlx5_9\n  NIC4: mlx5_10\n  NIC5: mlx5_13\n  NIC6: mlx5_14\n  NIC7: mlx5_15\n\n",
+  "hostname": "prenyx0231.a51.clusters.nvidia.com",
+  "ib": {
+    "device": "mlx5_4",
+    "ports": [
+      {
+        "port": "1",
+        "rate": "400 Gb/sec (4X NDR)",
+        "state": "4: ACTIVE"
+      }
+    ]
+  },
+  "mooncake_version": null,
+  "platform": "Linux-6.17.0-40-generic-x86_64-with-glibc2.39",
+  "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "python_source": {
+    "PYTHONPATH_entries": [
+      "/lustre/fsw/coreai_comparch_infbench/huanhuanc/sglang-dev/python"
+    ],
+    "expected_repo_python": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/sglang-dev/python",
+    "mooncake_engine_origin": "/usr/local/lib/python3.12/dist-packages/mooncake/engine.so",
+    "repo_sglang_loaded": true,
+    "sglang_origin": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/sglang-dev/python/sglang/__init__.py",
+    "sglang_router_launch_origin": "/usr/local/lib/python3.12/dist-packages/sglang_router/launch_router.py"
+  },
+  "repository_head": "0f01613fa3a95dba6a5b7a2f6dcd95e0721db8b4",
+  "selected_gpus": [
+    {
+      "driver": "580.167.08",
+      "index": 0,
+      "memory_mib": 183359,
+      "name": "NVIDIA B200",
+      "uuid": "GPU-9ab859b4-0b7a-2b04-4bb8-ab777c5e740d"
+    },
+    {
+      "driver": "580.167.08",
+      "index": 1,
+      "memory_mib": 183359,
+      "name": "NVIDIA B200",
+      "uuid": "GPU-4738a052-6350-b9c1-6d7b-18da301f8688"
+    }
+  ],
+  "torch": "2.11.0+cu130"
+}

@@ -1,0 +1,67 @@
+{
+  "checkpoint_loaded": false,
+  "checks": {
+    "aggregate_bytes_exact": true,
+    "aggregate_calls_exact": true,
+    "alignment_rows_6": true,
+    "all_requests_exact": true,
+    "all_requests_have_gpu_events": true,
+    "backend_mooncake_sender_only": true,
+    "histogram_bytes_exact": true,
+    "histogram_calls_exact": true,
+    "histogram_rows_72": true,
+    "no_tensor_contents": true,
+    "page_size_one": true,
+    "repeat_histograms_exact": true,
+    "request_count_45": true,
+    "runtime_formula_exact": true,
+    "state_payload_zero": true
+  },
+  "compatibility_smoke": {
+    "admission_sender_chunks": 10,
+    "attention_backend": "flashinfer",
+    "page_size_tokens": 1,
+    "sender_chunks_total": 11,
+    "status": "PASS",
+    "transport_sender_chunks": 1
+  },
+  "completed_at_utc": "2026-08-17T04:15:16.916223+00:00",
+  "counts": {
+    "compatibility_smoke_sender_chunks": 11,
+    "exact_requests": 45,
+    "external_raw_bytes": 127878,
+    "external_raw_files": 4,
+    "gpu_logical_chunks": 75,
+    "histogram_rows": 72,
+    "repeats_per_scenario": 3,
+    "requests": 45,
+    "scenarios": 5,
+    "teacher_logical_chunks": 75
+  },
+  "evidence_boundary": {
+    "full_request_list_usage": "offline teacher generation and representative audit only",
+    "not_proved": "a trained low-dimensional PD predictor, six-model generalization, Mooncake physical cost, placement or online scheduling",
+    "proved": "exact representative GPU-to-teacher alignment for the frozen P1-D1 Qwen3/Mooncake logical KV-chunk semantics"
+  },
+  "objective": "在纯P1-D1、fixed-draining、固定Mooncake/RDMA传输语义下，用真实SGLang GPU KV发送记录验证拓扑无关P→D 12-bin逻辑消息直方图口径，并建立可由完整请求窗口离线生成的scheduler-faithful Hfull teacher基础闭环",
+  "overall_alignment": {
+    "calls_absolute_error": "0",
+    "exact_requests": "45",
+    "gpu_calls": "75",
+    "gpu_logical_bytes": "20941701120",
+    "logical_bytes_absolute_error": "0",
+    "requests": "45",
+    "scenario": "overall",
+    "teacher_calls": "75",
+    "teacher_logical_bytes": "20941701120"
+  },
+  "physical_curve_measured": false,
+  "runtime_kv_bytes_per_page": [
+    147456
+  ],
+  "scheduler_or_placement_evaluated": false,
+  "schema_version": "phase40-pure-pd-semantics-teacher-result-v1",
+  "status": "PASS",
+  "training_performed": false,
+  "workflow_commit": "0f01613fa3a95dba6a5b7a2f6dcd95e0721db8b4"
+}

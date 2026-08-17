@@ -1,0 +1,430 @@
+{
+  "admission_environment": {
+    "SGLANG_PD_BOOTSTRAP_BATCH_BARRIER": "1",
+    "SGLANG_TEST_FORCE_OPTIMISTIC_PREFILL_RETRY_PROB": null
+  },
+  "admission_expected_segments": {
+    "p40::admission_smoke::rep0_0": [
+      [
+        0,
+        1000
+      ]
+    ],
+    "p40::admission_smoke::rep0_1": [
+      [
+        0,
+        1000
+      ]
+    ],
+    "p40::admission_smoke::rep0_2": [
+      [
+        0,
+        1000
+      ]
+    ],
+    "p40::admission_smoke::rep0_3": [
+      [
+        0,
+        1096
+      ],
+      [
+        1096,
+        2000
+      ]
+    ],
+    "p40::admission_smoke::rep1_0": [
+      [
+        0,
+        1000
+      ]
+    ],
+    "p40::admission_smoke::rep1_1": [
+      [
+        0,
+        1000
+      ]
+    ],
+    "p40::admission_smoke::rep1_2": [
+      [
+        0,
+        1000
+      ]
+    ],
+    "p40::admission_smoke::rep1_3": [
+      [
+        0,
+        1096
+      ],
+      [
+        1096,
+        2000
+      ]
+    ]
+  },
+  "admission_sender_chunks": 10,
+  "admission_signatures": [
+    [
+      [
+        [
+          0,
+          1000
+        ]
+      ],
+      [
+        [
+          0,
+          1000
+        ]
+      ],
+      [
+        [
+          0,
+          1000
+        ]
+      ],
+      [
+        [
+          0,
+          1096
+        ],
+        [
+          1096,
+          2000
+        ]
+      ]
+    ],
+    [
+      [
+        [
+          0,
+          1000
+        ]
+      ],
+      [
+        [
+          0,
+          1000
+        ]
+      ],
+      [
+        [
+          0,
+          1000
+        ]
+      ],
+      [
+        [
+          0,
+          1096
+        ],
+        [
+          1096,
+          2000
+        ]
+      ]
+    ]
+  ],
+  "attention_backend": "flashinfer",
+  "checks": {
+    "admission_repeats_exact": true,
+    "admission_segments_exact": true,
+    "all_smoke_waves_returned": true,
+    "bytes_per_page_exact": true,
+    "exactly_one_transport_sender_chunk": true,
+    "formal_raw_still_empty": true,
+    "logical_bytes_formula_exact": true,
+    "mooncake_sender": true,
+    "no_tensor_contents": true,
+    "no_transfer_error_in_logs": true,
+    "no_unexpected_profile_records": true,
+    "page_size_one": true,
+    "sender_chunks_total_exact": true,
+    "state_payload_zero": true,
+    "transport_page_count_exact": true
+  },
+  "commands": {
+    "decode": [
+      "/usr/bin/python3",
+      "-m",
+      "sglang.launch_server",
+      "--model-path",
+      "$MODEL_PATH",
+      "--tp",
+      "1",
+      "--pp-size",
+      "1",
+      "--dtype",
+      "bfloat16",
+      "--kv-cache-dtype",
+      "auto",
+      "--attention-backend",
+      "flashinfer",
+      "--page-size",
+      "1",
+      "--schedule-policy",
+      "fcfs",
+      "--chunked-prefill-size",
+      "4096",
+      "--max-prefill-tokens",
+      "4096",
+      "--max-running-requests",
+      "64",
+      "--context-length",
+      "16384",
+      "--mem-fraction-static",
+      "0.8",
+      "--disable-radix-cache",
+      "--disable-overlap-schedule",
+      "--disaggregation-transfer-backend",
+      "mooncake",
+      "--disaggregation-ib-device",
+      "mlx5_4",
+      "--disaggregation-bootstrap-port",
+      "39103",
+      "--host",
+      "127.0.0.1",
+      "--disaggregation-mode",
+      "decode",
+      "--port",
+      "39101"
+    ],
+    "prefill": [
+      "/usr/bin/python3",
+      "-m",
+      "sglang.launch_server",
+      "--model-path",
+      "$MODEL_PATH",
+      "--tp",
+      "1",
+      "--pp-size",
+      "1",
+      "--dtype",
+      "bfloat16",
+      "--kv-cache-dtype",
+      "auto",
+      "--attention-backend",
+      "flashinfer",
+      "--page-size",
+      "1",
+      "--schedule-policy",
+      "fcfs",
+      "--chunked-prefill-size",
+      "4096",
+      "--max-prefill-tokens",
+      "4096",
+      "--max-running-requests",
+      "64",
+      "--context-length",
+      "16384",
+      "--mem-fraction-static",
+      "0.8",
+      "--disable-radix-cache",
+      "--disable-overlap-schedule",
+      "--disaggregation-transfer-backend",
+      "mooncake",
+      "--disaggregation-ib-device",
+      "mlx5_4",
+      "--disaggregation-bootstrap-port",
+      "39103",
+      "--host",
+      "127.0.0.1",
+      "--disaggregation-mode",
+      "prefill",
+      "--optimistic-prefill-retries",
+      "0",
+      "--port",
+      "39100"
+    ],
+    "router": [
+      "/usr/bin/python3",
+      "-m",
+      "sglang_router.launch_router",
+      "--pd-disaggregation",
+      "--prefill",
+      "http://127.0.0.1:39100",
+      "--decode",
+      "http://127.0.0.1:39101",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "39102"
+    ]
+  },
+  "external_manifest": {
+    "bytes": 69527,
+    "external_raw_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/phase40_smoke_fix4_attempt1",
+    "file_count": 4,
+    "files": [
+      {
+        "bytes": 6573,
+        "relative_path": "profile/phase40_compat_smoke_prefill_pid2699931.jsonl",
+        "sha256": "c5f8c5aeca85f0fba8e0a0b5052b6cd2dc0fa7bef53f9e06cf67bd5b6aa2c8fa"
+      },
+      {
+        "bytes": 30533,
+        "relative_path": "server_logs/decode.log",
+        "sha256": "1dd7656f3ea8881aa5aa06f701daf1b80be907d1ac32cf7c40bd9f7b4f76f51e"
+      },
+      {
+        "bytes": 22650,
+        "relative_path": "server_logs/prefill.log",
+        "sha256": "41d36cd1d4fdb2439013a750f7af4494d02b9316684a65254a041371e7fdb342"
+      },
+      {
+        "bytes": 9771,
+        "relative_path": "server_logs/router.log",
+        "sha256": "2009cf0a821263e307ceb536173625dca739cc68335d5e48664a32421d810ada"
+      }
+    ],
+    "profiler_event_count": 11,
+    "raw_committed_to_git": false,
+    "schema_version": "phase40-external-raw-manifest-v1"
+  },
+  "external_smoke_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/phase40_smoke_fix4_attempt1",
+  "finished_at_utc": "2026-08-17T04:14:18.870908+00:00",
+  "gpu_pair": [
+    0,
+    1
+  ],
+  "ib_device": "mlx5_4",
+  "matching_sender_chunks": 11,
+  "observed": [
+    {
+      "backend": "MooncakeKVSender",
+      "kv_bytes_per_page": 147456,
+      "kv_page_count": 64,
+      "logical_bytes": 9437184,
+      "page_end": 64,
+      "page_size_tokens": 1,
+      "page_start": 0,
+      "rid": "p40::compat_smoke_0",
+      "state_logical_bytes": 0
+    },
+    {
+      "backend": "MooncakeKVSender",
+      "kv_bytes_per_page": 147456,
+      "kv_page_count": 1000,
+      "logical_bytes": 147456000,
+      "page_end": 1000,
+      "page_size_tokens": 1,
+      "page_start": 0,
+      "rid": "p40::admission_smoke::rep0_0",
+      "state_logical_bytes": 0
+    },
+    {
+      "backend": "MooncakeKVSender",
+      "kv_bytes_per_page": 147456,
+      "kv_page_count": 1000,
+      "logical_bytes": 147456000,
+      "page_end": 1000,
+      "page_size_tokens": 1,
+      "page_start": 0,
+      "rid": "p40::admission_smoke::rep0_1",
+      "state_logical_bytes": 0
+    },
+    {
+      "backend": "MooncakeKVSender",
+      "kv_bytes_per_page": 147456,
+      "kv_page_count": 1000,
+      "logical_bytes": 147456000,
+      "page_end": 1000,
+      "page_size_tokens": 1,
+      "page_start": 0,
+      "rid": "p40::admission_smoke::rep0_2",
+      "state_logical_bytes": 0
+    },
+    {
+      "backend": "MooncakeKVSender",
+      "kv_bytes_per_page": 147456,
+      "kv_page_count": 1096,
+      "logical_bytes": 161611776,
+      "page_end": 1096,
+      "page_size_tokens": 1,
+      "page_start": 0,
+      "rid": "p40::admission_smoke::rep0_3",
+      "state_logical_bytes": 0
+    },
+    {
+      "backend": "MooncakeKVSender",
+      "kv_bytes_per_page": 147456,
+      "kv_page_count": 904,
+      "logical_bytes": 133300224,
+      "page_end": 2000,
+      "page_size_tokens": 1,
+      "page_start": 1096,
+      "rid": "p40::admission_smoke::rep0_3",
+      "state_logical_bytes": 0
+    },
+    {
+      "backend": "MooncakeKVSender",
+      "kv_bytes_per_page": 147456,
+      "kv_page_count": 1000,
+      "logical_bytes": 147456000,
+      "page_end": 1000,
+      "page_size_tokens": 1,
+      "page_start": 0,
+      "rid": "p40::admission_smoke::rep1_0",
+      "state_logical_bytes": 0
+    },
+    {
+      "backend": "MooncakeKVSender",
+      "kv_bytes_per_page": 147456,
+      "kv_page_count": 1000,
+      "logical_bytes": 147456000,
+      "page_end": 1000,
+      "page_size_tokens": 1,
+      "page_start": 0,
+      "rid": "p40::admission_smoke::rep1_1",
+      "state_logical_bytes": 0
+    },
+    {
+      "backend": "MooncakeKVSender",
+      "kv_bytes_per_page": 147456,
+      "kv_page_count": 1000,
+      "logical_bytes": 147456000,
+      "page_end": 1000,
+      "page_size_tokens": 1,
+      "page_start": 0,
+      "rid": "p40::admission_smoke::rep1_2",
+      "state_logical_bytes": 0
+    },
+    {
+      "backend": "MooncakeKVSender",
+      "kv_bytes_per_page": 147456,
+      "kv_page_count": 1096,
+      "logical_bytes": 161611776,
+      "page_end": 1096,
+      "page_size_tokens": 1,
+      "page_start": 0,
+      "rid": "p40::admission_smoke::rep1_3",
+      "state_logical_bytes": 0
+    },
+    {
+      "backend": "MooncakeKVSender",
+      "kv_bytes_per_page": 147456,
+      "kv_page_count": 904,
+      "logical_bytes": 133300224,
+      "page_end": 2000,
+      "page_size_tokens": 1,
+      "page_start": 1096,
+      "rid": "p40::admission_smoke::rep1_3",
+      "state_logical_bytes": 0
+    }
+  ],
+  "profile_records_total": 11,
+  "schema_version": "phase40-compatibility-smoke-v2",
+  "started_at_utc": "2026-08-17T04:12:56.942652+00:00",
+  "status": "PASS",
+  "transfer_backend": "mooncake",
+  "transport": "rdma",
+  "transport_environment": {
+    "MC_FORCE_MNNVL": null,
+    "MC_FORCE_TCP": null,
+    "MC_INTRANODE_NVLINK": null,
+    "MOONCAKE_PROTOCOL": "rdma",
+    "SGLANG_MOONCAKE_CUSTOM_MEM_POOL": null,
+    "WITH_NVIDIA_PEERMEM": "0"
+  },
+  "transport_expected_rid": "p40::compat_smoke_0",
+  "transport_sender_chunks": 1
+}
