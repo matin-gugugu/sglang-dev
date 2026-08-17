@@ -1,0 +1,3335 @@
+{
+  "models": [
+    {
+      "admission_environment": {
+        "SGLANG_PD_BOOTSTRAP_BATCH_BARRIER": "1",
+        "SGLANG_TEST_FORCE_OPTIMISTIC_PREFILL_RETRY_PROB": null
+      },
+      "admission_expected_segments": {
+        "p47::deepseek-v2-lite::packed_remainder::rep0_0": [
+          [
+            0,
+            16
+          ]
+        ],
+        "p47::deepseek-v2-lite::packed_remainder::rep0_1": [
+          [
+            0,
+            16
+          ]
+        ],
+        "p47::deepseek-v2-lite::packed_remainder::rep0_2": [
+          [
+            0,
+            16
+          ]
+        ],
+        "p47::deepseek-v2-lite::packed_remainder::rep0_3": [
+          [
+            0,
+            16
+          ],
+          [
+            16,
+            32
+          ]
+        ],
+        "p47::deepseek-v2-lite::packed_remainder::rep1_0": [
+          [
+            0,
+            16
+          ]
+        ],
+        "p47::deepseek-v2-lite::packed_remainder::rep1_1": [
+          [
+            0,
+            16
+          ]
+        ],
+        "p47::deepseek-v2-lite::packed_remainder::rep1_2": [
+          [
+            0,
+            16
+          ]
+        ],
+        "p47::deepseek-v2-lite::packed_remainder::rep1_3": [
+          [
+            0,
+            16
+          ],
+          [
+            16,
+            32
+          ]
+        ],
+        "p47::deepseek-v2-lite::page_boundary_crosscheck::rep0_0": [
+          [
+            0,
+            1
+          ]
+        ],
+        "p47::deepseek-v2-lite::page_boundary_crosscheck::rep0_1": [
+          [
+            0,
+            2
+          ]
+        ],
+        "p47::deepseek-v2-lite::page_boundary_crosscheck::rep0_2": [
+          [
+            0,
+            16
+          ]
+        ],
+        "p47::deepseek-v2-lite::page_boundary_crosscheck::rep0_3": [
+          [
+            0,
+            45
+          ],
+          [
+            45,
+            47
+          ]
+        ],
+        "p47::deepseek-v2-lite::page_boundary_crosscheck::rep1_0": [
+          [
+            0,
+            1
+          ]
+        ],
+        "p47::deepseek-v2-lite::page_boundary_crosscheck::rep1_1": [
+          [
+            0,
+            2
+          ]
+        ],
+        "p47::deepseek-v2-lite::page_boundary_crosscheck::rep1_2": [
+          [
+            0,
+            16
+          ]
+        ],
+        "p47::deepseek-v2-lite::page_boundary_crosscheck::rep1_3": [
+          [
+            0,
+            45
+          ],
+          [
+            45,
+            47
+          ]
+        ]
+      },
+      "admission_probe_names": [
+        "packed_remainder",
+        "page_boundary_crosscheck"
+      ],
+      "admission_sender_chunks": 20,
+      "admission_signatures": {
+        "packed_remainder": [
+          [
+            [
+              [
+                0,
+                16
+              ]
+            ],
+            [
+              [
+                0,
+                16
+              ]
+            ],
+            [
+              [
+                0,
+                16
+              ]
+            ],
+            [
+              [
+                0,
+                16
+              ],
+              [
+                16,
+                32
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                0,
+                16
+              ]
+            ],
+            [
+              [
+                0,
+                16
+              ]
+            ],
+            [
+              [
+                0,
+                16
+              ]
+            ],
+            [
+              [
+                0,
+                16
+              ],
+              [
+                16,
+                32
+              ]
+            ]
+          ]
+        ],
+        "page_boundary_crosscheck": [
+          [
+            [
+              [
+                0,
+                1
+              ]
+            ],
+            [
+              [
+                0,
+                2
+              ]
+            ],
+            [
+              [
+                0,
+                16
+              ]
+            ],
+            [
+              [
+                0,
+                45
+              ],
+              [
+                45,
+                47
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                0,
+                1
+              ]
+            ],
+            [
+              [
+                0,
+                2
+              ]
+            ],
+            [
+              [
+                0,
+                16
+              ]
+            ],
+            [
+              [
+                0,
+                45
+              ],
+              [
+                45,
+                47
+              ]
+            ]
+          ]
+        ]
+      },
+      "attention_backend": "trtllm_mla",
+      "checks": {
+        "admission_probe_roster_exact": true,
+        "admission_repeats_exact": true,
+        "admission_segments_exact": true,
+        "all_smoke_waves_returned": true,
+        "bytes_per_page_exact": true,
+        "exactly_one_transport_sender_chunk": true,
+        "formal_raw_still_empty": true,
+        "logical_bytes_formula_exact": true,
+        "mooncake_sender": true,
+        "no_tensor_contents": true,
+        "no_transfer_error_in_logs": true,
+        "no_unexpected_profile_records": true,
+        "page_size_frozen": true,
+        "sender_chunks_total_exact": true,
+        "state_payload_zero": true,
+        "transport_page_count_exact": true
+      },
+      "commands": {
+        "decode": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang.launch_server",
+          "--model-path",
+          "$MODEL_PATH",
+          "--tp",
+          "1",
+          "--pp-size",
+          "1",
+          "--dtype",
+          "bfloat16",
+          "--kv-cache-dtype",
+          "bf16",
+          "--attention-backend",
+          "trtllm_mla",
+          "--page-size",
+          "64",
+          "--schedule-policy",
+          "fcfs",
+          "--chunked-prefill-size",
+          "4096",
+          "--max-prefill-tokens",
+          "4096",
+          "--max-running-requests",
+          "64",
+          "--context-length",
+          "16384",
+          "--mem-fraction-static",
+          "0.8",
+          "--disable-radix-cache",
+          "--disable-overlap-schedule",
+          "--disaggregation-transfer-backend",
+          "mooncake",
+          "--disaggregation-ib-device",
+          "mlx5_4",
+          "--disaggregation-bootstrap-port",
+          "43103",
+          "--host",
+          "127.0.0.1",
+          "--disaggregation-mode",
+          "decode",
+          "--port",
+          "43101"
+        ],
+        "prefill": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang.launch_server",
+          "--model-path",
+          "$MODEL_PATH",
+          "--tp",
+          "1",
+          "--pp-size",
+          "1",
+          "--dtype",
+          "bfloat16",
+          "--kv-cache-dtype",
+          "bf16",
+          "--attention-backend",
+          "trtllm_mla",
+          "--page-size",
+          "64",
+          "--schedule-policy",
+          "fcfs",
+          "--chunked-prefill-size",
+          "4096",
+          "--max-prefill-tokens",
+          "4096",
+          "--max-running-requests",
+          "64",
+          "--context-length",
+          "16384",
+          "--mem-fraction-static",
+          "0.8",
+          "--disable-radix-cache",
+          "--disable-overlap-schedule",
+          "--disaggregation-transfer-backend",
+          "mooncake",
+          "--disaggregation-ib-device",
+          "mlx5_4",
+          "--disaggregation-bootstrap-port",
+          "43103",
+          "--host",
+          "127.0.0.1",
+          "--disaggregation-mode",
+          "prefill",
+          "--optimistic-prefill-retries",
+          "0",
+          "--port",
+          "43100"
+        ],
+        "router": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang_router.launch_router",
+          "--pd-disaggregation",
+          "--prefill",
+          "http://127.0.0.1:43100",
+          "--decode",
+          "http://127.0.0.1:43101",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "43102"
+        ]
+      },
+      "external_manifest": {
+        "bytes": 76735,
+        "external_raw_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/patterndemand_runs/phase47_pd_five_model_teacher_validation/ext/smoke_attempt4/deepseek-v2-lite",
+        "file_count": 4,
+        "files": [
+          {
+            "bytes": 12949,
+            "relative_path": "profile/phase47_compat_smoke_prefill_pid2443606.jsonl",
+            "sha256": "ede795fe981646f611633efb5ceef1dd84b2bfb0a55b1d0c66072e3951b186a8"
+          },
+          {
+            "bytes": 25987,
+            "relative_path": "server_logs/decode.log",
+            "sha256": "16478b8e03fde94f22669299df0b12f13572fdc5dbd58487b758217c5ed793cf"
+          },
+          {
+            "bytes": 26305,
+            "relative_path": "server_logs/prefill.log",
+            "sha256": "32e7a59eecb7b0c13f638281cf0fce042d21f97fac77d0da09e6615161277b61"
+          },
+          {
+            "bytes": 11494,
+            "relative_path": "server_logs/router.log",
+            "sha256": "9f58b1635b7085598bffff6081bd8ded8101f3fb2b2cf00682689f133c312950"
+          }
+        ],
+        "profiler_event_count": 21,
+        "raw_committed_to_git": false,
+        "schema_version": "phase40-external-raw-manifest-v1"
+      },
+      "external_smoke_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/patterndemand_runs/phase47_pd_five_model_teacher_validation/ext/smoke_attempt4/deepseek-v2-lite",
+      "finished_at_utc": "2026-08-17T15:14:03.951464+00:00",
+      "gpu_pair": [
+        0,
+        1
+      ],
+      "ib_device": "mlx5_4",
+      "matching_sender_chunks": 21,
+      "model_id": "deepseek-v2-lite",
+      "observed": [
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 1,
+          "logical_bytes": 1990656,
+          "page_end": 1,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::compat_smoke_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 16,
+          "logical_bytes": 31850496,
+          "page_end": 16,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::packed_remainder::rep0_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 16,
+          "logical_bytes": 31850496,
+          "page_end": 16,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::packed_remainder::rep0_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 16,
+          "logical_bytes": 31850496,
+          "page_end": 16,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::packed_remainder::rep0_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 16,
+          "logical_bytes": 31850496,
+          "page_end": 16,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::packed_remainder::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 16,
+          "logical_bytes": 31850496,
+          "page_end": 32,
+          "page_size_tokens": 64,
+          "page_start": 16,
+          "rid": "p47::deepseek-v2-lite::packed_remainder::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 16,
+          "logical_bytes": 31850496,
+          "page_end": 16,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::packed_remainder::rep1_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 16,
+          "logical_bytes": 31850496,
+          "page_end": 16,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::packed_remainder::rep1_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 16,
+          "logical_bytes": 31850496,
+          "page_end": 16,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::packed_remainder::rep1_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 16,
+          "logical_bytes": 31850496,
+          "page_end": 16,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::packed_remainder::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 16,
+          "logical_bytes": 31850496,
+          "page_end": 32,
+          "page_size_tokens": 64,
+          "page_start": 16,
+          "rid": "p47::deepseek-v2-lite::packed_remainder::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 1,
+          "logical_bytes": 1990656,
+          "page_end": 1,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::page_boundary_crosscheck::rep0_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 2,
+          "logical_bytes": 3981312,
+          "page_end": 2,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::page_boundary_crosscheck::rep0_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 16,
+          "logical_bytes": 31850496,
+          "page_end": 16,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::page_boundary_crosscheck::rep0_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 45,
+          "logical_bytes": 89579520,
+          "page_end": 45,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::page_boundary_crosscheck::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 2,
+          "logical_bytes": 3981312,
+          "page_end": 47,
+          "page_size_tokens": 64,
+          "page_start": 45,
+          "rid": "p47::deepseek-v2-lite::page_boundary_crosscheck::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 1,
+          "logical_bytes": 1990656,
+          "page_end": 1,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::page_boundary_crosscheck::rep1_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 2,
+          "logical_bytes": 3981312,
+          "page_end": 2,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::page_boundary_crosscheck::rep1_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 16,
+          "logical_bytes": 31850496,
+          "page_end": 16,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::page_boundary_crosscheck::rep1_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 45,
+          "logical_bytes": 89579520,
+          "page_end": 45,
+          "page_size_tokens": 64,
+          "page_start": 0,
+          "rid": "p47::deepseek-v2-lite::page_boundary_crosscheck::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 1990656,
+          "kv_page_count": 2,
+          "logical_bytes": 3981312,
+          "page_end": 47,
+          "page_size_tokens": 64,
+          "page_start": 45,
+          "rid": "p47::deepseek-v2-lite::page_boundary_crosscheck::rep1_3",
+          "state_logical_bytes": 0
+        }
+      ],
+      "profile_records_total": 21,
+      "schema_version": "phase47-dual-probe-compatibility-smoke-v1",
+      "started_at_utc": "2026-08-17T15:12:35.198834+00:00",
+      "status": "PASS",
+      "transfer_backend": "mooncake",
+      "transport": "rdma",
+      "transport_environment": {
+        "MC_FORCE_MNNVL": null,
+        "MC_FORCE_TCP": null,
+        "MC_INTRANODE_NVLINK": null,
+        "MOONCAKE_PROTOCOL": "rdma",
+        "SGLANG_MOONCAKE_CUSTOM_MEM_POOL": null,
+        "WITH_NVIDIA_PEERMEM": "0"
+      },
+      "transport_expected_rid": "p47::deepseek-v2-lite::compat_smoke_0",
+      "transport_sender_chunks": 1
+    },
+    {
+      "admission_environment": {
+        "SGLANG_PD_BOOTSTRAP_BATCH_BARRIER": "1",
+        "SGLANG_TEST_FORCE_OPTIMISTIC_PREFILL_RETRY_PROB": null
+      },
+      "admission_expected_segments": {
+        "p47::qwen3-30b-a3b::packed_remainder::rep0_0": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::qwen3-30b-a3b::packed_remainder::rep0_1": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::qwen3-30b-a3b::packed_remainder::rep0_2": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::qwen3-30b-a3b::packed_remainder::rep0_3": [
+          [
+            0,
+            1096
+          ],
+          [
+            1096,
+            2000
+          ]
+        ],
+        "p47::qwen3-30b-a3b::packed_remainder::rep1_0": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::qwen3-30b-a3b::packed_remainder::rep1_1": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::qwen3-30b-a3b::packed_remainder::rep1_2": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::qwen3-30b-a3b::packed_remainder::rep1_3": [
+          [
+            0,
+            1096
+          ],
+          [
+            1096,
+            2000
+          ]
+        ],
+        "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep0_0": [
+          [
+            0,
+            63
+          ]
+        ],
+        "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep0_1": [
+          [
+            0,
+            65
+          ]
+        ],
+        "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep0_2": [
+          [
+            0,
+            1001
+          ]
+        ],
+        "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep0_3": [
+          [
+            0,
+            2967
+          ],
+          [
+            2967,
+            3000
+          ]
+        ],
+        "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep1_0": [
+          [
+            0,
+            63
+          ]
+        ],
+        "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep1_1": [
+          [
+            0,
+            65
+          ]
+        ],
+        "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep1_2": [
+          [
+            0,
+            1001
+          ]
+        ],
+        "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep1_3": [
+          [
+            0,
+            2967
+          ],
+          [
+            2967,
+            3000
+          ]
+        ]
+      },
+      "admission_probe_names": [
+        "packed_remainder",
+        "page_boundary_crosscheck"
+      ],
+      "admission_sender_chunks": 20,
+      "admission_signatures": {
+        "packed_remainder": [
+          [
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1096
+              ],
+              [
+                1096,
+                2000
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1096
+              ],
+              [
+                1096,
+                2000
+              ]
+            ]
+          ]
+        ],
+        "page_boundary_crosscheck": [
+          [
+            [
+              [
+                0,
+                63
+              ]
+            ],
+            [
+              [
+                0,
+                65
+              ]
+            ],
+            [
+              [
+                0,
+                1001
+              ]
+            ],
+            [
+              [
+                0,
+                2967
+              ],
+              [
+                2967,
+                3000
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                0,
+                63
+              ]
+            ],
+            [
+              [
+                0,
+                65
+              ]
+            ],
+            [
+              [
+                0,
+                1001
+              ]
+            ],
+            [
+              [
+                0,
+                2967
+              ],
+              [
+                2967,
+                3000
+              ]
+            ]
+          ]
+        ]
+      },
+      "attention_backend": "flashinfer",
+      "checks": {
+        "admission_probe_roster_exact": true,
+        "admission_repeats_exact": true,
+        "admission_segments_exact": true,
+        "all_smoke_waves_returned": true,
+        "bytes_per_page_exact": true,
+        "exactly_one_transport_sender_chunk": true,
+        "formal_raw_still_empty": true,
+        "logical_bytes_formula_exact": true,
+        "mooncake_sender": true,
+        "no_tensor_contents": true,
+        "no_transfer_error_in_logs": true,
+        "no_unexpected_profile_records": true,
+        "page_size_frozen": true,
+        "sender_chunks_total_exact": true,
+        "state_payload_zero": true,
+        "transport_page_count_exact": true
+      },
+      "commands": {
+        "decode": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang.launch_server",
+          "--model-path",
+          "$MODEL_PATH",
+          "--tp",
+          "1",
+          "--pp-size",
+          "1",
+          "--dtype",
+          "bfloat16",
+          "--kv-cache-dtype",
+          "bf16",
+          "--attention-backend",
+          "flashinfer",
+          "--page-size",
+          "1",
+          "--schedule-policy",
+          "fcfs",
+          "--chunked-prefill-size",
+          "4096",
+          "--max-prefill-tokens",
+          "4096",
+          "--max-running-requests",
+          "64",
+          "--context-length",
+          "16384",
+          "--mem-fraction-static",
+          "0.8",
+          "--disable-radix-cache",
+          "--disable-overlap-schedule",
+          "--disaggregation-transfer-backend",
+          "mooncake",
+          "--disaggregation-ib-device",
+          "mlx5_4",
+          "--disaggregation-bootstrap-port",
+          "43103",
+          "--host",
+          "127.0.0.1",
+          "--disaggregation-mode",
+          "decode",
+          "--port",
+          "43101"
+        ],
+        "prefill": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang.launch_server",
+          "--model-path",
+          "$MODEL_PATH",
+          "--tp",
+          "1",
+          "--pp-size",
+          "1",
+          "--dtype",
+          "bfloat16",
+          "--kv-cache-dtype",
+          "bf16",
+          "--attention-backend",
+          "flashinfer",
+          "--page-size",
+          "1",
+          "--schedule-policy",
+          "fcfs",
+          "--chunked-prefill-size",
+          "4096",
+          "--max-prefill-tokens",
+          "4096",
+          "--max-running-requests",
+          "64",
+          "--context-length",
+          "16384",
+          "--mem-fraction-static",
+          "0.8",
+          "--disable-radix-cache",
+          "--disable-overlap-schedule",
+          "--disaggregation-transfer-backend",
+          "mooncake",
+          "--disaggregation-ib-device",
+          "mlx5_4",
+          "--disaggregation-bootstrap-port",
+          "43103",
+          "--host",
+          "127.0.0.1",
+          "--disaggregation-mode",
+          "prefill",
+          "--optimistic-prefill-retries",
+          "0",
+          "--port",
+          "43100"
+        ],
+        "router": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang_router.launch_router",
+          "--pd-disaggregation",
+          "--prefill",
+          "http://127.0.0.1:43100",
+          "--decode",
+          "http://127.0.0.1:43101",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "43102"
+        ]
+      },
+      "external_manifest": {
+        "bytes": 87523,
+        "external_raw_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/patterndemand_runs/phase47_pd_five_model_teacher_validation/ext/smoke_attempt4/qwen3-30b-a3b",
+        "file_count": 4,
+        "files": [
+          {
+            "bytes": 12912,
+            "relative_path": "profile/phase47_compat_smoke_prefill_pid2449643.jsonl",
+            "sha256": "f7675883fff0ba383009d6a93e09c97e6ae54c68418ceec1426854fb26a73434"
+          },
+          {
+            "bytes": 37576,
+            "relative_path": "server_logs/decode.log",
+            "sha256": "cf00b5f5d17a45d072036b2e732ccb8da507527fdc71750a2f8a7bf29bd78ad4"
+          },
+          {
+            "bytes": 25580,
+            "relative_path": "server_logs/prefill.log",
+            "sha256": "adc75686e60fc82af8faa370fd4ebc7d706b6af7870f76e6d517c8cdc4d33be5"
+          },
+          {
+            "bytes": 11455,
+            "relative_path": "server_logs/router.log",
+            "sha256": "9bf701698bfaa084e8ef254dbf6f5c83954b366648d6c280a2371e523a3e0672"
+          }
+        ],
+        "profiler_event_count": 21,
+        "raw_committed_to_git": false,
+        "schema_version": "phase40-external-raw-manifest-v1"
+      },
+      "external_smoke_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/patterndemand_runs/phase47_pd_five_model_teacher_validation/ext/smoke_attempt4/qwen3-30b-a3b",
+      "finished_at_utc": "2026-08-17T15:17:13.639870+00:00",
+      "gpu_pair": [
+        0,
+        1
+      ],
+      "ib_device": "mlx5_4",
+      "matching_sender_chunks": 21,
+      "model_id": "qwen3-30b-a3b",
+      "observed": [
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 64,
+          "logical_bytes": 6291456,
+          "page_end": 64,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::compat_smoke_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 1000,
+          "logical_bytes": 98304000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::packed_remainder::rep0_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 1000,
+          "logical_bytes": 98304000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::packed_remainder::rep0_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 1000,
+          "logical_bytes": 98304000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::packed_remainder::rep0_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 1096,
+          "logical_bytes": 107741184,
+          "page_end": 1096,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::packed_remainder::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 904,
+          "logical_bytes": 88866816,
+          "page_end": 2000,
+          "page_size_tokens": 1,
+          "page_start": 1096,
+          "rid": "p47::qwen3-30b-a3b::packed_remainder::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 1000,
+          "logical_bytes": 98304000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::packed_remainder::rep1_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 1000,
+          "logical_bytes": 98304000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::packed_remainder::rep1_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 1000,
+          "logical_bytes": 98304000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::packed_remainder::rep1_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 1096,
+          "logical_bytes": 107741184,
+          "page_end": 1096,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::packed_remainder::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 904,
+          "logical_bytes": 88866816,
+          "page_end": 2000,
+          "page_size_tokens": 1,
+          "page_start": 1096,
+          "rid": "p47::qwen3-30b-a3b::packed_remainder::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 63,
+          "logical_bytes": 6193152,
+          "page_end": 63,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep0_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 65,
+          "logical_bytes": 6389760,
+          "page_end": 65,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep0_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 1001,
+          "logical_bytes": 98402304,
+          "page_end": 1001,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep0_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 2967,
+          "logical_bytes": 291667968,
+          "page_end": 2967,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 33,
+          "logical_bytes": 3244032,
+          "page_end": 3000,
+          "page_size_tokens": 1,
+          "page_start": 2967,
+          "rid": "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 63,
+          "logical_bytes": 6193152,
+          "page_end": 63,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep1_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 65,
+          "logical_bytes": 6389760,
+          "page_end": 65,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep1_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 1001,
+          "logical_bytes": 98402304,
+          "page_end": 1001,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep1_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 2967,
+          "logical_bytes": 291667968,
+          "page_end": 2967,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 98304,
+          "kv_page_count": 33,
+          "logical_bytes": 3244032,
+          "page_end": 3000,
+          "page_size_tokens": 1,
+          "page_start": 2967,
+          "rid": "p47::qwen3-30b-a3b::page_boundary_crosscheck::rep1_3",
+          "state_logical_bytes": 0
+        }
+      ],
+      "profile_records_total": 21,
+      "schema_version": "phase47-dual-probe-compatibility-smoke-v1",
+      "started_at_utc": "2026-08-17T15:15:15.071776+00:00",
+      "status": "PASS",
+      "transfer_backend": "mooncake",
+      "transport": "rdma",
+      "transport_environment": {
+        "MC_FORCE_MNNVL": null,
+        "MC_FORCE_TCP": null,
+        "MC_INTRANODE_NVLINK": null,
+        "MOONCAKE_PROTOCOL": "rdma",
+        "SGLANG_MOONCAKE_CUSTOM_MEM_POOL": null,
+        "WITH_NVIDIA_PEERMEM": "0"
+      },
+      "transport_expected_rid": "p47::qwen3-30b-a3b::compat_smoke_0",
+      "transport_sender_chunks": 1
+    },
+    {
+      "admission_environment": {
+        "SGLANG_PD_BOOTSTRAP_BATCH_BARRIER": "1",
+        "SGLANG_TEST_FORCE_OPTIMISTIC_PREFILL_RETRY_PROB": null
+      },
+      "admission_expected_segments": {
+        "p47::llama-3.2-3b-instruct::packed_remainder::rep0_0": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::packed_remainder::rep0_1": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::packed_remainder::rep0_2": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::packed_remainder::rep0_3": [
+          [
+            0,
+            1096
+          ],
+          [
+            1096,
+            2000
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::packed_remainder::rep1_0": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::packed_remainder::rep1_1": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::packed_remainder::rep1_2": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::packed_remainder::rep1_3": [
+          [
+            0,
+            1096
+          ],
+          [
+            1096,
+            2000
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep0_0": [
+          [
+            0,
+            63
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep0_1": [
+          [
+            0,
+            65
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep0_2": [
+          [
+            0,
+            1001
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep0_3": [
+          [
+            0,
+            2967
+          ],
+          [
+            2967,
+            3000
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep1_0": [
+          [
+            0,
+            63
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep1_1": [
+          [
+            0,
+            65
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep1_2": [
+          [
+            0,
+            1001
+          ]
+        ],
+        "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep1_3": [
+          [
+            0,
+            2967
+          ],
+          [
+            2967,
+            3000
+          ]
+        ]
+      },
+      "admission_probe_names": [
+        "packed_remainder",
+        "page_boundary_crosscheck"
+      ],
+      "admission_sender_chunks": 20,
+      "admission_signatures": {
+        "packed_remainder": [
+          [
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1096
+              ],
+              [
+                1096,
+                2000
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1096
+              ],
+              [
+                1096,
+                2000
+              ]
+            ]
+          ]
+        ],
+        "page_boundary_crosscheck": [
+          [
+            [
+              [
+                0,
+                63
+              ]
+            ],
+            [
+              [
+                0,
+                65
+              ]
+            ],
+            [
+              [
+                0,
+                1001
+              ]
+            ],
+            [
+              [
+                0,
+                2967
+              ],
+              [
+                2967,
+                3000
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                0,
+                63
+              ]
+            ],
+            [
+              [
+                0,
+                65
+              ]
+            ],
+            [
+              [
+                0,
+                1001
+              ]
+            ],
+            [
+              [
+                0,
+                2967
+              ],
+              [
+                2967,
+                3000
+              ]
+            ]
+          ]
+        ]
+      },
+      "attention_backend": "flashinfer",
+      "checks": {
+        "admission_probe_roster_exact": true,
+        "admission_repeats_exact": true,
+        "admission_segments_exact": true,
+        "all_smoke_waves_returned": true,
+        "bytes_per_page_exact": true,
+        "exactly_one_transport_sender_chunk": true,
+        "formal_raw_still_empty": true,
+        "logical_bytes_formula_exact": true,
+        "mooncake_sender": true,
+        "no_tensor_contents": true,
+        "no_transfer_error_in_logs": true,
+        "no_unexpected_profile_records": true,
+        "page_size_frozen": true,
+        "sender_chunks_total_exact": true,
+        "state_payload_zero": true,
+        "transport_page_count_exact": true
+      },
+      "commands": {
+        "decode": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang.launch_server",
+          "--model-path",
+          "$MODEL_PATH",
+          "--tp",
+          "1",
+          "--pp-size",
+          "1",
+          "--dtype",
+          "bfloat16",
+          "--kv-cache-dtype",
+          "bf16",
+          "--attention-backend",
+          "flashinfer",
+          "--page-size",
+          "1",
+          "--schedule-policy",
+          "fcfs",
+          "--chunked-prefill-size",
+          "4096",
+          "--max-prefill-tokens",
+          "4096",
+          "--max-running-requests",
+          "64",
+          "--context-length",
+          "16384",
+          "--mem-fraction-static",
+          "0.8",
+          "--disable-radix-cache",
+          "--disable-overlap-schedule",
+          "--disaggregation-transfer-backend",
+          "mooncake",
+          "--disaggregation-ib-device",
+          "mlx5_4",
+          "--disaggregation-bootstrap-port",
+          "43103",
+          "--host",
+          "127.0.0.1",
+          "--disaggregation-mode",
+          "decode",
+          "--port",
+          "43101"
+        ],
+        "prefill": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang.launch_server",
+          "--model-path",
+          "$MODEL_PATH",
+          "--tp",
+          "1",
+          "--pp-size",
+          "1",
+          "--dtype",
+          "bfloat16",
+          "--kv-cache-dtype",
+          "bf16",
+          "--attention-backend",
+          "flashinfer",
+          "--page-size",
+          "1",
+          "--schedule-policy",
+          "fcfs",
+          "--chunked-prefill-size",
+          "4096",
+          "--max-prefill-tokens",
+          "4096",
+          "--max-running-requests",
+          "64",
+          "--context-length",
+          "16384",
+          "--mem-fraction-static",
+          "0.8",
+          "--disable-radix-cache",
+          "--disable-overlap-schedule",
+          "--disaggregation-transfer-backend",
+          "mooncake",
+          "--disaggregation-ib-device",
+          "mlx5_4",
+          "--disaggregation-bootstrap-port",
+          "43103",
+          "--host",
+          "127.0.0.1",
+          "--disaggregation-mode",
+          "prefill",
+          "--optimistic-prefill-retries",
+          "0",
+          "--port",
+          "43100"
+        ],
+        "router": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang_router.launch_router",
+          "--pd-disaggregation",
+          "--prefill",
+          "http://127.0.0.1:43100",
+          "--decode",
+          "http://127.0.0.1:43101",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "43102"
+        ]
+      },
+      "external_manifest": {
+        "bytes": 77019,
+        "external_raw_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/patterndemand_runs/phase47_pd_five_model_teacher_validation/ext/smoke_attempt4/llama-3.2-3b-instruct",
+        "file_count": 4,
+        "files": [
+          {
+            "bytes": 13121,
+            "relative_path": "profile/phase47_compat_smoke_prefill_pid2453166.jsonl",
+            "sha256": "27c89b35d93964a4c9571fe5883923a8b4e343f015f1b8718fa14abfa02b6545"
+          },
+          {
+            "bytes": 29525,
+            "relative_path": "server_logs/decode.log",
+            "sha256": "1997fcaef663784fd7b2e7013806e480bab854c68e5d4b693b958d76a0ff1b78"
+          },
+          {
+            "bytes": 22817,
+            "relative_path": "server_logs/prefill.log",
+            "sha256": "5e8b6e04bca4644b8b6c5740fedbca9d510879eae5a10aafe5d2af4905c6bce3"
+          },
+          {
+            "bytes": 11556,
+            "relative_path": "server_logs/router.log",
+            "sha256": "efac2b74c8c3a5dec44e6e02d30aa90877d5708ffa492c6decde83c7e8d5d8b3"
+          }
+        ],
+        "profiler_event_count": 21,
+        "raw_committed_to_git": false,
+        "schema_version": "phase40-external-raw-manifest-v1"
+      },
+      "external_smoke_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/patterndemand_runs/phase47_pd_five_model_teacher_validation/ext/smoke_attempt4/llama-3.2-3b-instruct",
+      "finished_at_utc": "2026-08-17T15:19:36.671515+00:00",
+      "gpu_pair": [
+        0,
+        1
+      ],
+      "ib_device": "mlx5_4",
+      "matching_sender_chunks": 21,
+      "model_id": "llama-3.2-3b-instruct",
+      "observed": [
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 64,
+          "logical_bytes": 7340032,
+          "page_end": 64,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::compat_smoke_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 1000,
+          "logical_bytes": 114688000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::packed_remainder::rep0_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 1000,
+          "logical_bytes": 114688000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::packed_remainder::rep0_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 1000,
+          "logical_bytes": 114688000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::packed_remainder::rep0_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 1096,
+          "logical_bytes": 125698048,
+          "page_end": 1096,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::packed_remainder::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 904,
+          "logical_bytes": 103677952,
+          "page_end": 2000,
+          "page_size_tokens": 1,
+          "page_start": 1096,
+          "rid": "p47::llama-3.2-3b-instruct::packed_remainder::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 1000,
+          "logical_bytes": 114688000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::packed_remainder::rep1_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 1000,
+          "logical_bytes": 114688000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::packed_remainder::rep1_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 1000,
+          "logical_bytes": 114688000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::packed_remainder::rep1_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 1096,
+          "logical_bytes": 125698048,
+          "page_end": 1096,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::packed_remainder::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 904,
+          "logical_bytes": 103677952,
+          "page_end": 2000,
+          "page_size_tokens": 1,
+          "page_start": 1096,
+          "rid": "p47::llama-3.2-3b-instruct::packed_remainder::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 63,
+          "logical_bytes": 7225344,
+          "page_end": 63,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep0_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 65,
+          "logical_bytes": 7454720,
+          "page_end": 65,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep0_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 1001,
+          "logical_bytes": 114802688,
+          "page_end": 1001,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep0_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 2967,
+          "logical_bytes": 340279296,
+          "page_end": 2967,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 33,
+          "logical_bytes": 3784704,
+          "page_end": 3000,
+          "page_size_tokens": 1,
+          "page_start": 2967,
+          "rid": "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 63,
+          "logical_bytes": 7225344,
+          "page_end": 63,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep1_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 65,
+          "logical_bytes": 7454720,
+          "page_end": 65,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep1_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 1001,
+          "logical_bytes": 114802688,
+          "page_end": 1001,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep1_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 2967,
+          "logical_bytes": 340279296,
+          "page_end": 2967,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 114688,
+          "kv_page_count": 33,
+          "logical_bytes": 3784704,
+          "page_end": 3000,
+          "page_size_tokens": 1,
+          "page_start": 2967,
+          "rid": "p47::llama-3.2-3b-instruct::page_boundary_crosscheck::rep1_3",
+          "state_logical_bytes": 0
+        }
+      ],
+      "profile_records_total": 21,
+      "schema_version": "phase47-dual-probe-compatibility-smoke-v1",
+      "started_at_utc": "2026-08-17T15:18:39.926875+00:00",
+      "status": "PASS",
+      "transfer_backend": "mooncake",
+      "transport": "rdma",
+      "transport_environment": {
+        "MC_FORCE_MNNVL": null,
+        "MC_FORCE_TCP": null,
+        "MC_INTRANODE_NVLINK": null,
+        "MOONCAKE_PROTOCOL": "rdma",
+        "SGLANG_MOONCAKE_CUSTOM_MEM_POOL": null,
+        "WITH_NVIDIA_PEERMEM": "0"
+      },
+      "transport_expected_rid": "p47::llama-3.2-3b-instruct::compat_smoke_0",
+      "transport_sender_chunks": 1
+    },
+    {
+      "admission_environment": {
+        "SGLANG_PD_BOOTSTRAP_BATCH_BARRIER": "1",
+        "SGLANG_TEST_FORCE_OPTIMISTIC_PREFILL_RETRY_PROB": null
+      },
+      "admission_expected_segments": {
+        "p47::qwen2.5-14b-instruct::packed_remainder::rep0_0": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::packed_remainder::rep0_1": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::packed_remainder::rep0_2": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::packed_remainder::rep0_3": [
+          [
+            0,
+            1096
+          ],
+          [
+            1096,
+            2000
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::packed_remainder::rep1_0": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::packed_remainder::rep1_1": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::packed_remainder::rep1_2": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::packed_remainder::rep1_3": [
+          [
+            0,
+            1096
+          ],
+          [
+            1096,
+            2000
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep0_0": [
+          [
+            0,
+            63
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep0_1": [
+          [
+            0,
+            65
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep0_2": [
+          [
+            0,
+            1001
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep0_3": [
+          [
+            0,
+            2967
+          ],
+          [
+            2967,
+            3000
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep1_0": [
+          [
+            0,
+            63
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep1_1": [
+          [
+            0,
+            65
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep1_2": [
+          [
+            0,
+            1001
+          ]
+        ],
+        "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep1_3": [
+          [
+            0,
+            2967
+          ],
+          [
+            2967,
+            3000
+          ]
+        ]
+      },
+      "admission_probe_names": [
+        "packed_remainder",
+        "page_boundary_crosscheck"
+      ],
+      "admission_sender_chunks": 20,
+      "admission_signatures": {
+        "packed_remainder": [
+          [
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1096
+              ],
+              [
+                1096,
+                2000
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1096
+              ],
+              [
+                1096,
+                2000
+              ]
+            ]
+          ]
+        ],
+        "page_boundary_crosscheck": [
+          [
+            [
+              [
+                0,
+                63
+              ]
+            ],
+            [
+              [
+                0,
+                65
+              ]
+            ],
+            [
+              [
+                0,
+                1001
+              ]
+            ],
+            [
+              [
+                0,
+                2967
+              ],
+              [
+                2967,
+                3000
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                0,
+                63
+              ]
+            ],
+            [
+              [
+                0,
+                65
+              ]
+            ],
+            [
+              [
+                0,
+                1001
+              ]
+            ],
+            [
+              [
+                0,
+                2967
+              ],
+              [
+                2967,
+                3000
+              ]
+            ]
+          ]
+        ]
+      },
+      "attention_backend": "flashinfer",
+      "checks": {
+        "admission_probe_roster_exact": true,
+        "admission_repeats_exact": true,
+        "admission_segments_exact": true,
+        "all_smoke_waves_returned": true,
+        "bytes_per_page_exact": true,
+        "exactly_one_transport_sender_chunk": true,
+        "formal_raw_still_empty": true,
+        "logical_bytes_formula_exact": true,
+        "mooncake_sender": true,
+        "no_tensor_contents": true,
+        "no_transfer_error_in_logs": true,
+        "no_unexpected_profile_records": true,
+        "page_size_frozen": true,
+        "sender_chunks_total_exact": true,
+        "state_payload_zero": true,
+        "transport_page_count_exact": true
+      },
+      "commands": {
+        "decode": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang.launch_server",
+          "--model-path",
+          "$MODEL_PATH",
+          "--tp",
+          "1",
+          "--pp-size",
+          "1",
+          "--dtype",
+          "bfloat16",
+          "--kv-cache-dtype",
+          "bf16",
+          "--attention-backend",
+          "flashinfer",
+          "--page-size",
+          "1",
+          "--schedule-policy",
+          "fcfs",
+          "--chunked-prefill-size",
+          "4096",
+          "--max-prefill-tokens",
+          "4096",
+          "--max-running-requests",
+          "64",
+          "--context-length",
+          "16384",
+          "--mem-fraction-static",
+          "0.8",
+          "--disable-radix-cache",
+          "--disable-overlap-schedule",
+          "--disaggregation-transfer-backend",
+          "mooncake",
+          "--disaggregation-ib-device",
+          "mlx5_4",
+          "--disaggregation-bootstrap-port",
+          "43103",
+          "--host",
+          "127.0.0.1",
+          "--disaggregation-mode",
+          "decode",
+          "--port",
+          "43101"
+        ],
+        "prefill": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang.launch_server",
+          "--model-path",
+          "$MODEL_PATH",
+          "--tp",
+          "1",
+          "--pp-size",
+          "1",
+          "--dtype",
+          "bfloat16",
+          "--kv-cache-dtype",
+          "bf16",
+          "--attention-backend",
+          "flashinfer",
+          "--page-size",
+          "1",
+          "--schedule-policy",
+          "fcfs",
+          "--chunked-prefill-size",
+          "4096",
+          "--max-prefill-tokens",
+          "4096",
+          "--max-running-requests",
+          "64",
+          "--context-length",
+          "16384",
+          "--mem-fraction-static",
+          "0.8",
+          "--disable-radix-cache",
+          "--disable-overlap-schedule",
+          "--disaggregation-transfer-backend",
+          "mooncake",
+          "--disaggregation-ib-device",
+          "mlx5_4",
+          "--disaggregation-bootstrap-port",
+          "43103",
+          "--host",
+          "127.0.0.1",
+          "--disaggregation-mode",
+          "prefill",
+          "--optimistic-prefill-retries",
+          "0",
+          "--port",
+          "43100"
+        ],
+        "router": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang_router.launch_router",
+          "--pd-disaggregation",
+          "--prefill",
+          "http://127.0.0.1:43100",
+          "--decode",
+          "http://127.0.0.1:43101",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "43102"
+        ]
+      },
+      "external_manifest": {
+        "bytes": 79756,
+        "external_raw_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/patterndemand_runs/phase47_pd_five_model_teacher_validation/ext/smoke_attempt4/qwen2.5-14b-instruct",
+        "file_count": 4,
+        "files": [
+          {
+            "bytes": 13108,
+            "relative_path": "profile/phase47_compat_smoke_prefill_pid2456350.jsonl",
+            "sha256": "66b0e8f413d5bc6cc231cc33e4f333b9b17bf2584b9c89f2896f9304d4fbf0eb"
+          },
+          {
+            "bytes": 31896,
+            "relative_path": "server_logs/decode.log",
+            "sha256": "132a78f522c4ab6708fa3da0c3e74778585bd1ffbb1e599456b59c0774d375a7"
+          },
+          {
+            "bytes": 23205,
+            "relative_path": "server_logs/prefill.log",
+            "sha256": "3368c24a88bb2ccc3a2886f0168a4805cabbd7ffe5f701dd84249cdb319fe1f0"
+          },
+          {
+            "bytes": 11547,
+            "relative_path": "server_logs/router.log",
+            "sha256": "27b25b884284f9980121fa8bb350f207017e739cb4bc43f1ad33425e7f2c4ab3"
+          }
+        ],
+        "profiler_event_count": 21,
+        "raw_committed_to_git": false,
+        "schema_version": "phase40-external-raw-manifest-v1"
+      },
+      "external_smoke_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/patterndemand_runs/phase47_pd_five_model_teacher_validation/ext/smoke_attempt4/qwen2.5-14b-instruct",
+      "finished_at_utc": "2026-08-17T15:21:37.197863+00:00",
+      "gpu_pair": [
+        0,
+        1
+      ],
+      "ib_device": "mlx5_4",
+      "matching_sender_chunks": 21,
+      "model_id": "qwen2.5-14b-instruct",
+      "observed": [
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 64,
+          "logical_bytes": 12582912,
+          "page_end": 64,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::compat_smoke_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 1000,
+          "logical_bytes": 196608000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::packed_remainder::rep0_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 1000,
+          "logical_bytes": 196608000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::packed_remainder::rep0_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 1000,
+          "logical_bytes": 196608000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::packed_remainder::rep0_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 1096,
+          "logical_bytes": 215482368,
+          "page_end": 1096,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::packed_remainder::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 904,
+          "logical_bytes": 177733632,
+          "page_end": 2000,
+          "page_size_tokens": 1,
+          "page_start": 1096,
+          "rid": "p47::qwen2.5-14b-instruct::packed_remainder::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 1000,
+          "logical_bytes": 196608000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::packed_remainder::rep1_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 1000,
+          "logical_bytes": 196608000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::packed_remainder::rep1_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 1000,
+          "logical_bytes": 196608000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::packed_remainder::rep1_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 1096,
+          "logical_bytes": 215482368,
+          "page_end": 1096,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::packed_remainder::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 904,
+          "logical_bytes": 177733632,
+          "page_end": 2000,
+          "page_size_tokens": 1,
+          "page_start": 1096,
+          "rid": "p47::qwen2.5-14b-instruct::packed_remainder::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 63,
+          "logical_bytes": 12386304,
+          "page_end": 63,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep0_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 65,
+          "logical_bytes": 12779520,
+          "page_end": 65,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep0_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 1001,
+          "logical_bytes": 196804608,
+          "page_end": 1001,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep0_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 2967,
+          "logical_bytes": 583335936,
+          "page_end": 2967,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 33,
+          "logical_bytes": 6488064,
+          "page_end": 3000,
+          "page_size_tokens": 1,
+          "page_start": 2967,
+          "rid": "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 63,
+          "logical_bytes": 12386304,
+          "page_end": 63,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep1_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 65,
+          "logical_bytes": 12779520,
+          "page_end": 65,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep1_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 1001,
+          "logical_bytes": 196804608,
+          "page_end": 1001,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep1_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 2967,
+          "logical_bytes": 583335936,
+          "page_end": 2967,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 196608,
+          "kv_page_count": 33,
+          "logical_bytes": 6488064,
+          "page_end": 3000,
+          "page_size_tokens": 1,
+          "page_start": 2967,
+          "rid": "p47::qwen2.5-14b-instruct::page_boundary_crosscheck::rep1_3",
+          "state_logical_bytes": 0
+        }
+      ],
+      "profile_records_total": 21,
+      "schema_version": "phase47-dual-probe-compatibility-smoke-v1",
+      "started_at_utc": "2026-08-17T15:20:32.412546+00:00",
+      "status": "PASS",
+      "transfer_backend": "mooncake",
+      "transport": "rdma",
+      "transport_environment": {
+        "MC_FORCE_MNNVL": null,
+        "MC_FORCE_TCP": null,
+        "MC_INTRANODE_NVLINK": null,
+        "MOONCAKE_PROTOCOL": "rdma",
+        "SGLANG_MOONCAKE_CUSTOM_MEM_POOL": null,
+        "WITH_NVIDIA_PEERMEM": "0"
+      },
+      "transport_expected_rid": "p47::qwen2.5-14b-instruct::compat_smoke_0",
+      "transport_sender_chunks": 1
+    },
+    {
+      "admission_environment": {
+        "SGLANG_PD_BOOTSTRAP_BATCH_BARRIER": "1",
+        "SGLANG_TEST_FORCE_OPTIMISTIC_PREFILL_RETRY_PROB": null
+      },
+      "admission_expected_segments": {
+        "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep0_0": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep0_1": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep0_2": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep0_3": [
+          [
+            0,
+            1096
+          ],
+          [
+            1096,
+            2000
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep1_0": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep1_1": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep1_2": [
+          [
+            0,
+            1000
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep1_3": [
+          [
+            0,
+            1096
+          ],
+          [
+            1096,
+            2000
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep0_0": [
+          [
+            0,
+            63
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep0_1": [
+          [
+            0,
+            65
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep0_2": [
+          [
+            0,
+            1001
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep0_3": [
+          [
+            0,
+            2967
+          ],
+          [
+            2967,
+            3000
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep1_0": [
+          [
+            0,
+            63
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep1_1": [
+          [
+            0,
+            65
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep1_2": [
+          [
+            0,
+            1001
+          ]
+        ],
+        "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep1_3": [
+          [
+            0,
+            2967
+          ],
+          [
+            2967,
+            3000
+          ]
+        ]
+      },
+      "admission_probe_names": [
+        "packed_remainder",
+        "page_boundary_crosscheck"
+      ],
+      "admission_sender_chunks": 20,
+      "admission_signatures": {
+        "packed_remainder": [
+          [
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1096
+              ],
+              [
+                1096,
+                2000
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1000
+              ]
+            ],
+            [
+              [
+                0,
+                1096
+              ],
+              [
+                1096,
+                2000
+              ]
+            ]
+          ]
+        ],
+        "page_boundary_crosscheck": [
+          [
+            [
+              [
+                0,
+                63
+              ]
+            ],
+            [
+              [
+                0,
+                65
+              ]
+            ],
+            [
+              [
+                0,
+                1001
+              ]
+            ],
+            [
+              [
+                0,
+                2967
+              ],
+              [
+                2967,
+                3000
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                0,
+                63
+              ]
+            ],
+            [
+              [
+                0,
+                65
+              ]
+            ],
+            [
+              [
+                0,
+                1001
+              ]
+            ],
+            [
+              [
+                0,
+                2967
+              ],
+              [
+                2967,
+                3000
+              ]
+            ]
+          ]
+        ]
+      },
+      "attention_backend": "flashinfer",
+      "checks": {
+        "admission_probe_roster_exact": true,
+        "admission_repeats_exact": true,
+        "admission_segments_exact": true,
+        "all_smoke_waves_returned": true,
+        "bytes_per_page_exact": true,
+        "exactly_one_transport_sender_chunk": true,
+        "formal_raw_still_empty": true,
+        "logical_bytes_formula_exact": true,
+        "mooncake_sender": true,
+        "no_tensor_contents": true,
+        "no_transfer_error_in_logs": true,
+        "no_unexpected_profile_records": true,
+        "page_size_frozen": true,
+        "sender_chunks_total_exact": true,
+        "state_payload_zero": true,
+        "transport_page_count_exact": true
+      },
+      "commands": {
+        "decode": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang.launch_server",
+          "--model-path",
+          "$MODEL_PATH",
+          "--tp",
+          "1",
+          "--pp-size",
+          "1",
+          "--dtype",
+          "bfloat16",
+          "--kv-cache-dtype",
+          "bf16",
+          "--attention-backend",
+          "flashinfer",
+          "--page-size",
+          "1",
+          "--schedule-policy",
+          "fcfs",
+          "--chunked-prefill-size",
+          "4096",
+          "--max-prefill-tokens",
+          "4096",
+          "--max-running-requests",
+          "64",
+          "--context-length",
+          "16384",
+          "--mem-fraction-static",
+          "0.8",
+          "--disable-radix-cache",
+          "--disable-overlap-schedule",
+          "--disaggregation-transfer-backend",
+          "mooncake",
+          "--disaggregation-ib-device",
+          "mlx5_4",
+          "--disaggregation-bootstrap-port",
+          "43103",
+          "--host",
+          "127.0.0.1",
+          "--disaggregation-mode",
+          "decode",
+          "--port",
+          "43101"
+        ],
+        "prefill": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang.launch_server",
+          "--model-path",
+          "$MODEL_PATH",
+          "--tp",
+          "1",
+          "--pp-size",
+          "1",
+          "--dtype",
+          "bfloat16",
+          "--kv-cache-dtype",
+          "bf16",
+          "--attention-backend",
+          "flashinfer",
+          "--page-size",
+          "1",
+          "--schedule-policy",
+          "fcfs",
+          "--chunked-prefill-size",
+          "4096",
+          "--max-prefill-tokens",
+          "4096",
+          "--max-running-requests",
+          "64",
+          "--context-length",
+          "16384",
+          "--mem-fraction-static",
+          "0.8",
+          "--disable-radix-cache",
+          "--disable-overlap-schedule",
+          "--disaggregation-transfer-backend",
+          "mooncake",
+          "--disaggregation-ib-device",
+          "mlx5_4",
+          "--disaggregation-bootstrap-port",
+          "43103",
+          "--host",
+          "127.0.0.1",
+          "--disaggregation-mode",
+          "prefill",
+          "--optimistic-prefill-retries",
+          "0",
+          "--port",
+          "43100"
+        ],
+        "router": [
+          "/usr/bin/python3",
+          "-m",
+          "sglang_router.launch_router",
+          "--pd-disaggregation",
+          "--prefill",
+          "http://127.0.0.1:43100",
+          "--decode",
+          "http://127.0.0.1:43101",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "43102"
+        ]
+      },
+      "external_manifest": {
+        "bytes": 85375,
+        "external_raw_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/patterndemand_runs/phase47_pd_five_model_teacher_validation/ext/smoke_attempt4/mixtral-8x7b-instruct-v0.1",
+        "file_count": 4,
+        "files": [
+          {
+            "bytes": 13224,
+            "relative_path": "profile/phase47_compat_smoke_prefill_pid2459673.jsonl",
+            "sha256": "12dc1c1ccbc60bc550b52c1b201cc82b4294d2b22db544e1145ef192d6b859c9"
+          },
+          {
+            "bytes": 34967,
+            "relative_path": "server_logs/decode.log",
+            "sha256": "7048fe34c2d7875c4e7689f219bd35c34c216862626a4c9d194b3491ffb283c4"
+          },
+          {
+            "bytes": 25560,
+            "relative_path": "server_logs/prefill.log",
+            "sha256": "002e123ea767f887d31cbcee7b92a8889e7362a4af4fc0823769a330622b919a"
+          },
+          {
+            "bytes": 11624,
+            "relative_path": "server_logs/router.log",
+            "sha256": "1c1e177fa8a0c8f4d4b127d611d9dce898ab327ef055a8c730596272a801d174"
+          }
+        ],
+        "profiler_event_count": 21,
+        "raw_committed_to_git": false,
+        "schema_version": "phase40-external-raw-manifest-v1"
+      },
+      "external_smoke_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/patterndemand_runs/phase47_pd_five_model_teacher_validation/ext/smoke_attempt4/mixtral-8x7b-instruct-v0.1",
+      "finished_at_utc": "2026-08-17T15:24:54.767696+00:00",
+      "gpu_pair": [
+        0,
+        1
+      ],
+      "ib_device": "mlx5_4",
+      "matching_sender_chunks": 21,
+      "model_id": "mixtral-8x7b-instruct-v0.1",
+      "observed": [
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 64,
+          "logical_bytes": 8388608,
+          "page_end": 64,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::compat_smoke_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 1000,
+          "logical_bytes": 131072000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep0_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 1000,
+          "logical_bytes": 131072000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep0_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 1000,
+          "logical_bytes": 131072000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep0_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 1096,
+          "logical_bytes": 143654912,
+          "page_end": 1096,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 904,
+          "logical_bytes": 118489088,
+          "page_end": 2000,
+          "page_size_tokens": 1,
+          "page_start": 1096,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 1000,
+          "logical_bytes": 131072000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep1_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 1000,
+          "logical_bytes": 131072000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep1_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 1000,
+          "logical_bytes": 131072000,
+          "page_end": 1000,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep1_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 1096,
+          "logical_bytes": 143654912,
+          "page_end": 1096,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 904,
+          "logical_bytes": 118489088,
+          "page_end": 2000,
+          "page_size_tokens": 1,
+          "page_start": 1096,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::packed_remainder::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 63,
+          "logical_bytes": 8257536,
+          "page_end": 63,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep0_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 65,
+          "logical_bytes": 8519680,
+          "page_end": 65,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep0_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 1001,
+          "logical_bytes": 131203072,
+          "page_end": 1001,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep0_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 2967,
+          "logical_bytes": 388890624,
+          "page_end": 2967,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 33,
+          "logical_bytes": 4325376,
+          "page_end": 3000,
+          "page_size_tokens": 1,
+          "page_start": 2967,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep0_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 63,
+          "logical_bytes": 8257536,
+          "page_end": 63,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep1_0",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 65,
+          "logical_bytes": 8519680,
+          "page_end": 65,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep1_1",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 1001,
+          "logical_bytes": 131203072,
+          "page_end": 1001,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep1_2",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 2967,
+          "logical_bytes": 388890624,
+          "page_end": 2967,
+          "page_size_tokens": 1,
+          "page_start": 0,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep1_3",
+          "state_logical_bytes": 0
+        },
+        {
+          "backend": "MooncakeKVSender",
+          "kv_bytes_per_page": 131072,
+          "kv_page_count": 33,
+          "logical_bytes": 4325376,
+          "page_end": 3000,
+          "page_size_tokens": 1,
+          "page_start": 2967,
+          "rid": "p47::mixtral-8x7b-instruct-v0.1::page_boundary_crosscheck::rep1_3",
+          "state_logical_bytes": 0
+        }
+      ],
+      "profile_records_total": 21,
+      "schema_version": "phase47-dual-probe-compatibility-smoke-v1",
+      "started_at_utc": "2026-08-17T15:22:41.300449+00:00",
+      "status": "PASS",
+      "transfer_backend": "mooncake",
+      "transport": "rdma",
+      "transport_environment": {
+        "MC_FORCE_MNNVL": null,
+        "MC_FORCE_TCP": null,
+        "MC_INTRANODE_NVLINK": null,
+        "MOONCAKE_PROTOCOL": "rdma",
+        "SGLANG_MOONCAKE_CUSTOM_MEM_POOL": null,
+        "WITH_NVIDIA_PEERMEM": "0"
+      },
+      "transport_expected_rid": "p47::mixtral-8x7b-instruct-v0.1::compat_smoke_0",
+      "transport_sender_chunks": 1
+    }
+  ],
+  "schema_version": "phase47-five-model-smoke-v1"
+}
