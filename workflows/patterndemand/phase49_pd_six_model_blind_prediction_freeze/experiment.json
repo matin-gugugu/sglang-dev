@@ -1,0 +1,26 @@
+{
+  "schema_version":"phase49-pd-six-model-blind-freeze-contract-v1",
+  "phase":"Phase49",
+  "objective":"在生成任何新blind Hfull标签前，冻结300个与全部历史PD cohort隔离的BurstGPT窗口，并用R48六模型checkpoint冻结H0与H0+DNN预测",
+  "workflow_parent_result_commit":"f573507abd1b59fa08cdf09030d2f62048c7ee5c",
+  "result_dir":"experiment-results/phase49_pd_six_model_blind_prediction_freeze",
+  "execution":{"environment":"local CPU","gpu_permitted":false,"network_permitted":false,"training_permitted":false,"target_generation_or_access_permitted":false,"raw_mutation_permitted":false},
+  "selection_contract":{"path":"workflows/patterndemand/phase49_pd_six_model_blind_prediction_freeze/selection/fresh_blind_windows.csv","sha256":"9ba00473befb48b3bf5ea2f4e2654aea4e32594de261cbee3f4008a28e5e671e","seed":"phase49-pd-six-model-fresh-blind-v1-20260818","segments":["burstgpt_1","burstgpt_2","burstgpt_3"],"profiles_per_segment":100,"strata_per_segment":10,"profiles_per_stratum":10,"profiles":300,"complete_requests_reconstructed_outside_git":118985,"minimum_same_segment_cutoff_distance_ms":300000,"embargo":"Phase27/28/30/31/32/33/34, Phase41 blind, Phase44 development and Phase45/46 blind","selection_inputs":"history-only columns; no target/future values"},
+  "predictor_contract":{"checkpoint":"R48 pd_six_model_h0_protected_dnn.json.gz","candidate_id":"pd48_full_w64_d1","feature_mode":"full_target_free","epochs":840,"alpha_by_model":{"qwen3-8b":0.5,"deepseek-v2-lite":0.75,"qwen3-30b-a3b":1.0,"llama-3.2-3b-instruct":1.0,"qwen2.5-14b-instruct":0.75,"mixtral-8x7b-instruct-v0.1":0.5},"models":6,"feature_rows":1800,"methods":["h0","h0_plus_dnn_residual"],"prediction_rows":3600,"target_rows":0,"next_gate":"Phase50 may reveal Hfull only after R49 is verified and ff-only integrated"},
+  "pinned_inputs":[
+    {"name":"phase48_manifest","path":"experiment-results/phase48_pd_six_model_expanded_training/manifest.sha256","sha256":"ca3bb8727fe69f32b9402b31bfce223ae7db2b200d9c1b4a31e16e18b877901b","verify_manifest_directory":"experiment-results/phase48_pd_six_model_expanded_training"},
+    {"name":"phase48_summary","path":"experiment-results/phase48_pd_six_model_expanded_training/summary.json","sha256":"e9cdd860bbdbb8baca3c085e5e7d2bbc5d279fb5332852cb516523972f253e04"},
+    {"name":"phase48_checkpoint","path":"experiment-results/phase48_pd_six_model_expanded_training/checkpoints/pd_six_model_h0_protected_dnn.json.gz","sha256":"ec97a8e1b5df1f1b0751daec8f32b39804a7e5f213aef18d6b928dd5684e84f7"},
+    {"name":"phase48_contract","path":"workflows/patterndemand/phase48_pd_six_model_expanded_training/experiment.json","sha256":"52644d663295c444c0de227d25437150a8531d6433819abfaec002ac71732725"},
+    {"name":"phase48_teacher_features","path":"workflows/patterndemand/phase48_pd_six_model_expanded_training/contracts.py","sha256":"dd6e61113d4f32aea21dcc890af2969e47af21380b47775d7babed397bf7febb"},
+    {"name":"phase48_models","path":"workflows/patterndemand/phase48_pd_six_model_expanded_training/models.json","sha256":"89d0ffa212f4832d24bc413334505c813f3d240b5a6e9e5d377ba59729fa6687"},
+    {"name":"phase42_model","path":"workflows/patterndemand/phase42_pd_residual_training/model.py","sha256":"f6b33240ea4a65ba974f520d440bae05d675ac079cc7ace49c4bf922eb55e389"},
+    {"name":"phase41_prepare_bundle","path":"workflows/patterndemand/phase41_pd_full_window_dataset/prepare_bundle.py","sha256":"81cbe2130e6c2411887e9d8052ebfb12b023a0e7a978bc6de2744c016d183119"},
+    {"name":"phase41_contract","path":"workflows/patterndemand/phase41_pd_full_window_dataset/experiment.json","sha256":"3573bdbcf4647abc6d7e563f1178db7bdc30a369dbaa1cab52b969e22cb29e69"},
+    {"name":"phase41_features","path":"workflows/patterndemand/phase41_pd_full_window_dataset/feature_contract.json","sha256":"12d60796683edd677d01a99857e6e976de86881fa812173c4dbd1d9c4c287cde"},
+    {"name":"phase15_windows","path":"experiment-results/phase15_trace_data/windows.csv.gz","sha256":"3ce6ba2c77426f768a80cc824543773f27c8a2ca2bdd4695d6e7c5695189b809"},
+    {"name":"phase49_selection","path":"workflows/patterndemand/phase49_pd_six_model_blind_prediction_freeze/selection/fresh_blind_windows.csv","sha256":"9ba00473befb48b3bf5ea2f4e2654aea4e32594de261cbee3f4008a28e5e671e"}
+  ],
+  "stop_and_block_if":["HEAD is not exact W49 or any pin/raw/selection differs","any target/Hfull/residual or metric-based decision is generated/accessed","checkpoint, transform, model weights, alpha or epochs changes","raw/full requests enter Git"],
+  "claim_boundary":["target-isolated six-model prediction freeze only","no blind performance claim until Phase50","known models and BurstGPT only","no physical time, placement, latency or online scheduling"]
+}
