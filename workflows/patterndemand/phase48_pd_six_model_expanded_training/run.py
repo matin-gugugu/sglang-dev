@@ -21,13 +21,15 @@ sys.path.insert(0, str(HERE)); sys.path.insert(0, str(P42)); sys.path.insert(0, 
 from common import environment_record, load_json, refresh_manifest, repo_root, utc_now, write_json  # noqa: E402
 from metrics import SCORE_KEYS, compare_to_h0, metric_bundle  # noqa: E402
 from model import decode_histograms, encode_histograms, fit_model, fit_transform, histogram_arrays, model_to_json, predict_histograms, transform_inputs, transform_targets, write_csv_gz, write_json_gz  # noqa: E402
-from preflight import read_selection, run_checks  # noqa: E402
 from prepare_bundle import reconstruct_profile  # noqa: E402
 from prepare_phase15_trace_windows import BURST_FILES, MOONCAKE_FILES, load_segment  # noqa: E402
 
 _SPEC = importlib.util.spec_from_file_location("phase48_contracts", HERE / "contracts.py")
 if _SPEC is None or _SPEC.loader is None: raise RuntimeError("cannot load Phase48 contracts")
 _P48 = importlib.util.module_from_spec(_SPEC); _SPEC.loader.exec_module(_P48)
+_PREFLIGHT_SPEC = importlib.util.spec_from_file_location("phase48_preflight", HERE / "preflight.py")
+if _PREFLIGHT_SPEC is None or _PREFLIGHT_SPEC.loader is None: raise RuntimeError("cannot load Phase48 preflight")
+_PREFLIGHT = importlib.util.module_from_spec(_PREFLIGHT_SPEC); _PREFLIGHT_SPEC.loader.exec_module(_PREFLIGHT)
 
 
 ARRIVAL_TOKENS = ("_rps", "interarrival", "peak_to_mean", "fano")
@@ -86,9 +88,9 @@ def prediction_rows(rows: list[dict[str, Any]], calls: np.ndarray, logical_bytes
 
 
 def run(expected: str, raw_dir: Path, output: Path) -> dict[str, Any]:
-    preflight = run_checks(expected, raw_dir); contract = load_json(HERE/"experiment.json"); p41 = load_json(P41/"experiment.json"); feature_contract = load_json(P41/"feature_contract.json"); models = _P48.load_models()
+    preflight = _PREFLIGHT.run_checks(expected, raw_dir); contract = load_json(HERE/"experiment.json"); p41 = load_json(P41/"experiment.json"); feature_contract = load_json(P41/"feature_contract.json"); models = _P48.load_models()
     if output.exists(): raise RuntimeError(f"refuse overwrite: {output}")
-    selected = read_selection(repo_root()/contract["dataset_contract"]["selection_path"]); selection = {row["profile_id"]: row for row in selected}
+    selected = _PREFLIGHT.read_selection(repo_root()/contract["dataset_contract"]["selection_path"]); selection = {row["profile_id"]: row for row in selected}
     file_by_segment = {segment: raw_dir.expanduser().resolve()/name for name,(segment,_split) in {**BURST_FILES,**MOONCAKE_FILES}.items()}
     arrays = {segment: load_segment(file_by_segment[segment]) for segment in ("burstgpt_1","burstgpt_2","burstgpt_3")}
     examples=[]; targets=[]; profiles=[]; unique_requests=0
