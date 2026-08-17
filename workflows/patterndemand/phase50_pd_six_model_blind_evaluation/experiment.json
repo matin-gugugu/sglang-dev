@@ -1,0 +1,28 @@
+{
+  "schema_version":"phase50-pd-six-model-blind-evaluation-contract-v1",
+  "phase":"Phase50",
+  "objective":"在R49已冻结300个fresh blind窗口的六模型H0与H0+DNN预测后，首次且一次性生成1800个Hfull标签，检验R48共享预测器能否在整体、六模型及三个BurstGPT段稳定优于H0",
+  "workflow_parent_result_commit":"1b9227753f941cf9c790af69bf0acb7cf8bc3796",
+  "result_dir":"experiment-results/phase50_pd_six_model_blind_evaluation",
+  "execution":{"environment":"local CPU","gpu_permitted":false,"network_permitted":false,"training_permitted":false,"checkpoint_loading_permitted":false,"prediction_recompute_or_change_permitted":false,"target_access_before_1800_feature_reconstruction_passes":false,"raw_mutation_permitted":false},
+  "blind_contract":{"profiles":300,"models":6,"units":1800,"segments":["burstgpt_1","burstgpt_2","burstgpt_3"],"complete_requests":118985,"teacher_request_model_replays":713910,"frozen_prediction_rows":3600,"target_rows":1800,"teacher":"six_model_pure_pd_page_aware_bounded_wave_hfull_v1","feature_reconstruction_tolerance_lt":1e-10,"evaluation_rule":"first reproduce all 1800 target-free feature/H0 rows exactly; only then generate Hfull and join immutable R49 predictions by profile_id+model"},
+  "acceptance_gate":{"overall":"strictly below 1.0 for calls WAPE, bytes WAPE, calls TV and normalized payload EMD","models":"each of six models strictly below 1.0 on all four metrics","segments":"each segment composite <1 and calls/bytes WAPE ratios <=1.05","scientific_outcome":"CONFIRMS_SIX_MODEL_H0_PROTECTED_IMPROVEMENT only if overall, all-model and all-segment gates pass","paired_bootstrap":"20000 deterministic profile-cluster resamples; six model rows stay together","model_segment_and_strata":"report all 18 model-segment cells and ten frozen request-count strata without using them for selection"},
+  "pinned_inputs":[
+    {"name":"phase49_manifest","path":"experiment-results/phase49_pd_six_model_blind_prediction_freeze/manifest.sha256","sha256":"e1a02c3a31f54c13684ce10dfb2527e0432c9e4e73a912cc74809b088302f3da","verify_manifest_directory":"experiment-results/phase49_pd_six_model_blind_prediction_freeze"},
+    {"name":"phase49_summary","path":"experiment-results/phase49_pd_six_model_blind_prediction_freeze/summary.json","sha256":"8e13c62c09ab28ede6b3b4c06da0b8d01603ee75f4ed144548db374063cfc16a"},
+    {"name":"phase49_features","path":"experiment-results/phase49_pd_six_model_blind_prediction_freeze/dataset/pd_six_model_blind_target_free_features.csv.gz","sha256":"27d102ed887e835723efa357476f47f79b9a924232a02a65e95e76a1e0efd86f"},
+    {"name":"phase49_predictions","path":"experiment-results/phase49_pd_six_model_blind_prediction_freeze/predictions/pd_six_model_blind_frozen_predictions.csv.gz","sha256":"db7278d2ca54f0f2a2c9f3170063e2530dde1b6fabf8a03b8ad827a4865eb402"},
+    {"name":"phase49_profiles","path":"experiment-results/phase49_pd_six_model_blind_prediction_freeze/profiles/fresh_blind_lowdim_profiles.csv.gz","sha256":"c720cbe7270e988e7f1eb97172377bd946e480e08679cde8ac9766b878caad2d"},
+    {"name":"phase49_contract","path":"workflows/patterndemand/phase49_pd_six_model_blind_prediction_freeze/experiment.json","sha256":"9dc5169b695db442fe54b79f551740f477c0b6e036eb09e4d5b308a829dc3027"},
+    {"name":"phase49_selection_builder","path":"workflows/patterndemand/phase49_pd_six_model_blind_prediction_freeze/build_selection.py","sha256":"cc9b161d1b1b44ec82c95705c8c9bc316d9385c255c26c13fdb1b082fa645ca5"},
+    {"name":"phase49_selection","path":"workflows/patterndemand/phase49_pd_six_model_blind_prediction_freeze/selection/fresh_blind_windows.csv","sha256":"9ba00473befb48b3bf5ea2f4e2654aea4e32594de261cbee3f4008a28e5e671e"},
+    {"name":"phase48_teacher_features","path":"workflows/patterndemand/phase48_pd_six_model_expanded_training/contracts.py","sha256":"dd6e61113d4f32aea21dcc890af2969e47af21380b47775d7babed397bf7febb"},
+    {"name":"phase48_models","path":"workflows/patterndemand/phase48_pd_six_model_expanded_training/models.json","sha256":"89d0ffa212f4832d24bc413334505c813f3d240b5a6e9e5d377ba59729fa6687"},
+    {"name":"phase42_metrics","path":"workflows/patterndemand/phase42_pd_residual_training/metrics.py","sha256":"79784decb14c2931a4d96fcd30a5afaf4c2f7e29ead357b520e0b11ddebd583f"},
+    {"name":"phase41_prepare_bundle","path":"workflows/patterndemand/phase41_pd_full_window_dataset/prepare_bundle.py","sha256":"81cbe2130e6c2411887e9d8052ebfb12b023a0e7a978bc6de2744c016d183119"},
+    {"name":"phase41_contract","path":"workflows/patterndemand/phase41_pd_full_window_dataset/experiment.json","sha256":"3573bdbcf4647abc6d7e563f1178db7bdc30a369dbaa1cab52b969e22cb29e69"},
+    {"name":"phase41_features","path":"workflows/patterndemand/phase41_pd_full_window_dataset/feature_contract.json","sha256":"12d60796683edd677d01a99857e6e976de86881fa812173c4dbd1d9c4c287cde"}
+  ],
+  "stop_and_block_if":["HEAD is not exact W50 or any R49 pin/raw differs","any target is generated before all 1800 frozen features reproduce exactly","evaluator trains, loads checkpoint, recomputes predictions, tunes a gate or omits a row","raw/full requests enter Git"],
+  "claim_boundary":["fresh blind evidence for six known model structures under pure P1-D1 and BurstGPT","not unseen-model or Mooncake generalization","not physical time, placement, latency or online scheduling","workflow PASS is integrity; scientific_outcome records confirmation"]
+}
