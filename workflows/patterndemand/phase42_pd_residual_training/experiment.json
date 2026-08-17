@@ -25,7 +25,8 @@
   "predictor": {
     "method": "h0_plus_dnn_residual",
     "input": "non-constant numeric feature_* columns plus log1p(h0 12-bin calls and logical bytes), standardized using development_train only",
-    "target_encoding": "log1p(Hfull 12-bin histogram)-log1p(H0 12-bin histogram), independently for calls and logical bytes",
+    "target_encoding": "for calls and logical bytes separately encode log1p(total)+12 log-smoothed-shares; predict the Hfull-H0 encoded residual",
+    "residual_bound": "final tanh bounds each total residual to +/-log(2) and each shape-logit residual to +/-2, matching the established PatternDemand bounded-residual contract",
     "output": "nonnegative topology-independent 12-bin calls and logical bytes per 1000 requests",
     "activation": "tanh",
     "optimizer": "full-batch Adam",
@@ -40,7 +41,7 @@
     "candidate_score": "mean of DNN/H0 ratios for calls_histogram_wape, bytes_histogram_wape, mean_calls_histogram_tv and mean_normalized_log_payload_emd on 75-profile OOF predictions",
     "tie_break": "lexicographically smaller candidate_id",
     "final_epochs": "median selected-candidate fold best_epoch, clamped to [100,max_epochs]",
-    "checkpoint_format": "gzip JSON with preprocessing, selected contract and three NumPy MLP parameter sets"
+    "checkpoint_format": "gzip JSON with preprocessing, fixed residual bounds, selected contract and three NumPy MLP parameter sets"
   },
   "scientific_outcome": {
     "improves_composite": "validation composite_ratio < 1.0 and neither calls nor bytes histogram WAPE exceeds 1.25x H0",
@@ -71,6 +72,7 @@
     "the 75/19/12 split, predictor schema, deterministic repeat check or output manifest differs",
     "a checkpoint or prediction contains target_* or residual_* fields for a blind profile"
   ],
+  "supersession_note": "The initial W42 implementation was not allowed to produce R42: a pre-commit internal audit found every 75-profile OOF candidate had unbounded encoded extrapolation. W42-fix restores the established tanh bounded-residual parameterization before any result or blind target was committed.",
   "claim_boundary": [
     "Phase42 trains and freezes one Qwen3-8B pure-PD low-dimensional H0+DNN residual predictor",
     "Phase42 development metrics are not blind generalization evidence",

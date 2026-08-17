@@ -33,7 +33,7 @@ class Phase42Contracts(unittest.TestCase):
         self.assertFalse(any(name.startswith("target_") or name.startswith("residual_") for name in blind[0]))
 
     def test_numpy_mlp_learns_simple_mapping(self) -> None:
-        rng = np.random.default_rng(7); x = rng.normal(size=(24, 3)); y = np.tanh(x @ rng.normal(scale=0.2, size=(3, 24)))
+        rng = np.random.default_rng(7); x = rng.normal(size=(24, 3)); y = np.tanh(x @ rng.normal(scale=0.2, size=(3, 26)))
         config = {"width": 8, "depth": 1, "learning_rate": 0.02, "weight_decay": 0.0, "max_epochs": 500, "patience": 100}
         model, audit = fit_model(x, y, config, 9, fixed_epochs=300)
         self.assertLess(float(np.mean((forward(model, x) - y) ** 2)), 0.01)

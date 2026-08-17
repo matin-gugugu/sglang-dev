@@ -137,7 +137,7 @@ def run(expected: str, output: Path) -> dict[str, Any]:
     write_csv_gz(output / "predictions/development_validation_predictions.csv.gz", prediction_rows(validation, h0_val_calls, h0_val_bytes, "h0", include_target=True) + prediction_rows(validation, dnn_val_calls, dnn_val_bytes, "h0_plus_dnn_residual", include_target=True))
     write_csv_gz(output / "predictions/blind_frozen_predictions.csv.gz", prediction_rows(blind, blind_h0_calls, blind_h0_bytes, "h0", include_target=False) + prediction_rows(blind, blind_dnn_calls, blind_dnn_bytes, "h0_plus_dnn_residual", include_target=False))
     checkpoint = {
-        "schema_version": "phase42-pd-numpy-h0-dnn-checkpoint-v1", "workflow_commit": expected,
+        "schema_version": "phase42-pd-numpy-bounded-h0-dnn-checkpoint-v2", "workflow_commit": expected,
         "selected_candidate": selected, "selected_epochs": selected_epochs,
         "ensemble_seeds": contract["predictor"]["final_ensemble_seeds"], "transform": final_transform,
         "models": [model_to_json(model) for model in final_models],

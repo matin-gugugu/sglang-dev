@@ -15,6 +15,7 @@ import numpy as np
 
 
 BIN_COUNT = 12
+ENCODED_SIZE = 2 * (BIN_COUNT + 1)
 
 
 def read_csv_gz(path: Path) -> list[dict[str, str]]:
@@ -57,6 +58,36 @@ def histogram_arrays(rows: list[dict[str, str]], prefix: str) -> tuple[np.ndarra
     return calls, logical_bytes
 
 
+def residual_bounds() -> np.ndarray:
+    bounds = np.full(ENCODED_SIZE, 2.0, dtype=np.float64)
+    bounds[0] = math.log(2.0)
+    bounds[BIN_COUNT + 1] = math.log(2.0)
+    return bounds
+
+
+def encode_histograms(calls: np.ndarray, logical_bytes: np.ndarray) -> np.ndarray:
+    parts = []
+    for vectors in (calls, logical_bytes):
+        totals = np.maximum(vectors.sum(axis=1), 0.0)
+        smoothing = np.maximum(totals, 1.0) * 1e-6 / BIN_COUNT
+        shares = (vectors + smoothing[:, None]) / (totals[:, None] + smoothing[:, None] * BIN_COUNT)
+        parts.append(np.concatenate([np.log1p(totals)[:, None], np.log(shares)], axis=1))
+    return np.concatenate(parts, axis=1)
+
+
+def decode_histograms(encoded: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    vectors = []
+    offset = 0
+    for _ in range(2):
+        totals = np.expm1(np.clip(encoded[:, offset], 0.0, 40.0))
+        logits = np.clip(encoded[:, offset + 1 : offset + BIN_COUNT + 1], -50.0, 50.0)
+        logits -= logits.max(axis=1, keepdims=True)
+        shares = np.exp(logits); shares /= shares.sum(axis=1, keepdims=True)
+        vectors.append(totals[:, None] * shares)
+        offset += BIN_COUNT + 1
+    return vectors[0], vectors[1]
+
+
 def raw_input_matrix(rows: list[dict[str, str]], input_names: list[str]) -> np.ndarray:
     values = np.asarray([[float(row[name]) for name in input_names] for row in rows], dtype=np.float64)
     for column, name in enumerate(input_names):
@@ -77,16 +108,11 @@ def fit_transform(rows: list[dict[str, str]]) -> dict[str, Any]:
     mean = raw.mean(axis=0)
     scale = raw.std(axis=0)
     scale[scale < 1e-12] = 1.0
-    h0_calls, h0_bytes = histogram_arrays(rows, "h0")
-    target_calls, target_bytes = histogram_arrays(rows, "target")
-    residual = np.log1p(np.concatenate([target_calls, target_bytes], axis=1)) - np.log1p(np.concatenate([h0_calls, h0_bytes], axis=1))
-    output_scale = residual.std(axis=0)
-    output_scale[output_scale < 0.05] = 0.05
     return {
         "input_names": selected,
         "input_mean": mean.tolist(),
         "input_scale": scale.tolist(),
-        "output_scale": output_scale.tolist(),
+        "residual_bounds": residual_bounds().tolist(),
     }
 
 
@@ -99,13 +125,13 @@ def transform_inputs(rows: list[dict[str, str]], transform: dict[str, Any]) -> n
 def transform_targets(rows: list[dict[str, str]], transform: dict[str, Any]) -> np.ndarray:
     h0_calls, h0_bytes = histogram_arrays(rows, "h0")
     target_calls, target_bytes = histogram_arrays(rows, "target")
-    residual = np.log1p(np.concatenate([target_calls, target_bytes], axis=1)) - np.log1p(np.concatenate([h0_calls, h0_bytes], axis=1))
-    return residual / np.asarray(transform["output_scale"])
+    residual = encode_histograms(target_calls, target_bytes) - encode_histograms(h0_calls, h0_bytes)
+    return np.clip(residual / np.asarray(transform["residual_bounds"]), -1.0, 1.0)
 
 
 def init_model(input_dim: int, width: int, depth: int, seed: int) -> dict[str, Any]:
     rng = np.random.default_rng(seed)
-    dims = [input_dim] + [width] * depth + [2 * BIN_COUNT]
+    dims = [input_dim] + [width] * depth + [ENCODED_SIZE]
     weights = []
     biases = []
     for left, right in zip(dims[:-1], dims[1:]):
@@ -120,8 +146,7 @@ def forward(model: dict[str, Any], x: np.ndarray, *, cache: bool = False) -> Any
     value = x
     for index, (weight, bias) in enumerate(zip(model["weights"], model["biases"])):
         value = value @ weight + bias
-        if index + 1 < len(model["weights"]):
-            value = np.tanh(value)
+        value = np.tanh(value)
         activations.append(value)
     return (value, activations) if cache else value
 
@@ -136,7 +161,7 @@ def fit_model(x: np.ndarray, y: np.ndarray, config: dict[str, Any], seed: int, *
     best_model = copy.deepcopy(model); best_loss = math.inf; best_epoch = 0; stale = 0
     for epoch in range(1, maximum + 1):
         prediction, activations = forward(model, x, cache=True)
-        delta = 2.0 * (prediction - y) / (x.shape[0] * y.shape[1])
+        delta = (2.0 * (prediction - y) / (x.shape[0] * y.shape[1])) * (1.0 - prediction ** 2)
         grad_w: list[np.ndarray] = [np.empty(0)] * len(model["weights"])
         grad_b: list[np.ndarray] = [np.empty(0)] * len(model["biases"])
         for layer in range(len(model["weights"]) - 1, -1, -1):
@@ -178,8 +203,6 @@ def model_from_json(value: dict[str, Any]) -> dict[str, Any]:
 def predict_histograms(rows: list[dict[str, str]], transform: dict[str, Any], models: list[dict[str, Any]]) -> tuple[np.ndarray, np.ndarray]:
     x = transform_inputs(rows, transform)
     mean_normalized_residual = np.mean([forward(model, x) for model in models], axis=0)
-    residual = mean_normalized_residual * np.asarray(transform["output_scale"])
+    residual = np.clip(mean_normalized_residual, -1.0, 1.0) * np.asarray(transform["residual_bounds"])
     h0_calls, h0_bytes = histogram_arrays(rows, "h0")
-    h0_log = np.log1p(np.concatenate([h0_calls, h0_bytes], axis=1))
-    prediction = np.expm1(np.clip(h0_log + residual, 0.0, 40.0))
-    return prediction[:, :BIN_COUNT], prediction[:, BIN_COUNT:]
+    return decode_histograms(encode_histograms(h0_calls, h0_bytes) + residual)
