@@ -21,7 +21,7 @@ workflow commit W
   -> 原环境验证R的父提交、路径和manifest
 ```
 
-当前十一个workflow：
+当前十二个workflow：
 
 - `phase36_cross_environment_replay`：一张GPU即可，不训练、不读teacher，复播Phase34冻结的六模型TP/PP直方图并演练commit回传。
 - `phase37_pp_single_node_p2p_curve`：至少两张GPU，实测单机PP GPU P2P连续曲线；raw逐次样本保存在仓库外，只提交紧凑曲线与审计。
@@ -34,5 +34,6 @@ workflow commit W
 - `phase44_pd_expanded_protected_training`：避开Phase27–34及已打开Phase41/43窗口，冻结1200个互不重叠的BurstGPT开发画像，用CPU teacher扩展到960/240训练验证集；训练带有界残差、alpha收缩和分segment H0硬保护门的DNN，只有四项指标严格改善才允许新blind。
 - `phase45_pd_fresh_blind_prediction_freeze`：在不生成Hfull的前提下冻结300个全新、历史隔离且分层的BurstGPT blind画像，并原样加载R44 checkpoint生成H0与H0+DNN预测；R45合入前禁止打开标签。
 - `phase46_pd_fresh_blind_evaluation`：R45正式合入后才重建同一批300个窗口并核对冻结特征，随后一次性生成Hfull，按预注册四指标、三segment保护门、paired bootstrap和请求量分层报告blind结论；不训练或重算预测。
+- `phase47_pd_five_model_teacher_validation`：在Qwen3-8B预测器通过fresh blind后，顺序复用同一对GPU，补齐DeepSeek-V2-Lite、Qwen3-30B-A3B、Llama-3.2-3B-Instruct、Qwen2.5-14B-Instruct和Mixtral-8x7B-Instruct的纯P1→D1 scheduler/逻辑KV teacher精确验证；固定DeepSeek FlashMLA/page64及其余模型FlashInfer/page1，不训练、不测物理时间。
 
 完整交接见`PatternDemand跨环境GPU执行交接_Phase36_Phase37.md`。
