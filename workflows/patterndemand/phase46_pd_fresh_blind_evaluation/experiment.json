@@ -1,0 +1,62 @@
+{
+  "schema_version": "phase46-pd-fresh-blind-evaluation-contract-v1",
+  "phase": "Phase46",
+  "objective": "在R45已正式冻结300个fresh blind画像的H0与H0+DNN预测后，首次且一次性生成同窗口Hfull标签，检验R44模型能否在整体及三个BurstGPT段稳定优于H0",
+  "workflow_parent_result_commit": "284f4b796b57bfee5002efb52937da26d0fe748f",
+  "result_dir": "experiment-results/phase46_pd_fresh_blind_evaluation",
+  "execution": {
+    "environment": "local CPU worktree with explicit read-only external protected raw directory",
+    "gpu_permitted": false,
+    "network_permitted": false,
+    "training_permitted": false,
+    "checkpoint_loading_permitted": false,
+    "prediction_recompute_or_change_permitted": false,
+    "target_access_before_freeze_reconstruction_passes": false,
+    "raw_mutation_permitted": false
+  },
+  "blind_contract": {
+    "profiles": 300,
+    "segments": ["burstgpt_1", "burstgpt_2", "burstgpt_3"],
+    "profiles_per_segment": 100,
+    "complete_requests": 115083,
+    "frozen_prediction_rows": 600,
+    "target_rows": 300,
+    "teacher": "qwen3_pure_pd_bounded_wave_hfull_v1",
+    "feature_reconstruction_tolerance_lt": 1e-10,
+    "evaluation_rule": "first reproduce all 300 target-free R45 feature/H0 rows exactly; only then generate Hfull and join to immutable R45 predictions by profile_id"
+  },
+  "acceptance_gate": {
+    "overall": "H0+DNN/H0 ratio must be strictly below 1.0 for calls histogram WAPE, bytes histogram WAPE, mean calls TV and normalized payload EMD",
+    "segments": "each of three segments must have four-metric composite ratio <1.0 and calls/bytes histogram WAPE ratios <=1.05",
+    "scientific_outcome": "CONFIRMS_H0_PROTECTED_IMPROVEMENT only if both overall and all-segment gates pass; otherwise DOES_NOT_CONFIRM",
+    "paired_bootstrap": "20000 deterministic profile-level resamples of H0 minus DNN mean profile calls-L1 and bytes-L1; confidence intervals are supporting evidence and do not alter the frozen gate",
+    "request_count_strata": "report the same ratios for each of ten pre-frozen request-count strata without using them for selection"
+  },
+  "pinned_inputs": [
+    {"name": "phase45_result_manifest", "path": "experiment-results/phase45_pd_fresh_blind_prediction_freeze/manifest.sha256", "sha256": "f8c0d5c5c3db19020fb9c4b701443b81c911726c3a47a15be80debba6b9e0ce9", "verify_manifest_directory": "experiment-results/phase45_pd_fresh_blind_prediction_freeze"},
+    {"name": "phase45_summary", "path": "experiment-results/phase45_pd_fresh_blind_prediction_freeze/summary.json", "sha256": "095b849496f180bff3575c9b4592e9f6f6218fa9ed7faf5d99c6faf541861ae3"},
+    {"name": "phase45_features", "path": "experiment-results/phase45_pd_fresh_blind_prediction_freeze/dataset/pd_fresh_blind_target_free_features.csv.gz", "sha256": "ae4af613b3fdcd3bece7a7d836b25486a7749c2ca7bc673d65cf8a239cea7e43"},
+    {"name": "phase45_predictions", "path": "experiment-results/phase45_pd_fresh_blind_prediction_freeze/predictions/pd_fresh_blind_frozen_predictions.csv.gz", "sha256": "a16b6bc42d1088b5083d52bf3c1d3febc42abd4f22864b7e3d4065b8144c1314"},
+    {"name": "phase45_profiles", "path": "experiment-results/phase45_pd_fresh_blind_prediction_freeze/profiles/fresh_blind_lowdim_profiles.csv.gz", "sha256": "12016868bf9367dd7797118e9841c85ed1cbdef4748a097d07680c6a44bbf414"},
+    {"name": "phase45_contract", "path": "workflows/patterndemand/phase45_pd_fresh_blind_prediction_freeze/experiment.json", "sha256": "11889c4091546e817767f331d3d6d92ccea278ca3e5b970e2076fe924114987d"},
+    {"name": "phase45_selection_builder", "path": "workflows/patterndemand/phase45_pd_fresh_blind_prediction_freeze/build_selection.py", "sha256": "1bb2e42962036301bdd7e4b598e6656570bf9914043f78267954e54d337d9d5a"},
+    {"name": "phase45_selection", "path": "workflows/patterndemand/phase45_pd_fresh_blind_prediction_freeze/selection/fresh_blind_windows.csv", "sha256": "4f749f32486723729b079a0f3de09bfa5466d90ae519d8813f6f331b70d2861f"},
+    {"name": "phase42_metrics", "path": "workflows/patterndemand/phase42_pd_residual_training/metrics.py", "sha256": "79784decb14c2931a4d96fcd30a5afaf4c2f7e29ead357b520e0b11ddebd583f"},
+    {"name": "phase41_contract", "path": "workflows/patterndemand/phase41_pd_full_window_dataset/experiment.json", "sha256": "3573bdbcf4647abc6d7e563f1178db7bdc30a369dbaa1cab52b969e22cb29e69"},
+    {"name": "phase41_teacher_contracts", "path": "workflows/patterndemand/phase41_pd_full_window_dataset/contracts.py", "sha256": "195c121e0bfd6caac18c58a77dd0b2cfe8214e33cbb934aaf4e18444c7c83531"},
+    {"name": "phase41_feature_contract", "path": "workflows/patterndemand/phase41_pd_full_window_dataset/feature_contract.json", "sha256": "12d60796683edd677d01a99857e6e976de86881fa812173c4dbd1d9c4c287cde"},
+    {"name": "phase41_model_contract", "path": "experiment-results/phase41_pd_full_window_dataset/contracts/model_contract.json", "sha256": "0acae25e92a166d1689b643a66da9627c4a7f7850369f9e314c4a7aa2f3ee066"}
+  ],
+  "accepted_result_statuses": ["PASS"],
+  "stop_and_block_if": [
+    "HEAD is not exact W46, any R45 file/manifest or protected raw hash differs, or the Phase45 selection cannot be reproduced exactly",
+    "any target is generated before all 300 target-free feature/H0 rows match R45 below tolerance",
+    "the evaluator would train, load a checkpoint, recompute/change predictions, tune alpha/model/metric/gate, or omit an unfavorable row",
+    "any raw row, complete request list, model weight, cache or PID would enter Git"
+  ],
+  "claim_boundary": [
+    "Phase46 can confirm or reject blind generalization for Qwen3-8B pure P1-D1 across three BurstGPT segments",
+    "it does not cover Mooncake, the other five models, physical RDMA time, placement, latency or online scheduling",
+    "workflow PASS means integrity passed; scientific_outcome separately records whether H0+DNN beat H0"
+  ]
+}
