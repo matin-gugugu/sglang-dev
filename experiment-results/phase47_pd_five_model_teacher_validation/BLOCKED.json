@@ -1,0 +1,160 @@
+{
+  "created_at_utc": "2026-08-17T14:31:43.749440+00:00",
+  "evidence": {
+    "asset_state": {
+      "attempt1_and_2_evidence_preserved": true,
+      "external_formal_raw_root": "phase47/raw_attempt3 - 0 bytes, EMPTY; the smoke gate held and no formal raw was produced",
+      "external_smoke_root": "phase47/smoke_attempt3 - 67470 bytes, 4 files (1 profiler jsonl with 11 events + prefill/decode/router logs)",
+      "git_worktree": "clean; nothing written into the repository work tree",
+      "preflight_audit": "phase47/preflight_attempt3.json - PASS"
+    },
+    "blocking_failure": {
+      "all_other_smoke_checks_true": [
+        "exactly_one_transport_sender_chunk",
+        "sender_chunks_total_exact",
+        "no_unexpected_profile_records",
+        "mooncake_sender",
+        "page_size_frozen",
+        "transport_page_count_exact",
+        "bytes_per_page_exact",
+        "logical_bytes_formula_exact",
+        "admission_repeats_exact",
+        "state_payload_zero",
+        "no_tensor_contents",
+        "all_smoke_waves_returned",
+        "no_transfer_error_in_logs",
+        "formal_raw_still_empty"
+      ],
+      "deterministic_not_a_race": "admission_repeats_exact = True; both repeats produced byte-identical segment signatures, so this is NOT the Phase40-style batch-assembly nondeterminism",
+      "gate": "compatibility_smoke admission_segments_exact = False (deepseek-v2-lite only)",
+      "single_point_of_disagreement": {
+        "contract_expected_segments": [
+          [
+            0,
+            17
+          ],
+          [
+            17,
+            32
+          ]
+        ],
+        "gpu_observed_segments": [
+          [
+            0,
+            16
+          ],
+          [
+            16,
+            32
+          ]
+        ],
+        "request": "4th request (2000 prompt tokens)",
+        "requests_1_to_3": "expected [[0,16]] and observed [[0,16]] - exact match",
+        "wave": "[1000, 1000, 1000, 2000] admission probe (same shape as the packed_remainder scenario)"
+      }
+    },
+    "bypass_paths_considered_and_rejected": [
+      {
+        "path": "adjust expected_segments_by_request_index in phase47 contracts.py to match the GPU",
+        "rejected_because": "that is the frozen scientific expectation; editing it to match observation is exactly the 'wrap a failing gate as PASS' pattern, red lines 1 and 4"
+      },
+      {
+        "path": "fix teacher_chunks_for_wave() to debit page-aligned budget",
+        "rejected_because": "phase40 contracts.py is a pinned input (sha 52bdf777...); editing it fails the preflight pinned-SHA gate and is red line 1. It is also a scientific model change, which is a control-side call"
+      },
+      {
+        "path": "drop the admission_segments_exact check or relax it",
+        "rejected_because": "red line 4; the contract explicitly lists 'any per-model smoke ... gate fails' as stop_and_block_if"
+      },
+      {
+        "path": "change page_size for DeepSeek to 32 or 1 to avoid the rounding",
+        "rejected_because": "page size is frozen and backend_or_page_fallback_permitted=false; trtllm_mla only accepts 32 or 64 anyway"
+      },
+      {
+        "path": "skip DeepSeek and run the other four models",
+        "rejected_because": "all_five_models_must_pass=true and verify.py hard-asserts 5 models / 225 requests, red line 4"
+      },
+      {
+        "path": "re-run hoping for a different result",
+        "rejected_because": "admission_repeats_exact=True proves the behaviour is deterministic; a re-run would consume a fresh attempt directory for no new information"
+      }
+    ],
+    "host": "prenyx0023.a51.clusters.nvidia.com",
+    "prior_attempts": [
+      {
+        "R": "c5a2897d",
+        "W": "3aa81077 (W47-fix)",
+        "cause": "flashmla dense decode is SM90a-only"
+      },
+      {
+        "R": "33fff69c",
+        "W": "85c2cd61 (W47-fix2)",
+        "cause": "trtllm_mla rejects the bfloat16 CLI spelling"
+      }
+    ],
+    "progress_relative_to_prior_attempts": {
+      "bf16_spelling_fix_worked": "both P and D servers started; ServerArgs show attention_backend='trtllm_mla', page_size=64, kv_cache_dtype='bf16' with no runtime override",
+      "kv_transfer_healthy": "11 sender chunks via MooncakeKVSender, zero transfer errors in server logs",
+      "smoke_checks_passed": "14 of 15",
+      "trtllm_mla_executes_on_b200": "yes - this is the first W47 attempt to reach real GPU execution; DeepSeek-V2-Lite prefill ran and Mooncake RDMA KV transfer succeeded"
+    },
+    "quantified_blast_radius_if_hypothesis_holds": {
+      "aggregate_gates_would_still_pass": "total chunk count identical (25 vs 25) and total logical bytes identical (1487020032 vs 1487020032), so calls_absolute_error and logical_bytes_absolute_error would both be 0",
+      "deepseek_page64_differing_requests": {
+        "mixed_burst": [
+          "r3",
+          "r4",
+          "r5",
+          "r6",
+          "r7"
+        ],
+        "packed_remainder": [
+          "r3"
+        ],
+        "single_cross_chunk": [],
+        "single_exact_chunk": [],
+        "single_short": []
+      },
+      "histogram_gate_would_fail": "the 12-bin histogram is identical for single_short, single_exact_chunk, single_cross_chunk and packed_remainder, but DIFFERS for mixed_burst, so histogram_calls_l1 / histogram_bytes_l1 would be non-zero for DeepSeek",
+      "method": "ran the frozen teacher_chunks_for_wave() against a page-aligned-budget variant over the five frozen Phase47 scenarios, comparing rid/page_start/page_end/kv_page_count/logical_bytes",
+      "other_four_models": "unaffected under either rule",
+      "per_model": "18 of 45 requests would fail request_level_exact_match",
+      "per_repeat": "6 of 15 requests differ"
+    },
+    "recommended_unblock": {
+      "core_question_for_control_side": "which accounting rule is the scientifically correct scheduler-faithful teacher at page_size > 1 - the frozen raw-token debit, or the page-aligned debit that the GPU exhibits",
+      "if_the_frozen_teacher_is_deemed_correct": "then DeepSeek at page64 genuinely violates the frozen scheduler model and Phase47's MLA member needs re-scoping",
+      "if_the_gpu_behaviour_is_deemed_correct": "teacher_chunks_for_wave() in the pinned phase40 contracts.py needs a page-aware budget debit, its pinned SHA must be updated, and phase47 runtime_contract()'s hardcoded split must be re-derived from the same rule. Note phase40/41 results stay valid because page_size=1 makes the two rules identical.",
+      "recommendation_on_verification": "whichever rule is chosen, it should be validated against a shape other than [1000,1000,1000,2000] before freezing, since only that one shape has been observed on GPU so far"
+    },
+    "root_cause_analysis": {
+      "frozen_arithmetic": "budget 4096 - 3*1000 = 1096 remaining; 1096 - (1096 % 64) = 1088 tokens = 17 pages -> [0,17] then [17,32]",
+      "frozen_rule": "workflows/patterndemand/phase40_pure_pd_semantics_teacher/contracts.py teacher_chunks_for_wave() debits the batch budget by the RAW token count (budget -= send_tokens); phase47 contracts.py runtime_contract() mirrors this with split = ((chunk - 3000) // page) * page",
+      "hypothesis_matching_the_gpu": "the real scheduler appears to debit the budget in PAGE-ALIGNED units: each 1000-token request occupies ceil(1000/64) = 16 pages = 1024 token slots, so 3*1024 = 3072 and 4096 - 3072 = 1024 = exactly 16 pages -> [0,16] then [16,32]",
+      "hypothesis_status": "this rule reproduces the observed segments exactly for the one wave shape that was actually executed; it is NOT independently verified against mixed_burst or any other shape, because the formal run never started",
+      "nature": "frozen teacher / contract prefill-budget accounting assumption, not a GPU fault and not a transport fault",
+      "scope_is_deepseek_only": "re-deriving both rules field-by-field over all five Phase47 scenarios shows the four flashinfer/page1 models are完全 equivalent under either rule; only DeepSeek at page64 diverges",
+      "why_phase40_and_41_never_hit_this": "they ran Qwen3-8B at page_size=1, where send % 1 == 0 and a page debit equals a token debit, making the two accounting rules identical"
+    },
+    "run_branch": "run/phase47-nvidia-a51-20260817-w47fix3",
+    "slurm_job": "2395105 (batch, 2h limit, elapsed 00:08:27, FAILED exit 95)",
+    "what_this_run_does_and_does_not_establish": {
+      "established": [
+        "the bf16 CLI spelling fix is correct and complete - no runtime override of backend, page size or kv dtype",
+        "trtllm_mla runs DeepSeek-V2-Lite on B200/SM100 and the Mooncake RDMA KV path works end to end",
+        "the DeepSeek MLA KV byte formula is confirmed empirically: kv_bytes_per_page = 1990656 and logical_bytes = kv_page_count * kv_bytes_per_page held for all 11 observed chunks",
+        "the wave admission behaviour is deterministic across repeats"
+      ],
+      "not_established": [
+        "no formal 45-request run executed for any model; zero formal requests across all four W47 attempts",
+        "the page-aligned-budget hypothesis is consistent with one observed wave shape only and is not proven",
+        "nothing is known about whether the other four models would pass their smoke and alignment gates"
+      ]
+    },
+    "workflow_commit_W47_fix3": "a5d6ac25f46716c37935804f897698e0558dc3a3"
+  },
+  "phase": "PHASE47",
+  "reason": "DeepSeek-V2-Lite在page64下的prefill预算记账与冻结teacher不一致：合同预期第4个请求切成[0,17]/[17,32]，GPU确定性地给出[0,16]/[16,32]（两次repeat完全一致，非竞态）。冻结teacher按原始token扣预算(budget-=send_tokens)，而实测符合按页对齐扣预算(3×ceil(1000/64)×64=3072，余1024=16页)。page=1的其余四模型两套规则等价，故Phase40/41从未暴露。修正需改动pinned的phase40 contracts.py或冻结的科学预期，均越红线。本轮已确认bf16修正正确、trtllm_mla在B200上可执行、Mooncake RDMA KV通路正常、DeepSeek MLA字节公式实测成立",
+  "schema_version": "patterndemand-workflow-blocked-v1",
+  "status": "BLOCKED"
+}
