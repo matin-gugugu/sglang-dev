@@ -1,0 +1,105 @@
+{
+  "created_at_utc": "2026-08-17T12:46:58.139089+00:00",
+  "evidence": {
+    "asset_state": {
+      "external_formal_raw_root": "/lustre/.../phase47/raw_attempt1 - 0 bytes, EMPTY; the contract gate formal_raw_must_be_empty_until_model_smoke_passes held correctly",
+      "external_smoke_root": "/lustre/.../phase47/smoke_attempt1 - 49491 bytes, only deepseek-v2-lite/server_logs/{prefill,decode}.log; preserved as evidence, not deleted",
+      "formal_result_dir_before_this_record": "did not exist",
+      "git_worktree": "clean; no file was written into the repository work tree",
+      "models_untouched": "all five frozen snapshots left as acquired",
+      "preflight_audit": "/lustre/.../phase47/preflight_attempt1.json - PASS, preserved"
+    },
+    "blocking_failure": {
+      "phase_of_run": "first model (deepseek-v2-lite) compatibility smoke, per contract model_order[0]",
+      "prefill_server_was_healthy": "yes - prefill came up, PD warmup returned status 200, then a 64-token prefill batch executed; only the decode side dies. This is another instance of 'server started != link usable'.",
+      "raising_frame": "sgl_kernel/flash_mla.py:181 flash_mla_with_kvcache -> torch.ops.sgl_kernel.fwd_kvcache_mla.default",
+      "root_cause_from_decode_server_log": "Exception: Capture cuda graph failed: Dense decode MLA is only supported on SM90a architecture",
+      "serverargs_matched_contract": "attention_backend='flashmla', page_size=64, kv_cache_dtype='bfloat16' - no silent runtime override; the frozen semantics were honoured exactly",
+      "sglang_call_path": "scheduler.init_model_worker -> init_all_cuda_graphs -> model_runner.init_decode_cuda_graph -> decode_cuda_graph_runner.__init__",
+      "symptom_seen_by_runner": "RuntimeError: process exited before readiness: rc=-9, url=http://127.0.0.1:43101/health (smoke decode server)"
+    },
+    "bypass_paths_considered_and_rejected": [
+      {
+        "path": "switch deepseek-v2-lite to cutlass_mla or trtllm_mla",
+        "rejected_because": "contract backend_contract.mla.attention_backend is frozen to 'flashmla' with backend_or_page_fallback_permitted=false; stop_and_block_if forbids the Agent changing backend; red line 1"
+      },
+      {
+        "path": "add --cuda-graph-backend-decode=disabled",
+        "rejected_because": "twice invalid - (a) it would require editing the SHA-pinned Phase40 build_server_commands (pinned sha 01a3eecd...), red line 1; (b) diagnostic 2394942 proves eager decode fails identically, so it would not even work"
+      },
+      {
+        "path": "run only the other four flashinfer/page1 models and report those",
+        "rejected_because": "acceptance_gates.all_five_models_must_pass=true, models=5, total_requests=225; verify.py hard-asserts counts=={models:5,requests:225}; reporting a partial as PASS is red line 4 (fabricating DONE)"
+      },
+      {
+        "path": "reorder model_order so deepseek runs last to salvage four models",
+        "rejected_because": "measurement_contract.model_order is frozen; the phase would still fail; red line 1"
+      },
+      {
+        "path": "run on Hopper/SM90a hardware",
+        "rejected_because": "no SM90a node exists on this cluster (149/149 are b200); contract execution.environment also declares a B200-class host"
+      },
+      {
+        "path": "rebuild sgl_kernel with SM100 FlashMLA decode support",
+        "rejected_because": "changes the frozen container toolchain, is not authorised by the contract, and upstream dense-decode MLA appears to have no SM100 implementation to enable"
+      }
+    ],
+    "cluster_architecture_inventory": {
+      "conclusion": "no SM90a hardware exists anywhere on nvidia-a51; this cannot be solved by node selection",
+      "method": "sinfo AVAIL_FEATURES / scontrol show node ActiveFeatures - every node reports 'viking,emr,b200,ndr,...'",
+      "nodes_with_b200_feature": 149,
+      "nodes_with_sm90a_hopper": 0,
+      "total_nodes": 149
+    },
+    "diagnostic_2394942_findings": {
+      "arch_gate_location": "/usr/local/lib/python3.12/dist-packages/sgl_kernel/flashmla_ops.abi3.so - compiled into a prebuilt container binary, not reachable by env var or repo source patch (same class of wall as the prebuilt Rust router in Phase40)",
+      "corroboration_from_repo_source": "python/sglang/srt/arg_groups/overrides.py comments 'Blackwell FP8 defaults to trtllm; Hopper FP8 to flashmla_kv' - upstream sglang itself treats flashmla as Hopper-oriented",
+      "eager_call_also_fails": "calling flash_mla_with_kvcache directly with DeepSeek-V2-Lite shapes (kv_lora_rank=512, qk_rope_head_dim=64, heads=16, page=64) in eager mode raises the same 'Dense decode MLA is only supported on SM90a architecture'. The failure is NOT specific to CUDA graph capture.",
+      "other_mla_backends_importable_on_sm100": [
+        "cutlass_mla",
+        "trtllm_mla"
+      ],
+      "sgl_kernel_version": "0.4.4",
+      "why_that_matters": "the sglang error message suggests '--cuda-graph-backend-decode=disabled' as a workaround; this diagnostic empirically disproves that workaround for SM100",
+      "why_the_earlier_diagnostic_2394625_was_a_false_green": "it probed only get_mla_metadata, which is architecture-agnostic and returns fine on SM100; the architecture gate lives in the decode kernel flash_mla_with_kvcache, which was never called"
+    },
+    "gpu": "NVIDIA B200, compute capability (10,0) = SM100, driver 580.167.08",
+    "host": "prenyx0047.a51.clusters.nvidia.com",
+    "preflight_status": {
+      "elapsed": "00:04:57",
+      "five_model_kv_formula_selfconsistent": "deepseek flashmla/page64 kv_bytes_per_page=1990656; qwen3-30b 98304; llama-3.2-3b 114688; qwen2.5-14b 196608; mixtral 131072 - all equal to contract expected values",
+      "gpu_pair": [
+        0,
+        1
+      ],
+      "ib_device": "mlx5_4, port 1, 400 Gb/sec (4X NDR), ACTIVE",
+      "pinned_inputs_ok": "18/18",
+      "required_modules": "sglang_router, mooncake, flashinfer, sgl_kernel_flash_mla, repo_flashmla_backend all True",
+      "result": "PASS",
+      "source_semantics_ok": "26/26 including the three new FlashMLA registration/page64 checks"
+    },
+    "run_branch": "run/phase47-nvidia-a51-20260817-w47fix",
+    "slurm_jobs": {
+      "formal_run": "2394911 (batch, 3h limit, elapsed 00:07:59, FAILED exit 95)",
+      "readonly_mla_diagnostic": "2394942 (batch, elapsed 00:01:47, COMPLETED)"
+    },
+    "superseded_workflow_commit_W47_old": "ebaf46e673a49112a6c11b77367f91dcbb3dfd42",
+    "unblock_requires_control_side_decision": "Phase47 cannot run on SM100 with DeepSeek-V2-Lite pinned to flashmla. The control side must decide the frozen policy: either re-pin the DeepSeek MLA execution point to an SM100-capable backend (cutlass_mla or trtllm_mla, both importable here) with its page-size contract restated, or split DeepSeek out of Phase47 and re-scope the acceptance gates. Both are contract changes and therefore control-side calls, not GPU-agent calls.",
+    "w47_fix_preflight_module_correction_verified": {
+      "W47_fix_checks": "importlib.util.find_spec('sgl_kernel.flash_mla')",
+      "W47_fix_result": "FOUND at /usr/local/lib/python3.12/dist-packages/sgl_kernel/flash_mla.py",
+      "conclusion": "the W47-fix module-name correction is correct and preflight now passes; the blocker below is a distinct, deeper problem",
+      "old_W47_checked": "importlib.util.find_spec('flash_mla')",
+      "old_W47_result_in_this_container": "MISSING - module does not exist"
+    },
+    "what_this_run_does_and_does_not_establish": {
+      "established": "W47-fix's preflight module-name correction is verified correct on this environment; all 18 pinned inputs, 26 source-semantics checks and the five-model KV formula identities pass; the frozen flashmla/page64 server args are honoured without runtime override",
+      "not_established": "no GPU/teacher alignment evidence was produced for any of the five models; zero formal requests were executed"
+    },
+    "workflow_commit_W47_fix": "3aa8107712e40de35b38dc09fc983df26fa59c02"
+  },
+  "phase": "PHASE47",
+  "reason": "DeepSeek-V2-Lite的冻结后端flashmla在SM100/B200上不可用：sgl_kernel预编译二进制的dense decode MLA kernel仅支持SM90a，decode端在CUDA graph capture阶段崩溃且eager调用同样失败；集群149个节点全为B200，无SM90a硬件；更换backend/page、改动SHA-pinned的Phase40 server命令、或仅报告其余四个模型均违反合同与红线",
+  "schema_version": "patterndemand-workflow-blocked-v1",
+  "status": "BLOCKED"
+}

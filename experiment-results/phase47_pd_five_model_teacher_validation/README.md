@@ -1,0 +1,3 @@
+# PHASE47：执行阻塞
+
+本次没有生成正式实验结果。阻塞原因：DeepSeek-V2-Lite的冻结后端flashmla在SM100/B200上不可用：sgl_kernel预编译二进制的dense decode MLA kernel仅支持SM90a，decode端在CUDA graph capture阶段崩溃且eager调用同样失败；集群149个节点全为B200，无SM90a硬件；更换backend/page、改动SHA-pinned的Phase40 server命令、或仅报告其余四个模型均违反合同与红线
