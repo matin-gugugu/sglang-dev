@@ -108,7 +108,7 @@ def run_checks(args: argparse.Namespace) -> dict[str, Any]:
         "sglang_router": importlib.util.find_spec("sglang_router.launch_router") is not None,
         "mooncake": importlib.util.find_spec("mooncake.engine") is not None,
         "flashinfer": importlib.util.find_spec("flashinfer") is not None,
-        "flash_mla": importlib.util.find_spec("flash_mla") is not None,
+        "sgl_kernel_flash_mla": importlib.util.find_spec("sgl_kernel.flash_mla") is not None,
         "repo_flashmla_backend": importlib.util.find_spec("sglang.srt.layers.attention.flashmla_backend") is not None,
     }
     if not all(module_checks.values()):
