@@ -3,6 +3,14 @@
   "phase": "Phase47",
   "objective": "在Qwen3-8B纯PD预测器通过300画像fresh blind后，用真实SGLang GPU P1-D1执行验证其余五个冻结模型的scheduler chunk和KV逻辑字节teacher，使后续Phase48能够安全生成六模型Hfull",
   "workflow_parent_result_commit": "927a693d723a91a5a248ce332899164686e31601",
+  "superseded_blocked_attempt": {
+    "workflow_commit": "3aa8107712e40de35b38dc09fc983df26fa59c02",
+    "blocked_result_commit": "c5a2897d69bd5fa0847c2d0ee834bfd47e0c52b8",
+    "run_branch": "run/phase47-nvidia-a51-20260817-w47fix",
+    "formal_requests_executed": 0,
+    "cause": "flashmla dense decode in sgl_kernel 0.4.4 is SM90a-only and fails on B200/SM100 in both CUDA graph capture and eager execution",
+    "integration": "BLOCKED evidence remains on the run branch and is referenced here but is not a workflow parent or formal PASS result"
+  },
   "result_dir": "experiment-results/phase47_pd_five_model_teacher_validation",
   "execution": {
     "environment": "remote NVIDIA B200-class host with two distinct GPUs reused sequentially",
@@ -32,8 +40,8 @@
     "sender_counted_only": true,
     "backend_or_page_fallback_permitted": false,
     "non_mla": {"attention_backend": "flashinfer", "page_size_tokens": 1},
-    "mla": {"model": "deepseek-v2-lite", "attention_backend": "flashmla", "page_size_tokens": 64},
-    "reason": "non-MLA preserves the Phase40 one-token page contract; FlashMLA has a source-enforced 64-token page contract, so DeepSeek MLA is separately frozen and its page size remains an explicit predictor/policy input"
+    "mla": {"model": "deepseek-v2-lite", "attention_backend": "trtllm_mla", "page_size_tokens": 64},
+    "reason": "non-MLA preserves the Phase40 one-token page contract; DeepSeek MLA is frozen to the Blackwell-native TRTLLM MLA backend at its supported page64 point after W47's FlashMLA dense-decode kernel proved SM90a-only; page size remains an explicit predictor/policy input"
   },
   "measurement_contract": {
     "schedule_policy": "fcfs",
@@ -116,7 +124,7 @@
     {"name": "sglang_memory_pool", "path": "python/sglang/srt/mem_cache/memory_pool.py", "sha256": "7e585c4c5870ac84a048069e61bfd9892f2c638b2d89964e927d2c554f3f951e"},
     {"name": "sglang_attention_registry", "path": "python/sglang/srt/layers/attention/attention_registry.py", "sha256": "3bc305efae91c7147357342b1a78203766e07490edfeca3fc8514510095603e6"},
     {"name": "sglang_attention_overrides", "path": "python/sglang/srt/arg_groups/overrides.py", "sha256": "9152d913b5f3ca2578312c830946ff69e159866b889d544b50f1f3c4b23c0662"},
-    {"name": "sglang_flashmla_backend", "path": "python/sglang/srt/layers/attention/flashmla_backend.py", "sha256": "2ae3ef6dbc6cf20a43c5fe52aec251e39c105b924b60a7e227efc62ac277baf2"}
+    {"name": "sglang_trtllm_mla_backend", "path": "python/sglang/srt/layers/attention/trtllm_mla_backend.py", "sha256": "13868fe625949108037bfd115559042981b2b75e8904eb669a1c5e997a9be1c9"}
   ],
   "accepted_result_statuses": ["PASS"],
   "claim_boundary": [

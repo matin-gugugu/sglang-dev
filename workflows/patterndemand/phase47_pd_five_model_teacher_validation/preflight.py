@@ -59,10 +59,10 @@ def source_additions() -> dict[str, bool]:
     registry = (repo_root() / "python/sglang/srt/layers/attention/attention_registry.py").read_text()
     overrides = (repo_root() / "python/sglang/srt/arg_groups/overrides.py").read_text()
     checks = {
-        "flashmla_registered": '@register_attention_backend("flashmla")' in registry,
-        "flashmla_page64_enforced": "FlashMLA only supports a page_size of 64" in overrides,
-        "flashmla_sets_page64": 'view.attention_backend == "flashmla"' in overrides
-        and "page_size = 64" in overrides,
+        "trtllm_mla_registered": '@register_attention_backend("trtllm_mla")' in registry,
+        "trtllm_mla_page32_or64": 'view.attention_backend == "trtllm_mla"' in overrides
+        and "if page_size not in [32, 64]" in overrides,
+        "trtllm_mla_blackwell_gate": "TRTLLM MLA backend is only supported on Blackwell GPUs (SM100/SM12x)" in overrides,
     }
     if not all(checks.values()):
         raise RuntimeError({"phase47_source_additions": checks})
@@ -108,14 +108,15 @@ def run_checks(args: argparse.Namespace) -> dict[str, Any]:
         "sglang_router": importlib.util.find_spec("sglang_router.launch_router") is not None,
         "mooncake": importlib.util.find_spec("mooncake.engine") is not None,
         "flashinfer": importlib.util.find_spec("flashinfer") is not None,
-        "sgl_kernel_flash_mla": importlib.util.find_spec("sgl_kernel.flash_mla") is not None,
-        "repo_flashmla_backend": importlib.util.find_spec("sglang.srt.layers.attention.flashmla_backend") is not None,
+        "repo_trtllm_mla_backend": importlib.util.find_spec("sglang.srt.layers.attention.trtllm_mla_backend") is not None,
     }
     if not all(module_checks.values()):
         raise RuntimeError({"required_modules": module_checks})
     import mooncake
     import torch
     import sglang
+    from flashinfer import decode as flashinfer_decode
+    from flashinfer import prefill as flashinfer_prefill
     from sglang.srt.utils import is_flashinfer_available
 
     sglang_origin = str(Path(sglang.__file__).resolve())
@@ -124,6 +125,9 @@ def run_checks(args: argparse.Namespace) -> dict[str, Any]:
         "cuda": torch.cuda.is_available(),
         "two_visible_gpus": torch.cuda.device_count() >= 2,
         "flashinfer_reported": is_flashinfer_available(),
+        "selected_blackwell_sm100_plus": all(torch.cuda.get_device_capability(index)[0] >= 10 for index in args.gpu_pair),
+        "trtllm_mla_decode_kernel": hasattr(flashinfer_decode, "trtllm_batch_decode_with_kv_cache_mla"),
+        "trtllm_mla_prefill_kernel": hasattr(flashinfer_prefill, "trtllm_ragged_attention_deepseek"),
     }
     if not all(runtime_checks.values()):
         raise RuntimeError({"runtime_checks": runtime_checks})

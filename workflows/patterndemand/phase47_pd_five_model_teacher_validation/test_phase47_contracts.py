@@ -25,11 +25,14 @@ def main() -> None:
     base = json.loads((HERE / "experiment.json").read_text())
     models = model_specs()
     preflight_source = (HERE / "preflight.py").read_text(encoding="utf-8")
-    assert 'find_spec("sgl_kernel.flash_mla")' in preflight_source
-    assert 'find_spec("flash_mla")' not in preflight_source
+    assert 'find_spec("sglang.srt.layers.attention.trtllm_mla_backend")' in preflight_source
+    assert 'find_spec("sgl_kernel.flash_mla")' not in preflight_source
     assert len(models) == 5
     assert len({row["model_id"] for row in models}) == 5
     assert all(len(row["revision"]) == 40 for row in models)
+    assert models[0]["model_id"] == "deepseek-v2-lite"
+    assert models[0]["attention_backend"] == "trtllm_mla"
+    assert models[0]["page_size_tokens"] == 64
     p40 = load_p40_contracts()
     for spec in models:
         runtime = runtime_contract(base, spec)
