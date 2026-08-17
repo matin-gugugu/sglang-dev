@@ -21,7 +21,7 @@ workflow commit W
   -> 原环境验证R的父提交、路径和manifest
 ```
 
-当前八个workflow：
+当前九个workflow：
 
 - `phase36_cross_environment_replay`：一张GPU即可，不训练、不读teacher，复播Phase34冻结的六模型TP/PP直方图并演练commit回传。
 - `phase37_pp_single_node_p2p_curve`：至少两张GPU，实测单机PP GPU P2P连续曲线；raw逐次样本保存在仓库外，只提交紧凑曲线与审计。
@@ -31,5 +31,6 @@ workflow commit W
 - `phase41_pd_full_window_dataset`：将Phase40语义扩展为最多64请求的有界fixed-draining wave，先以63/64/65/129边界和三个真实完整窗口做GPU sentinel；精确通过后才生成94个Qwen3开发画像的Hfull/H0/residual数据，并冻结12个不含完整请求和target的新盲测画像。仍不训练DNN。
 - `phase42_pd_residual_training`：在不含raw的本地CPU隔离worktree中，仅用75个训练画像做五折候选选择，19个开发验证画像一次性报告表现，并在target打开前冻结12个blind画像的H0与H0+DNN residual预测。
 - `phase43_pd_blind_evaluation`：R42正式冻结预测后，才在本地CPU控制端从六个受保护raw源重建12个blind完整窗口、生成Hfull标签并一次性评分；不重训、不加载checkpoint、不重算预测，完整请求仍不进入Git。
+- `phase44_pd_expanded_protected_training`：避开Phase27–34及已打开Phase41/43窗口，冻结1200个互不重叠的BurstGPT开发画像，用CPU teacher扩展到960/240训练验证集；训练带有界残差、alpha收缩和分segment H0硬保护门的DNN，只有四项指标严格改善才允许新blind。
 
 完整交接见`PatternDemand跨环境GPU执行交接_Phase36_Phase37.md`。

@@ -22,6 +22,7 @@ PHASE_PREFIX = {
     "phase41": "experiment-results/phase41_pd_full_window_dataset/",
     "phase42": "experiment-results/phase42_pd_residual_training/",
     "phase43": "experiment-results/phase43_pd_blind_evaluation/",
+    "phase44": "experiment-results/phase44_pd_expanded_protected_training/",
 }
 
 

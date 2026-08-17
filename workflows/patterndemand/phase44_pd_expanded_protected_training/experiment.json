@@ -1,0 +1,91 @@
+{
+  "schema_version": "phase44-pd-expanded-protected-training-contract-v1",
+  "phase": "Phase44",
+  "objective": "在不使用已打开Phase43 blind标签的前提下，从1200个全新且请求区间不重叠的BurstGPT窗口生成Qwen3纯PD Hfull/H0开发数据，并训练带有界残差、alpha收缩和H0硬保护门的DNN",
+  "workflow_parent_result_commit": "4e627c8f72f2568111410d57f053eb82d61b1538",
+  "result_dir": "experiment-results/phase44_pd_expanded_protected_training",
+  "execution": {
+    "environment": "local CPU worktree with explicit Git-external protected raw input",
+    "gpu_permitted": false,
+    "network_permitted": false,
+    "raw_mutation_permitted": false,
+    "phase43_target_access_permitted": false,
+    "new_blind_selection_or_evaluation_permitted": false
+  },
+  "selection_contract": {
+    "path": "workflows/patterndemand/phase44_pd_expanded_protected_training/selection/expanded_windows.csv",
+    "sha256": "bcb78c1db11ddddf4037abcb495ccb66332be6cfdccdf88004386beb9f569052",
+    "seed": "phase44-expanded-pd-development-v1-20260817",
+    "source_columns": ["window_id", "source", "segment", "split", "cutoff_ms", "history_seconds", "history_count"],
+    "future_columns_used": false,
+    "segments": ["burstgpt_1", "burstgpt_2", "burstgpt_3"],
+    "profiles_per_segment": 400,
+    "train_per_segment": 320,
+    "validation_per_segment": 80,
+    "train_profiles": 960,
+    "validation_profiles": 240,
+    "total_profiles": 1200,
+    "complete_requests": 486242,
+    "minimum_request_count": 32,
+    "request_count_strata_per_segment": 10,
+    "minimum_same_segment_cutoff_distance_ms": 300000,
+    "embargo": "exclude any interval overlapping Phase27/28/30/31/32/33/34 selections or Phase41/43 blind windows",
+    "mooncake": "no fresh non-overlapping Mooncake interval remains after the historical 300-second embargo; this expansion is BurstGPT-only"
+  },
+  "teacher_contract": {
+    "kind": "qwen3_pure_pd_bounded_wave_hfull_v1",
+    "source": "Phase41 scheduler-faithful teacher validated against 4853 GPU requests and 6849 chunks",
+    "label": "topology-independent 12-bin sender-counted logical calls and bytes per 1000 requests",
+    "complete_request_storage": "used in memory only; never written to Git"
+  },
+  "predictor_contract": {
+    "method": "h0_plus_dnn_bounded_residual_with_alpha",
+    "candidate_selection": "five-fold OOF within 960 expanded_train profiles only",
+    "validation": "240 expanded_validation profiles evaluated once after candidate+alpha freeze",
+    "residual": "Phase42 total+shape encoding with tanh bounds: total +/-log(2), shape logits +/-2",
+    "feature_modes": {
+      "fixed_draining_causal": "remove rps/interarrival/peak-to-mean/fano arrival features because fixed-draining communication is arrival-time invariant",
+      "full_target_free": "all non-constant feature_* and H0 inputs"
+    },
+    "alpha_grid": [0.05, 0.1, 0.25, 0.5, 0.75, 1.0],
+    "ensemble_seeds": [20260817, 20260918, 20261019],
+    "candidate_grid": [
+      {"candidate_id": "pd44_causal_w16_d1", "feature_mode": "fixed_draining_causal", "width": 16, "depth": 1, "learning_rate": 0.01, "weight_decay": 0.001, "max_epochs": 1200, "patience": 120},
+      {"candidate_id": "pd44_causal_w32_d1", "feature_mode": "fixed_draining_causal", "width": 32, "depth": 1, "learning_rate": 0.01, "weight_decay": 0.001, "max_epochs": 1200, "patience": 120},
+      {"candidate_id": "pd44_causal_w32_d2", "feature_mode": "fixed_draining_causal", "width": 32, "depth": 2, "learning_rate": 0.005, "weight_decay": 0.002, "max_epochs": 1500, "patience": 160},
+      {"candidate_id": "pd44_full_w32_d1", "feature_mode": "full_target_free", "width": 32, "depth": 1, "learning_rate": 0.01, "weight_decay": 0.001, "max_epochs": 1200, "patience": 120}
+    ]
+  },
+  "hard_acceptance_gate": {
+    "oof": "selected positive-alpha candidate must strictly beat H0 on calls histogram WAPE, bytes histogram WAPE, mean calls TV and normalized payload EMD",
+    "validation_overall": "the frozen model must again strictly beat H0 on the same four metrics",
+    "validation_segments": "each of three segments must have composite ratio <1.0 and neither calls nor bytes histogram WAPE may exceed 1.05x H0",
+    "negative_policy": "if any gate fails, save the expanded dataset and honest model result but set model_accepted=false and prohibit a new blind phase",
+    "pass_meaning": "workflow integrity can PASS independently of scientific model acceptance"
+  },
+  "pinned_inputs": [
+    {"name": "phase43_result_manifest", "path": "experiment-results/phase43_pd_blind_evaluation/manifest.sha256", "sha256": "578cc412322e70f0d27f97f8de6f06aef81ca40d0de70a9ebdc9a03b212655e5", "verify_manifest_directory": "experiment-results/phase43_pd_blind_evaluation"},
+    {"name": "phase43_summary", "path": "experiment-results/phase43_pd_blind_evaluation/summary.json", "sha256": "62f4d1b3eba062e5cf1b162a6227468394c1c1dee7285603f2dcc72bd82b5a30"},
+    {"name": "phase42_model_library", "path": "workflows/patterndemand/phase42_pd_residual_training/model.py", "sha256": "f6b33240ea4a65ba974f520d440bae05d675ac079cc7ace49c4bf922eb55e389"},
+    {"name": "phase42_metric_library", "path": "workflows/patterndemand/phase42_pd_residual_training/metrics.py", "sha256": "79784decb14c2931a4d96fcd30a5afaf4c2f7e29ead357b520e0b11ddebd583f"},
+    {"name": "phase41_prepare_bundle", "path": "workflows/patterndemand/phase41_pd_full_window_dataset/prepare_bundle.py", "sha256": "81cbe2130e6c2411887e9d8052ebfb12b023a0e7a978bc6de2744c016d183119"},
+    {"name": "phase41_teacher_contracts", "path": "workflows/patterndemand/phase41_pd_full_window_dataset/contracts.py", "sha256": "195c121e0bfd6caac18c58a77dd0b2cfe8214e33cbb934aaf4e18444c7c83531"},
+    {"name": "phase41_feature_contract", "path": "workflows/patterndemand/phase41_pd_full_window_dataset/feature_contract.json", "sha256": "12d60796683edd677d01a99857e6e976de86881fa812173c4dbd1d9c4c287cde"},
+    {"name": "phase41_model_contract", "path": "experiment-results/phase41_pd_full_window_dataset/contracts/model_contract.json", "sha256": "0acae25e92a166d1689b643a66da9627c4a7f7850369f9e314c4a7aa2f3ee066"},
+    {"name": "phase15_windows", "path": "experiment-results/phase15_trace_data/windows.csv.gz", "sha256": "3ce6ba2c77426f768a80cc824543773f27c8a2ca2bdd4695d6e7c5695189b809"},
+    {"name": "phase44_selection", "path": "workflows/patterndemand/phase44_pd_expanded_protected_training/selection/expanded_windows.csv", "sha256": "bcb78c1db11ddddf4037abcb495ccb66332be6cfdccdf88004386beb9f569052"}
+  ],
+  "accepted_result_statuses": ["PASS"],
+  "stop_and_block_if": [
+    "HEAD is not exact W44, a pinned input or any of six raw hashes differs, or selection reproduction differs",
+    "any selected interval overlaps another selected interval or an embargoed historical/blind interval",
+    "Phase43 labels, raw rows, complete request pairs, GPU, network, model weights or caches are accessed by the predictor",
+    "candidate/alpha selection reads the 240 validation targets or a hard gate is relaxed after results",
+    "raw trace rows or complete requests would enter Git"
+  ],
+  "claim_boundary": [
+    "Phase44 can establish expanded-development improvement and permit a later fresh blind freeze; it is not itself new blind evidence",
+    "the dataset and model cover Qwen3-8B pure P1-D1 and BurstGPT only",
+    "no claim is made for the other five models, physical RDMA time, placement, latency or online scheduling"
+  ]
+}
