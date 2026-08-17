@@ -1,0 +1,72 @@
+{
+  "schema_version": "phase43-pd-blind-evaluation-contract-v1",
+  "phase": "Phase43",
+  "objective": "在R42已经正式冻结Qwen3-8B纯PD H0与H0+DNN residual预测以后，首次从六个受保护raw源重建12个blind完整窗口，用Phase40/41已验证teacher生成Hfull标签并做一次性盲测",
+  "workflow_parent_result_commit": "88dd1a8f5a4b9452e226118ade270aa3eb6fed7e",
+  "result_dir": "experiment-results/phase43_pd_blind_evaluation",
+  "execution": {
+    "environment": "local CPU worktree with explicit read-only external protected raw directory",
+    "gpu_permitted": false,
+    "network_permitted": false,
+    "training_permitted": false,
+    "checkpoint_loading_permitted": false,
+    "prediction_recompute_permitted": false,
+    "raw_mutation_permitted": false
+  },
+  "blind_contract": {
+    "profiles": 12,
+    "segments": ["burstgpt_1", "burstgpt_2", "burstgpt_3"],
+    "profiles_per_segment": 4,
+    "complete_requests": 2887,
+    "prediction_methods": ["h0", "h0_plus_dnn_residual"],
+    "frozen_prediction_rows": 24,
+    "target_rows": 12,
+    "teacher": "qwen3_pure_pd_bounded_wave_hfull_v1",
+    "feature_reconstruction_tolerance_lt": 1e-10,
+    "evaluation_rule": "join targets to the already committed R42 predictions by exact profile_id; no model, alpha, candidate, seed, feature, window or metric may change after target access"
+  },
+  "metrics": {
+    "headline": ["calls_histogram_wape", "bytes_histogram_wape", "calls_total_wape", "bytes_total_wape", "mean_calls_histogram_tv", "mean_normalized_log_payload_emd"],
+    "composite": "same four-ratio DNN/H0 score frozen by Phase42",
+    "improves_composite": "composite_ratio < 1.0 and calls/bytes histogram WAPE ratios are each <=1.25",
+    "paired_bootstrap": "10000 deterministic profile-level resamples of H0 minus DNN mean per-profile calls-L1 and bytes-L1",
+    "negative_result_policy": "workflow status remains PASS when integrity passes; scientific_outcome separately records improvement or non-improvement"
+  },
+  "pinned_inputs": [
+    {"name": "phase42_result_manifest", "path": "experiment-results/phase42_pd_residual_training/manifest.sha256", "sha256": "e4609c45d6d70e11f3972f8b2179412d2ae850035ecf32c2bbac10e6e3fe222b", "verify_manifest_directory": "experiment-results/phase42_pd_residual_training"},
+    {"name": "phase42_summary", "path": "experiment-results/phase42_pd_residual_training/summary.json", "sha256": "155b506ef042ef419c68e36f7af3140a3a6e92920ffb23cedbcd160e4fe4ba97"},
+    {"name": "phase42_checkpoint", "path": "experiment-results/phase42_pd_residual_training/checkpoints/pd_qwen3_h0_dnn_residual.json.gz", "sha256": "885a7dd353ddbfd81b3a690093e6427d54eb49a9aa9c1121377f8ddd73c0040e"},
+    {"name": "phase42_blind_predictions", "path": "experiment-results/phase42_pd_residual_training/predictions/blind_frozen_predictions.csv.gz", "sha256": "24c99da5bfb271ac981688e19f1a5ef43d20d110e1011b608d56055221cc663f"},
+    {"name": "phase42_training_audit", "path": "experiment-results/phase42_pd_residual_training/audit/training.json", "sha256": "a1d17d52a2cf8757e1a7423504ea4a95ef9dd5917132878024d588d5d41bb094"},
+    {"name": "phase41_result_manifest", "path": "experiment-results/phase41_pd_full_window_dataset/manifest.sha256", "sha256": "9415ab21a476e3efdbf4d10bce1782953045724cf10f9dda49b721e9e964404b", "verify_manifest_directory": "experiment-results/phase41_pd_full_window_dataset"},
+    {"name": "phase41_blind_features", "path": "experiment-results/phase41_pd_full_window_dataset/dataset/pd_blind_target_free_features.csv.gz", "sha256": "12971f2112ec841075d267d34f7711821e32043e2c7236bbfee9fb63f1c6a1f9"},
+    {"name": "phase41_contract", "path": "workflows/patterndemand/phase41_pd_full_window_dataset/experiment.json", "sha256": "3573bdbcf4647abc6d7e563f1178db7bdc30a369dbaa1cab52b969e22cb29e69"},
+    {"name": "phase41_feature_contract", "path": "workflows/patterndemand/phase41_pd_full_window_dataset/feature_contract.json", "sha256": "12d60796683edd677d01a99857e6e976de86881fa812173c4dbd1d9c4c287cde"},
+    {"name": "phase41_model_contract", "path": "experiment-results/phase41_pd_full_window_dataset/contracts/model_contract.json", "sha256": "0acae25e92a166d1689b643a66da9627c4a7f7850369f9e314c4a7aa2f3ee066"},
+    {"name": "phase41_selection", "path": "workflows/patterndemand/phase41_pd_full_window_dataset/selection/blind_windows.csv", "sha256": "97672bfa8eaa83ebce6a4547772cd4bf499659d7a01abe8299764c7fbf702823"},
+    {"name": "phase41_prepare_bundle", "path": "workflows/patterndemand/phase41_pd_full_window_dataset/prepare_bundle.py", "sha256": "81cbe2130e6c2411887e9d8052ebfb12b023a0e7a978bc6de2744c016d183119"},
+    {"name": "phase41_teacher_contracts", "path": "workflows/patterndemand/phase41_pd_full_window_dataset/contracts.py", "sha256": "195c121e0bfd6caac18c58a77dd0b2cfe8214e33cbb934aaf4e18444c7c83531"},
+    {"name": "trace_loader", "path": "scripts/prepare_phase15_trace_windows.py", "sha256": "9426ec1f158143593f06d48c4ac522a4c5dd03dfdcce8d9bacc533a83a435416"},
+    {"name": "profile_builder", "path": "scripts/build_phase27b_pp_hfull_dataset.py", "sha256": "f0b0487ad6167635f3a1f0ecb50a0fe22883eb025dbd75469f4c1100d0615ec5"}
+  ],
+  "raw_source_contract": {
+    "manifest_sha256": "5e565e09c2b332a6007ab09166fcb2b92c631224e533bf8b1622dbab986169f1",
+    "total_source_files": 6,
+    "storage": "Git-external and read-only",
+    "committed_content": "only names, bytes and SHA audits; never raw rows or complete request lists"
+  },
+  "required_outputs": {"target_rows": 12, "aggregate_metric_rows": 2, "per_profile_metric_rows": 24, "full_request_rows_in_git": 0},
+  "accepted_result_statuses": ["PASS"],
+  "stop_and_block_if": [
+    "HEAD is not exact W43, R42 predictions or checkpoint hashes differ, or Phase42 result manifest fails",
+    "any protected raw source hash differs or the 12 frozen window IDs cannot be reproduced exactly",
+    "reconstructed target-free features/H0 differ from the values frozen in Phase41",
+    "the evaluator would train, load a checkpoint, recompute predictions, change metrics or inspect targets before R42",
+    "a raw row, timestamp stream, input/output request pair list, model weight, cache or PID would enter Git"
+  ],
+  "claim_boundary": [
+    "Phase43 is a one-time blind evaluation for Qwen3-8B pure P1-D1 under the frozen bounded-wave communication semantics",
+    "12 profiles are confirmation evidence with uncertainty, not proof for the other five models",
+    "the result concerns topology-independent logical histograms, not physical RDMA time, latency, placement or online scheduling"
+  ]
+}

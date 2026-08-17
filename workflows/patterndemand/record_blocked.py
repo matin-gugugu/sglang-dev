@@ -20,6 +20,7 @@ OUTPUTS = {
     "phase40": repo_root() / "experiment-results/phase40_pure_pd_semantics_teacher",
     "phase41": repo_root() / "experiment-results/phase41_pd_full_window_dataset",
     "phase42": repo_root() / "experiment-results/phase42_pd_residual_training",
+    "phase43": repo_root() / "experiment-results/phase43_pd_blind_evaluation",
 }
 
 
