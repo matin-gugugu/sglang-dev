@@ -1,0 +1,67 @@
+{
+  "schema_version": "phase45-pd-fresh-blind-prediction-freeze-contract-v1",
+  "phase": "Phase45",
+  "objective": "在任何新blind Hfull标签生成前，冻结300个历史隔离的BurstGPT窗口，重建其低维画像，并用R44已接受的Qwen3纯PD H0保护模型冻结H0与H0+DNN预测",
+  "workflow_parent_result_commit": "61773b3d85f9f5c4cdce1ee92b4c287b92810f06",
+  "result_dir": "experiment-results/phase45_pd_fresh_blind_prediction_freeze",
+  "execution": {
+    "environment": "local CPU worktree with explicit Git-external protected raw input",
+    "gpu_permitted": false,
+    "network_permitted": false,
+    "training_permitted": false,
+    "target_generation_or_access_permitted": false,
+    "raw_mutation_permitted": false
+  },
+  "selection_contract": {
+    "path": "workflows/patterndemand/phase45_pd_fresh_blind_prediction_freeze/selection/fresh_blind_windows.csv",
+    "sha256": "4f749f32486723729b079a0f3de09bfa5466d90ae519d8813f6f331b70d2861f",
+    "seed": "phase45-pd-fresh-blind-v1-20260817",
+    "segments": ["burstgpt_1", "burstgpt_2", "burstgpt_3"],
+    "profiles_per_segment": 100,
+    "request_count_strata_per_segment": 10,
+    "profiles_per_stratum": 10,
+    "total_profiles": 300,
+    "complete_requests_reconstructed_outside_git": 115083,
+    "minimum_request_count": 32,
+    "minimum_same_segment_cutoff_distance_ms": 300000,
+    "embargo": "exclude every interval overlapping Phase27/28/30/31/32/33/34, Phase41/43 blind, or Phase44 development windows",
+    "selection_inputs": "history-only windows.csv columns; no future request, Hfull, residual or Phase43 target value"
+  },
+  "predictor_contract": {
+    "checkpoint": "R44 accepted pd_qwen3_expanded_h0_protected_dnn.json.gz",
+    "candidate_id": "pd44_causal_w32_d1",
+    "feature_mode": "fixed_draining_causal",
+    "alpha": 0.5,
+    "epochs": 533,
+    "ensemble_seeds": [20260817, 20260918, 20261019],
+    "methods": ["h0", "h0_plus_dnn_residual"],
+    "freeze_rule": "load the exact committed checkpoint without training or parameter change; emit exactly 600 target-free prediction rows",
+    "next_gate": "Phase46 may generate Hfull only after R45 is formally verified and ff-only integrated"
+  },
+  "pinned_inputs": [
+    {"name": "phase44_result_manifest", "path": "experiment-results/phase44_pd_expanded_protected_training/manifest.sha256", "sha256": "95bd53e9301688519fe4735aaa816dee6e1d69bb2d43592f1311a6fcaf9a5cc0", "verify_manifest_directory": "experiment-results/phase44_pd_expanded_protected_training"},
+    {"name": "phase44_summary", "path": "experiment-results/phase44_pd_expanded_protected_training/summary.json", "sha256": "642881dd809d83216cb641b27ec0a95da2eff734c634055321cf4d0b69c850a3"},
+    {"name": "phase44_checkpoint", "path": "experiment-results/phase44_pd_expanded_protected_training/checkpoints/pd_qwen3_expanded_h0_protected_dnn.json.gz", "sha256": "2a8b031db86d6848b3b0620fada056c5a25ea0c987f7dcb92db9cc91fd069b96"},
+    {"name": "phase44_contract", "path": "workflows/patterndemand/phase44_pd_expanded_protected_training/experiment.json", "sha256": "496b89ed2df7a21d699d7c669f5b4ab0e207221a9da262c44cd5b7e10cefdb9e"},
+    {"name": "phase42_model_library", "path": "workflows/patterndemand/phase42_pd_residual_training/model.py", "sha256": "f6b33240ea4a65ba974f520d440bae05d675ac079cc7ace49c4bf922eb55e389"},
+    {"name": "phase41_contract", "path": "workflows/patterndemand/phase41_pd_full_window_dataset/experiment.json", "sha256": "3573bdbcf4647abc6d7e563f1178db7bdc30a369dbaa1cab52b969e22cb29e69"},
+    {"name": "phase41_teacher_contracts", "path": "workflows/patterndemand/phase41_pd_full_window_dataset/contracts.py", "sha256": "195c121e0bfd6caac18c58a77dd0b2cfe8214e33cbb934aaf4e18444c7c83531"},
+    {"name": "phase41_feature_contract", "path": "workflows/patterndemand/phase41_pd_full_window_dataset/feature_contract.json", "sha256": "12d60796683edd677d01a99857e6e976de86881fa812173c4dbd1d9c4c287cde"},
+    {"name": "phase41_model_contract", "path": "experiment-results/phase41_pd_full_window_dataset/contracts/model_contract.json", "sha256": "0acae25e92a166d1689b643a66da9627c4a7f7850369f9e314c4a7aa2f3ee066"},
+    {"name": "phase15_windows", "path": "experiment-results/phase15_trace_data/windows.csv.gz", "sha256": "3ce6ba2c77426f768a80cc824543773f27c8a2ca2bdd4695d6e7c5695189b809"},
+    {"name": "phase45_selection", "path": "workflows/patterndemand/phase45_pd_fresh_blind_prediction_freeze/selection/fresh_blind_windows.csv", "sha256": "4f749f32486723729b079a0f3de09bfa5466d90ae519d8813f6f331b70d2861f"}
+  ],
+  "accepted_result_statuses": ["PASS"],
+  "stop_and_block_if": [
+    "HEAD is not exact W45, any pinned file/manifest/raw hash differs, or selection does not reproduce exactly",
+    "any Phase45 interval overlaps another Phase45 or embargoed historical interval",
+    "any target, residual, Phase43 label, candidate selection, training or metric-based decision is accessed",
+    "the R44 checkpoint identity, transform, model weights, alpha, epochs or ensemble changes",
+    "a raw row, complete request list, target, model cache, weight copy or PID would enter the Phase45 result commit"
+  ],
+  "claim_boundary": [
+    "Phase45 proves only target-isolated prediction freeze; it contains no blind performance result",
+    "the blind cohort covers Qwen3-8B pure P1-D1 and three BurstGPT segments only",
+    "no claim is made for Mooncake, other models, physical RDMA time, placement, latency or online scheduling"
+  ]
+}
