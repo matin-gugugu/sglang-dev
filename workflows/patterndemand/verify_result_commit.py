@@ -20,6 +20,7 @@ PHASE_PREFIX = {
     "phase39": "experiment-results/phase39_tp_pp_l1_l3_physical_placement_validation/",
     "phase40": "experiment-results/phase40_pure_pd_semantics_teacher/",
     "phase41": "experiment-results/phase41_pd_full_window_dataset/",
+    "phase42": "experiment-results/phase42_pd_residual_training/",
 }
 
 

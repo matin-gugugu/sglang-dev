@@ -1,0 +1,79 @@
+{
+  "schema_version": "phase42-pd-residual-training-contract-v1",
+  "phase": "Phase42",
+  "objective": "仅使用Phase41的75个development_train画像选择并训练Qwen3-8B纯PD H0+DNN residual预测器，在19个development_validation画像上一次性报告开发集表现，并在blind target不存在的状态下冻结12个blind预测",
+  "workflow_parent_result_commit": "914f7fb53c4ff076a5fe12f7c56624502673eb1f",
+  "result_dir": "experiment-results/phase42_pd_residual_training",
+  "execution": {
+    "environment": "local CPU clean Git worktree without protected data mounted",
+    "gpu_permitted": false,
+    "network_permitted": false,
+    "raw_access_permitted": false,
+    "complete_request_access_permitted": false,
+    "numpy_required": true,
+    "training_backend": "deterministic NumPy full-batch Adam"
+  },
+  "dataset": {
+    "development_train_profiles": 75,
+    "development_validation_profiles": 19,
+    "blind_profiles": 12,
+    "blind_target_rows": 0,
+    "selection_rule": "candidate selection uses deterministic five-fold out-of-fold predictions within the 75 development_train profiles only",
+    "validation_rule": "the 19 development_validation profiles are evaluated once after candidate selection and cannot alter the selected candidate or final ensemble",
+    "blind_rule": "the 12 blind rows provide only feature_* and h0_* inputs; predictions are committed before any blind complete request or Hfull target is opened"
+  },
+  "predictor": {
+    "method": "h0_plus_dnn_residual",
+    "input": "non-constant numeric feature_* columns plus log1p(h0 12-bin calls and logical bytes), standardized using development_train only",
+    "target_encoding": "log1p(Hfull 12-bin histogram)-log1p(H0 12-bin histogram), independently for calls and logical bytes",
+    "output": "nonnegative topology-independent 12-bin calls and logical bytes per 1000 requests",
+    "activation": "tanh",
+    "optimizer": "full-batch Adam",
+    "folds": 5,
+    "final_ensemble_seeds": [20260817, 20260918, 20261019],
+    "candidate_grid": [
+      {"candidate_id": "pd_mlp_w16_d1", "width": 16, "depth": 1, "learning_rate": 0.01, "weight_decay": 0.001, "max_epochs": 1400, "patience": 160},
+      {"candidate_id": "pd_mlp_w32_d1", "width": 32, "depth": 1, "learning_rate": 0.01, "weight_decay": 0.001, "max_epochs": 1400, "patience": 160},
+      {"candidate_id": "pd_mlp_w16_d2", "width": 16, "depth": 2, "learning_rate": 0.005, "weight_decay": 0.001, "max_epochs": 1800, "patience": 200},
+      {"candidate_id": "pd_mlp_w32_d2", "width": 32, "depth": 2, "learning_rate": 0.005, "weight_decay": 0.002, "max_epochs": 1800, "patience": 200}
+    ],
+    "candidate_score": "mean of DNN/H0 ratios for calls_histogram_wape, bytes_histogram_wape, mean_calls_histogram_tv and mean_normalized_log_payload_emd on 75-profile OOF predictions",
+    "tie_break": "lexicographically smaller candidate_id",
+    "final_epochs": "median selected-candidate fold best_epoch, clamped to [100,max_epochs]",
+    "checkpoint_format": "gzip JSON with preprocessing, selected contract and three NumPy MLP parameter sets"
+  },
+  "scientific_outcome": {
+    "improves_composite": "validation composite_ratio < 1.0 and neither calls nor bytes histogram WAPE exceeds 1.25x H0",
+    "negative_result_policy": "a development non-improvement is reported, not hidden; blind predictions remain frozen and Phase43 still evaluates them once",
+    "workflow_pass_meaning": "asset isolation, deterministic training, frozen predictions and metric integrity passed; PASS does not itself assert predictor improvement"
+  },
+  "pinned_inputs": [
+    {"name": "phase41_result_manifest", "path": "experiment-results/phase41_pd_full_window_dataset/manifest.sha256", "sha256": "9415ab21a476e3efdbf4d10bce1782953045724cf10f9dda49b721e9e964404b", "verify_manifest_directory": "experiment-results/phase41_pd_full_window_dataset"},
+    {"name": "phase41_summary", "path": "experiment-results/phase41_pd_full_window_dataset/summary.json", "sha256": "938fca13542dabc6911588066a5c3a210f1a6f66d22f383152a6ef5611237d10"},
+    {"name": "phase41_examples", "path": "experiment-results/phase41_pd_full_window_dataset/dataset/pd_development_h0_residual_examples.csv.gz", "sha256": "1356a21e53b7f91b1650b18c43ab3485a25607efbaa9a5ab4c952be47a9bcbdf"},
+    {"name": "phase41_targets", "path": "experiment-results/phase41_pd_full_window_dataset/dataset/pd_development_hfull_targets.csv.gz", "sha256": "ad2a293ccec0fbd0b13d512f70ba4d31cc79999d7094e8080e4f3ed79f6ea475"},
+    {"name": "phase41_blind_features", "path": "experiment-results/phase41_pd_full_window_dataset/dataset/pd_blind_target_free_features.csv.gz", "sha256": "12971f2112ec841075d267d34f7711821e32043e2c7236bbfee9fb63f1c6a1f9"},
+    {"name": "phase41_dataset_contract", "path": "experiment-results/phase41_pd_full_window_dataset/contracts/dataset_contract.json", "sha256": "cbcf4a426e5a07475f96482adfd0f9f436fb2ce566811755a78dcfb346e4f649"},
+    {"name": "phase41_feature_contract", "path": "experiment-results/phase41_pd_full_window_dataset/contracts/feature_contract.json", "sha256": "12d60796683edd677d01a99857e6e976de86881fa812173c4dbd1d9c4c287cde"}
+  ],
+  "required_outputs": {
+    "candidate_rows": 4,
+    "validation_prediction_rows": 38,
+    "blind_prediction_rows": 24,
+    "checkpoint_models": 3,
+    "blind_target_rows": 0
+  },
+  "accepted_result_statuses": ["PASS"],
+  "stop_and_block_if": [
+    "HEAD is not exact W42, tracked files are dirty, or any untracked file such as protected data is visible in the execution worktree",
+    "a pinned Phase41 asset or its manifest differs",
+    "the process would access data/, raw traces, complete requests, GPU, network, validation targets during candidate selection, or any blind target",
+    "the 75/19/12 split, predictor schema, deterministic repeat check or output manifest differs",
+    "a checkpoint or prediction contains target_* or residual_* fields for a blind profile"
+  ],
+  "claim_boundary": [
+    "Phase42 trains and freezes one Qwen3-8B pure-PD low-dimensional H0+DNN residual predictor",
+    "Phase42 development metrics are not blind generalization evidence",
+    "Phase42 does not generate or inspect blind targets, run SGLang, use GPU, test the other five models, measure physical RDMA time or make placement claims"
+  ]
+}
