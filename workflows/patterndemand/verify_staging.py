@@ -25,6 +25,10 @@ PHASES = {
     "phase45": "experiment-results/phase45_pd_fresh_blind_prediction_freeze/",
     "phase46": "experiment-results/phase46_pd_fresh_blind_evaluation/",
     "phase47": "experiment-results/phase47_pd_five_model_teacher_validation/",
+    "phase48": "experiment-results/phase48_pd_six_model_expanded_training/",
+    "phase49": "experiment-results/phase49_pd_six_model_blind_prediction_freeze/",
+    "phase50": "experiment-results/phase50_pd_six_model_blind_evaluation/",
+    "phase51": "experiment-results/phase51_pd_l1_l3_physical_curve_library/",
 }
 
 

@@ -21,7 +21,7 @@ workflow commit W
   -> 原环境验证R的父提交、路径和manifest
 ```
 
-当前十二个workflow：
+当前十六个workflow：
 
 - `phase36_cross_environment_replay`：一张GPU即可，不训练、不读teacher，复播Phase34冻结的六模型TP/PP直方图并演练commit回传。
 - `phase37_pp_single_node_p2p_curve`：至少两张GPU，实测单机PP GPU P2P连续曲线；raw逐次样本保存在仓库外，只提交紧凑曲线与审计。
@@ -35,5 +35,9 @@ workflow commit W
 - `phase45_pd_fresh_blind_prediction_freeze`：在不生成Hfull的前提下冻结300个全新、历史隔离且分层的BurstGPT blind画像，并原样加载R44 checkpoint生成H0与H0+DNN预测；R45合入前禁止打开标签。
 - `phase46_pd_fresh_blind_evaluation`：R45正式合入后才重建同一批300个窗口并核对冻结特征，随后一次性生成Hfull，按预注册四指标、三segment保护门、paired bootstrap和请求量分层报告blind结论；不训练或重算预测。
 - `phase47_pd_five_model_teacher_validation`：在Qwen3-8B预测器通过fresh blind后，顺序复用同一对GPU，补齐DeepSeek-V2-Lite、Qwen3-30B-A3B、Llama-3.2-3B-Instruct、Qwen2.5-14B-Instruct和Mixtral-8x7B-Instruct的纯P1→D1 scheduler/逻辑KV teacher精确验证；固定DeepSeek TRTLLM MLA/page64及其余模型FlashInfer/page1，page>1时按SGLang真实整页占用扣prefill预算并使用双wave交叉smoke，不训练、不测物理时间。
+- `phase48_pd_six_model_expanded_training`：把Phase41的Qwen开发画像按六种已验证模型结构确定性展开，在CPU上训练一个共享的H0保护残差模型；冻结模型差异为输入，不读取fresh blind标签。
+- `phase49_pd_six_model_blind_prediction_freeze`：冻结300个fresh blind低维画像及六模型的H0/H0+DNN预测；不打开完整请求或Hfull，形成一次性盲测的预测先验。
+- `phase50_pd_six_model_blind_evaluation`：R49合入后才重建完整请求和六模型Hfull，一次性验证整体、逐模型和逐segment的H0保护改善；不训练或重算预测。
+- `phase51_pd_l1_l3_physical_curve_library`：不加载模型，按六模型真实KV描述符布局，直接调用SGLang生产Mooncake/RDMA batch-transfer测量L1/L2/L3；36个冻结shard汇总成18条模型相关物理曲线、396个knots，供后续Phase52确定性卷积与communication-only placement验证。
 
 完整交接见`PatternDemand跨环境GPU执行交接_Phase36_Phase37.md`。
