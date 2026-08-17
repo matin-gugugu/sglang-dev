@@ -36,6 +36,7 @@ from contracts import (  # noqa: E402
     load_model_map,
     model_specs,
     runtime_contract,
+    teacher_chunks_for_wave_page_aware,
     write_csv,
 )
 from preflight import parse_gpu_pair  # noqa: E402
@@ -79,23 +80,53 @@ def pin_bf16_kv_cache(p40: Any) -> None:
     p40.build_server_commands = build_server_commands
 
 
+def pin_page_aware_teacher(p40: Any) -> None:
+    """Replace only Phase40's token-debit teacher; keep its runner and comparators."""
+
+    def build_teacher(contract: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+        grouped: dict[tuple[str, int], list[dict[str, Any]]] = {}
+        for row in p40.workload_rows(contract):
+            grouped.setdefault((str(row["scenario"]), int(row["repeat"])), []).append(row)
+        result: list[dict[str, Any]] = []
+        for key in sorted(grouped):
+            requests = sorted(grouped[key], key=lambda row: int(row["request_index"]))
+            result.extend(
+                teacher_chunks_for_wave_page_aware(
+                    requests,
+                    chunk_tokens=int(contract["measurement_contract"]["chunked_prefill_tokens"]),
+                    page_size_tokens=int(contract["measurement_contract"]["page_size_tokens"]),
+                    kv_bytes_per_page=int(model["derived"]["kv_bytes_per_page"]),
+                )
+            )
+        return result
+
+    p40.build_teacher = build_teacher
+
+
 def validate_smoke_events_generic(
     contract: dict[str, Any], model: dict[str, Any], raw_events: list[dict[str, Any]]
 ) -> dict[str, Any]:
     smoke = contract["compatibility_smoke_contract"]
     transport = smoke["transport_request"]
     transport_rid = f"{transport['rid_prefix']}_0"
-    probe = smoke["admission_probe"]
+    probes = smoke["admission_probes"]
     page = int(smoke["expected_page_size_tokens"])
     expected_segments: dict[str, list[tuple[int, int]]] = {
         transport_rid: [(0, int(smoke["expected_kv_page_count"]))]
     }
-    admission_rids = []
-    for repeat in range(int(probe["repeats"])):
-        for request_index, segments in enumerate(probe["expected_segments_by_request_index"]):
-            rid = f"{probe['rid_prefix_base']}{repeat}_{request_index}"
-            admission_rids.append(rid)
-            expected_segments[rid] = [(int(segment[0]), int(segment[1])) for segment in segments]
+    admission_rids: list[str] = []
+    probe_rids: dict[str, list[list[str]]] = {}
+    for probe in probes:
+        repeats: list[list[str]] = []
+        for repeat in range(int(probe["repeats"])):
+            repeat_rids: list[str] = []
+            for request_index, segments in enumerate(probe["expected_segments_by_request_index"]):
+                rid = f"{probe['rid_prefix_base']}{repeat}_{request_index}"
+                admission_rids.append(rid)
+                repeat_rids.append(rid)
+                expected_segments[rid] = [(int(segment[0]), int(segment[1])) for segment in segments]
+            repeats.append(repeat_rids)
+        probe_rids[str(probe["name"])] = repeats
     expected_rids = set(expected_segments)
     events = [row for row in raw_events if row.get("rid") in expected_rids]
     by_rid = {rid: [] for rid in expected_rids}
@@ -107,10 +138,10 @@ def validate_smoke_events_generic(
     }
     expected_bytes = int(model["derived"]["kv_bytes_per_page"])
     transport_events = by_rid[transport_rid]
-    signatures = [
-        [actual_segments[f"{probe['rid_prefix_base']}{repeat}_{index}"] for index in range(len(probe["prompt_tokens"]))]
-        for repeat in range(int(probe["repeats"]))
-    ]
+    signatures = {
+        name: [[actual_segments[rid] for rid in repeat_rids] for repeat_rids in repeats]
+        for name, repeats in probe_rids.items()
+    }
     checks = {
         "exactly_one_transport_sender_chunk": len(transport_events) == 1,
         "sender_chunks_total_exact": len(events) == int(smoke["expected_sender_chunks_total"]),
@@ -121,12 +152,17 @@ def validate_smoke_events_generic(
         "bytes_per_page_exact": all(int(row.get("kv_bytes_per_page", -1)) == expected_bytes for row in events),
         "logical_bytes_formula_exact": all(int(row.get("logical_bytes", -1)) == int(row.get("kv_page_count", -2)) * expected_bytes for row in events),
         "admission_segments_exact": all(actual_segments[rid] == expected_segments[rid] for rid in admission_rids),
-        "admission_repeats_exact": all(row == signatures[0] for row in signatures[1:]),
+        "admission_probe_roster_exact": list(signatures) == [str(probe["name"]) for probe in probes],
+        "admission_repeats_exact": all(
+            all(signature == probe_signatures[0] for signature in probe_signatures[1:])
+            for probe_signatures in signatures.values()
+        ),
         "state_payload_zero": all(int(row.get("state_logical_bytes", -1)) == 0 for row in events),
         "no_tensor_contents": all(row.get("raw_tensor_contents_saved") is False for row in events),
     }
     return {
         "transport_expected_rid": transport_rid,
+        "admission_probe_names": list(signatures),
         "admission_expected_segments": {rid: [list(segment) for segment in expected_segments[rid]] for rid in admission_rids},
         "profile_records_total": len(raw_events),
         "matching_sender_chunks": len(events),
@@ -136,6 +172,142 @@ def validate_smoke_events_generic(
         "checks": checks,
         "observed": [{key: row.get(key) for key in ("rid", "backend", "page_start", "page_end", "page_size_tokens", "kv_page_count", "kv_bytes_per_page", "logical_bytes", "state_logical_bytes")} for row in events],
     }
+
+
+def run_compatibility_smoke_generic(
+    p40: Any,
+    args: SimpleNamespace,
+    contract: dict[str, Any],
+    model: dict[str, Any],
+    base_env: dict[str, str],
+    formal_raw_dir: Path,
+) -> dict[str, Any]:
+    """Run transport plus two independent atomic admission probes in one startup."""
+    smoke_dir = args.smoke_dir.resolve()
+    if smoke_dir.exists():
+        raise RuntimeError(f"smoke directory must not already exist: {smoke_dir}")
+    if smoke_dir == formal_raw_dir or smoke_dir in formal_raw_dir.parents or formal_raw_dir in smoke_dir.parents:
+        raise RuntimeError("smoke directory and formal raw directory must be disjoint")
+    smoke_dir.mkdir(parents=True, exist_ok=False)
+    profile_dir = smoke_dir / "profile"
+    log_dir = smoke_dir / "server_logs"
+    profile_dir.mkdir()
+    log_dir.mkdir()
+    commands = p40.build_server_commands(
+        contract=contract,
+        model_path=args.model_path,
+        ib_device=args.ib_device,
+        prefill_port=args.smoke_prefill_port,
+        decode_port=args.smoke_decode_port,
+        router_port=args.smoke_router_port,
+        bootstrap_port=args.smoke_bootstrap_port,
+    )
+    processes: list[subprocess.Popen] = []
+    handles = []
+    responses: list[Any] = []
+    started = utc_now()
+    try:
+        prefill_env = dict(base_env)
+        prefill_env["CUDA_VISIBLE_DEVICES"] = str(args.gpu_pair[0])
+        prefill_env["SGLANG_PD_COMM_PROFILE_DIR"] = str(profile_dir)
+        prefill_env["SGLANG_PD_COMM_PROFILE_RUN_ID"] = "phase47_compat_smoke"
+        decode_env = dict(base_env)
+        decode_env["CUDA_VISIBLE_DEVICES"] = str(args.gpu_pair[1])
+        for name, env in (("prefill", prefill_env), ("decode", decode_env)):
+            handle = (log_dir / f"{name}.log").open("w", encoding="utf-8")
+            handles.append(handle)
+            process = subprocess.Popen(
+                commands[name], cwd=repo_root(), env=env, stdout=handle, stderr=subprocess.STDOUT, text=True
+            )
+            processes.append(process)
+        p40.wait_http(f"http://127.0.0.1:{args.smoke_prefill_port}/health", processes[0], args.startup_timeout)
+        p40.wait_http(f"http://127.0.0.1:{args.smoke_decode_port}/health", processes[1], args.startup_timeout)
+        handle = (log_dir / "router.log").open("w", encoding="utf-8")
+        handles.append(handle)
+        router = subprocess.Popen(
+            commands["router"], cwd=repo_root(), env=base_env, stdout=handle, stderr=subprocess.STDOUT, text=True
+        )
+        processes.append(router)
+        p40.wait_http(f"http://127.0.0.1:{args.smoke_router_port}/health", router, 120)
+        smoke = contract["compatibility_smoke_contract"]
+        transport = smoke["transport_request"]
+        response = p40.post_json(
+            f"http://127.0.0.1:{args.smoke_router_port}/generate",
+            {
+                "input_ids": [[int(contract["measurement_contract"]["input_token_id"])] * int(transport["prompt_tokens"])],
+                "rid": transport["rid_prefix"],
+                "sampling_params": {
+                    "temperature": 0.0,
+                    "max_new_tokens": int(transport["max_new_tokens"]),
+                    "ignore_eos": True,
+                },
+                "stream": False,
+            },
+        )
+        if isinstance(response, dict) and response.get("error"):
+            raise RuntimeError({"compatibility_transport_smoke": response})
+        responses.append(response)
+        for probe in smoke["admission_probes"]:
+            for repeat in range(int(probe["repeats"])):
+                response = p40.post_json(
+                    f"http://127.0.0.1:{args.smoke_router_port}/generate",
+                    {
+                        "input_ids": [
+                            [int(contract["measurement_contract"]["input_token_id"])] * int(tokens)
+                            for tokens in probe["prompt_tokens"]
+                        ],
+                        "rid": f"{probe['rid_prefix_base']}{repeat}",
+                        "sampling_params": {
+                            "temperature": 0.0,
+                            "max_new_tokens": int(contract["measurement_contract"]["max_new_tokens"]),
+                            "ignore_eos": True,
+                        },
+                        "stream": False,
+                    },
+                )
+                if isinstance(response, dict) and response.get("error"):
+                    raise RuntimeError({"compatibility_admission_probe": probe["name"], "repeat": repeat, "response": response})
+                responses.append(response)
+    finally:
+        p40.terminate_processes(processes)
+        for handle in handles:
+            handle.close()
+    paths = sorted(profile_dir.glob("*.jsonl"))
+    raw_events = p40.read_jsonl(paths) if paths else []
+    evidence = validate_smoke_events_generic(contract, model, raw_events)
+    log_text = "\n".join(path.read_text(encoding="utf-8", errors="replace") for path in sorted(log_dir.glob("*.log")))
+    expected_responses = 1 + sum(int(probe["repeats"]) for probe in contract["compatibility_smoke_contract"]["admission_probes"])
+    evidence["checks"].update(
+        {
+            "all_smoke_waves_returned": len(responses) == expected_responses,
+            "no_transfer_error_in_logs": not any(
+                value in log_text
+                for value in ("Failed to send kv chunk", "Failed to get kvcache from prefill instance", "remote mooncake session")
+            ),
+            "formal_raw_still_empty": formal_raw_dir.is_dir() and not any(formal_raw_dir.iterdir()),
+        }
+    )
+    evidence.update(
+        {
+            "schema_version": "phase47-dual-probe-compatibility-smoke-v1",
+            "status": "PASS" if all(evidence["checks"].values()) else "FAIL",
+            "started_at_utc": started,
+            "finished_at_utc": utc_now(),
+            "external_smoke_dir": str(smoke_dir),
+            "attention_backend": contract["backend_contract"]["inference_attention_backend"],
+            "transfer_backend": contract["backend_contract"]["sglang_transfer_backend"],
+            "transport": contract["backend_contract"]["transport"],
+            "transport_environment": {name: base_env.get(name) for name in ("MOONCAKE_PROTOCOL", "WITH_NVIDIA_PEERMEM", "MC_FORCE_TCP", "MC_FORCE_MNNVL", "MC_INTRANODE_NVLINK", "SGLANG_MOONCAKE_CUSTOM_MEM_POOL")},
+            "admission_environment": {"SGLANG_PD_BOOTSTRAP_BATCH_BARRIER": base_env.get("SGLANG_PD_BOOTSTRAP_BATCH_BARRIER"), "SGLANG_TEST_FORCE_OPTIMISTIC_PREFILL_RETRY_PROB": base_env.get("SGLANG_TEST_FORCE_OPTIMISTIC_PREFILL_RETRY_PROB")},
+            "gpu_pair": list(args.gpu_pair),
+            "ib_device": args.ib_device,
+            "commands": {name: p40.redacted_command(command, args.model_path.resolve()) for name, command in commands.items()},
+            "external_manifest": p40.raw_manifest(smoke_dir, len(raw_events)),
+        }
+    )
+    if not all(evidence["checks"].values()):
+        raise RuntimeError({"compatibility_smoke_failed": evidence})
+    return evidence
 
 
 def formal_model_run(
@@ -173,7 +345,7 @@ def formal_model_run(
             "SGLANG_PD_BOOTSTRAP_BATCH_BARRIER": "1",
         }
     )
-    smoke = p40.run_compatibility_smoke(smoke_args, runtime, model, base_env, raw_dir)
+    smoke = run_compatibility_smoke_generic(p40, smoke_args, runtime, model, base_env, raw_dir)
     profile_dir = raw_dir / "profile"
     logs_dir = raw_dir / "server_logs"
     profile_dir.mkdir()
@@ -377,8 +549,8 @@ def main() -> None:
             raise RuntimeError({"model_changed_after_preflight": spec["model_id"]})
         models[spec["model_id"]] = current
     p40 = load_phase40_run()
-    p40.validate_smoke_events = validate_smoke_events_generic
     pin_bf16_kv_cache(p40)
+    pin_page_aware_teacher(p40)
     results = []
     for spec in model_specs():
         model_id = spec["model_id"]

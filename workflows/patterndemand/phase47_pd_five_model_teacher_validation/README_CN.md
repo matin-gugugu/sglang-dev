@@ -2,7 +2,9 @@
 
 Phase40/41已经用Qwen3-8B证明纯`P1→D1`的fixed-draining GPU发送记录与scheduler-faithful teacher精确一致；Phase46又证明Qwen3-8B的低维`H0+DNN residual`在300个fresh blind画像上优于H0。Phase47不继续训练，而是先补齐冻结六模型阵容中另外五个模型的GPU语义证据，防止Phase48直接批量生成六模型Hfull时把错误的KV公式、MLA page或backend带入标签。
 
-本阶段总共运行5个模型、每模型45个请求、合计225个请求。五个模型顺序复用同一对GPU，不同时加载。每个模型正式raw前先做独立的真实Mooncake传输和两次原子wave smoke；随后运行5个边界场景×3次重复，并逐请求核对GPU chunk、teacher chunk、逻辑字节和12-bin直方图。
+本阶段总共运行5个模型、每模型45个请求、合计225个请求。五个模型顺序复用同一对GPU，不同时加载。每个模型正式raw前先做独立的真实Mooncake传输，并分别把`[1000,1000,1000,2000]`和`[63,65,1001,3000]`两个原子wave重复两次；随后运行5个边界场景×3次重复，并逐请求核对GPU chunk、teacher chunk、逻辑字节和12-bin直方图。
+
+W47-fix3已经在B200上确认：SGLang对page64请求先按完整页向上取整，再从4096-token prefill预算中扣除。W47-fix4因此在Phase47本地加入page-aware teacher，不改动历史Phase40/41；page1时新旧规则严格等价。第二个独立wave专门跨越63/64、65/128和1001/1024边界，防止只根据上一次观察到的单一形状调整预期。
 
 - `DeepSeek-V2-Lite`：`TRTLLM MLA + page64`，使用B200/SM100原生支持的MLA执行点；
 - 其余四模型：`FlashInfer + page1`，标准K/V公式；
@@ -32,17 +34,17 @@ python3 "$P47/preflight.py" \
   --expected-workflow-commit W47 \
   --model-map /EXTERNAL/phase47/model_map.json \
   --gpu-pair 0,1 --ib-device mlx5_0 \
-  --raw-root /EXTERNAL/phase47/raw_attempt1 \
-  --smoke-root /EXTERNAL/phase47/smoke_attempt1 \
-  --audit-output /EXTERNAL/phase47/preflight_attempt1.json
+  --raw-root /EXTERNAL/phase47/raw_attempt4 \
+  --smoke-root /EXTERNAL/phase47/smoke_attempt4 \
+  --audit-output /EXTERNAL/phase47/preflight_attempt4.json
 
 python3 "$P47/run.py" \
   --expected-workflow-commit W47 \
   --model-map /EXTERNAL/phase47/model_map.json \
   --gpu-pair 0,1 --ib-device mlx5_0 \
-  --raw-root /EXTERNAL/phase47/raw_attempt1 \
-  --smoke-root /EXTERNAL/phase47/smoke_attempt1 \
-  --preflight-audit /EXTERNAL/phase47/preflight_attempt1.json
+  --raw-root /EXTERNAL/phase47/raw_attempt4 \
+  --smoke-root /EXTERNAL/phase47/smoke_attempt4 \
+  --preflight-audit /EXTERNAL/phase47/preflight_attempt4.json
 
 python3 "$P47/verify.py"
 ```

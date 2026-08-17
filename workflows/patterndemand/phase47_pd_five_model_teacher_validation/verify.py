@@ -34,6 +34,7 @@ def verify(output: Path) -> dict:
     invariants = read_csv(output / "analysis/formula_invariants.csv")
     model_ids = [row["model_id"] for row in roster]
     expected_policy = {row["model_id"]: (row["attention_backend"], int(row["page_size_tokens"])) for row in roster}
+    expected_smoke_probes = [row["name"] for row in workflow["compatibility_smoke"]["atomic_admission_probes"]]
     def command_option(command: list[str], name: str) -> str | None:
         return command[command.index(name) + 1] if name in command and command.index(name) + 1 < len(command) else None
     checks = {
@@ -51,6 +52,7 @@ def verify(output: Path) -> dict:
         "histograms_exact": all(float(row["calls_absolute_error"]) == 0.0 and float(row["logical_bytes_absolute_error"]) == 0.0 for row in histograms),
         "invariants_five": len(invariants) == 5 and all(row["exact"] == "True" for row in invariants),
         "smoke_five_pass": [row.get("model_id") for row in smoke] == model_ids and all(row.get("status") == "PASS" and all(row.get("checks", {}).values()) for row in smoke),
+        "smoke_dual_page_budget_probes": all(row.get("admission_probe_names") == expected_smoke_probes for row in smoke),
         "launch_policy_exact": [row.get("model_id") for row in launches] == model_ids and all((row.get("attention_backend"), int(row.get("page_size_tokens", -1))) == expected_policy[row["model_id"]] for row in launches),
         "kv_cache_bf16_cli": all(command_option(row.get("commands", {}).get(name, []), "--kv-cache-dtype") == "bf16" for row in launches for name in ("prefill", "decode")),
         "rdma_no_fallback": all(row.get("transport_environment", {}).get("MOONCAKE_PROTOCOL") == "rdma" and row.get("transport_environment", {}).get("WITH_NVIDIA_PEERMEM") == "0" and row.get("transport_environment", {}).get("SGLANG_DISAGG_STAGING_BUFFER") == "0" and all(row.get("transport_environment", {}).get(name) is None for name in ("MC_FORCE_TCP", "MC_FORCE_MNNVL", "MC_INTRANODE_NVLINK", "SGLANG_MOONCAKE_CUSTOM_MEM_POOL")) for row in launches),

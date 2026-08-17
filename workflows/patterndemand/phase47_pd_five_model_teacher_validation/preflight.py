@@ -58,11 +58,15 @@ def _external_file(path: Path, label: str) -> Path:
 def source_additions() -> dict[str, bool]:
     registry = (repo_root() / "python/sglang/srt/layers/attention/attention_registry.py").read_text()
     overrides = (repo_root() / "python/sglang/srt/arg_groups/overrides.py").read_text()
+    schedule_policy = (repo_root() / "python/sglang/srt/managers/schedule_policy.py").read_text()
     checks = {
         "trtllm_mla_registered": '@register_attention_backend("trtllm_mla")' in registry,
         "trtllm_mla_page32_or64": 'view.attention_backend == "trtllm_mla"' in overrides
         and "if page_size not in [32, 64]" in overrides,
         "trtllm_mla_blackwell_gate": "TRTLLM MLA backend is only supported on Blackwell GPUs (SM100/SM12x)" in overrides,
+        "prefill_budget_ceil_pages": "extend_input_len = self.ceil_paged_tokens(extend_input_len)" in schedule_policy,
+        "chunk_budget_debits_paged_length": "self.rem_chunk_tokens -= extend_input_len" in schedule_policy,
+        "whole_request_input_ceil_pages": "input_tokens = self.ceil_paged_tokens(" in schedule_policy,
     }
     if not all(checks.values()):
         raise RuntimeError({"phase47_source_additions": checks})

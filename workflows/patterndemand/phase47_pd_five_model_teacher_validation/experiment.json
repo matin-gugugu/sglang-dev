@@ -19,6 +19,14 @@
       "formal_requests_executed": 0,
       "cause": "trtllm_mla accepts the bf16 CLI spelling but rejects its documented bfloat16 synonym before model load or CUDA execution",
       "integration": "BLOCKED evidence remains on the run branch and is referenced here but is not a workflow parent or formal PASS result"
+    },
+    {
+      "workflow_commit": "a5d6ac25f46716c37935804f897698e0558dc3a3",
+      "blocked_result_commit": "e88dbadafdf881c88d391692c671e014c2058fbe",
+      "run_branch": "run/phase47-nvidia-a51-20260817-w47fix3",
+      "formal_requests_executed": 0,
+      "cause": "DeepSeek page64 GPU execution deterministically debits the 4096-token prefill budget in page-aligned units, while the reused Phase40 teacher debits raw tokens",
+      "integration": "BLOCKED evidence remains on the run branch and is referenced here but is not a workflow parent or formal PASS result"
     }
   ],
   "result_dir": "experiment-results/phase47_pd_five_model_teacher_validation",
@@ -60,6 +68,7 @@
     "optimistic_prefill_retries": 0,
     "chunked_prefill_tokens": 4096,
     "max_prefill_tokens": 4096,
+    "prefill_budget_accounting": "page_aligned: debit ceil(extend_tokens/page_size)*page_size for every admitted request or chunk",
     "max_running_requests": 64,
     "context_length": 16384,
     "mem_fraction_static": 0.8,
@@ -72,6 +81,13 @@
     "independent_repeats": 3,
     "model_order": ["deepseek-v2-lite", "qwen3-30b-a3b", "llama-3.2-3b-instruct", "qwen2.5-14b-instruct", "mixtral-8x7b-instruct-v0.1"]
   },
+  "teacher_semantics_revision": {
+    "scope": "Phase47-local; historical Phase40/41 workflow and results remain byte-for-byte unchanged",
+    "source_basis": "SGLang PrefillAdder._update_prefill_budget applies ceil_paged_tokens before subtracting extend_input_len from rem_chunk_tokens",
+    "gpu_basis": "W47-fix3 observed deterministic page64 splits [0,16]/[16,32] for the fourth request in [1000,1000,1000,2000]",
+    "compatibility": "at page_size=1 the page-aligned debit is exactly equal to the original raw-token debit",
+    "anti_overfit_gate": "a distinct [63,65,1001,3000] wave must independently match twice before formal raw begins"
+  },
   "workload_scenarios": [
     {"name": "single_short", "prompt_tokens": [64]},
     {"name": "single_exact_chunk", "prompt_tokens": [4096]},
@@ -82,8 +98,11 @@
   "compatibility_smoke": {
     "required_per_model_before_formal_raw": true,
     "transport_prompt_tokens": 64,
-    "atomic_admission_prompt_tokens": [1000, 1000, 1000, 2000],
-    "atomic_admission_repeats": 2,
+    "page_budget_rule": "each admitted request or chunk is charged ceil(extend_tokens/page_size)*page_size against the chunk budget, matching PrefillAdder._update_prefill_budget",
+    "atomic_admission_probes": [
+      {"name": "packed_remainder", "prompt_tokens": [1000, 1000, 1000, 2000], "repeats": 2},
+      {"name": "page_boundary_crosscheck", "prompt_tokens": [63, 65, 1001, 3000], "repeats": 2}
+    ],
     "formal_raw_must_be_empty_until_model_smoke_passes": true
   },
   "phase34_bin_edges_bytes": [4096.0, 13777.246867516858, 46340.95001184158, 155871.75497763665, 524288.0, 1763487.5990421579, 5931641.601515722, 19951584.63713749, 67108864.0, 225726412.6773962, 759250124.9940125, 2553802833.553599, 8589934592.0],
@@ -101,6 +120,7 @@
     "repeat_histograms_must_be_exact": true,
     "runtime_kv_bytes_per_page_must_equal_model_formula": true,
     "state_payload_must_be_zero": true,
+    "independent_page_budget_smoke_probes_per_model": 2,
     "all_five_models_must_pass": true
   },
   "model_acquisition": {
@@ -132,6 +152,7 @@
     {"name": "sglang_mooncake_conn", "path": "python/sglang/srt/disaggregation/mooncake/conn.py", "sha256": "9106dfc8deb91662bdbac850f41612104a597b7f6a5cd15c8eb7ca17a20c8a0d"},
     {"name": "sglang_pd_profiler", "path": "python/sglang/srt/disaggregation/pd_comm_profile.py", "sha256": "d3c269bed154c966b2a82e93348ec6dd0e25612cf82ea5b171f1c3cb08ed18fd"},
     {"name": "sglang_memory_pool", "path": "python/sglang/srt/mem_cache/memory_pool.py", "sha256": "7e585c4c5870ac84a048069e61bfd9892f2c638b2d89964e927d2c554f3f951e"},
+    {"name": "sglang_schedule_policy", "path": "python/sglang/srt/managers/schedule_policy.py", "sha256": "5a505dfbb0a6854d36180c0337fbfb98d75ecde647abc00b66a33c971e1700b3"},
     {"name": "sglang_attention_registry", "path": "python/sglang/srt/layers/attention/attention_registry.py", "sha256": "3bc305efae91c7147357342b1a78203766e07490edfeca3fc8514510095603e6"},
     {"name": "sglang_attention_overrides", "path": "python/sglang/srt/arg_groups/overrides.py", "sha256": "9152d913b5f3ca2578312c830946ff69e159866b889d544b50f1f3c4b23c0662"},
     {"name": "sglang_trtllm_mla_backend", "path": "python/sglang/srt/layers/attention/trtllm_mla_backend.py", "sha256": "13868fe625949108037bfd115559042981b2b75e8904eb669a1c5e997a9be1c9"}
@@ -141,7 +162,8 @@
     "PASS plus Phase40 establishes representative GPU-exact pure-PD logical teacher semantics for the frozen six-model roster",
     "Phase47 does not train a six-model predictor or prove fresh-blind generalization for the other five models",
     "logical histograms are topology independent; no physical RDMA cost or placement claim is made",
-    "DeepSeek MLA/page64 is a distinct frozen execution-policy point and must remain an explicit downstream feature"
+    "DeepSeek MLA/page64 is a distinct frozen execution-policy point and must remain an explicit downstream feature",
+    "for page sizes above 1, the scheduler-faithful teacher debits page-aligned token slots rather than raw prompt tokens; at page1 this reduces exactly to the Phase40 rule"
   ],
   "stop_and_block_if": [
     "exact W47 is not checked out, pinned inputs differ, or tracked files are dirty",

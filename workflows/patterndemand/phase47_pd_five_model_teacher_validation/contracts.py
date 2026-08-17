@@ -159,18 +159,42 @@ def runtime_contract(base: dict[str, Any], spec: dict[str, Any]) -> dict[str, An
     page = int(spec["page_size_tokens"])
     chunk = int(base["measurement_contract"]["chunked_prefill_tokens"])
 
-    def page_segment(start_token: int, end_token: int) -> list[int]:
-        return [start_token // page, math.ceil(end_token / page)]
+    def expected_probe(name: str, prompt_tokens: list[int]) -> dict[str, Any]:
+        requests = [
+            {
+                "scenario": name,
+                "repeat": 0,
+                "rid": f"probe::{index}",
+                "prompt_tokens": tokens,
+            }
+            for index, tokens in enumerate(prompt_tokens)
+        ]
+        rows = teacher_chunks_for_wave_page_aware(
+            requests,
+            chunk_tokens=chunk,
+            page_size_tokens=page,
+            kv_bytes_per_page=1,
+        )
+        by_rid = {request["rid"]: [] for request in requests}
+        for row in rows:
+            by_rid[row["rid"]].append([int(row["page_start"]), int(row["page_end"])])
+        return {
+            "name": name,
+            "rid_prefix_base": f"p47::{spec['model_id']}::{name}::rep",
+            "prompt_tokens": prompt_tokens,
+            "repeats": 2,
+            "expected_segments_by_request_index": [by_rid[request["rid"]] for request in requests],
+        }
 
-    # For the 1000/1000/1000/2000 FCFS wave, the last request is split at
-    # floor((4096-3000)/page)*page so a non-final chunk is page aligned.
-    split = ((chunk - 3000) // page) * page
-    expected_segments = [
-        [page_segment(0, 1000)],
-        [page_segment(0, 1000)],
-        [page_segment(0, 1000)],
-        [page_segment(0, split), page_segment(split, 2000)],
+    probes = [
+        expected_probe("packed_remainder", [1000, 1000, 1000, 2000]),
+        expected_probe("page_boundary_crosscheck", [63, 65, 1001, 3000]),
     ]
+    expected_sender_chunks = 1 + sum(
+        int(probe["repeats"])
+        * sum(len(segments) for segments in probe["expected_segments_by_request_index"])
+        for probe in probes
+    )
     result = dict(base)
     result["backend_contract"] = {
         "inference_attention_backend": spec["attention_backend"],
@@ -191,14 +215,9 @@ def runtime_contract(base: dict[str, Any], spec: dict[str, Any]) -> dict[str, An
             "prompt_tokens": 64,
             "max_new_tokens": 2,
         },
-        "admission_probe": {
-            "rid_prefix_base": f"p47::{spec['model_id']}::admission_smoke::rep",
-            "prompt_tokens": [1000, 1000, 1000, 2000],
-            "repeats": 2,
-            "expected_segments_by_request_index": expected_segments,
-        },
+        "admission_probes": probes,
         "expected_transport_sender_chunks": 1,
-        "expected_sender_chunks_total": 11,
+        "expected_sender_chunks_total": expected_sender_chunks,
         "expected_page_size_tokens": page,
         "expected_kv_page_count": math.ceil(64 / page),
         "expected_transfer_backend": "MooncakeKVSender",
@@ -209,6 +228,76 @@ def runtime_contract(base: dict[str, Any], spec: dict[str, Any]) -> dict[str, An
     result["expected_alignment_rows"] = 6
     result["expected_histogram_rows"] = 72
     return result
+
+
+def teacher_chunks_for_wave_page_aware(
+    requests: list[dict[str, Any]],
+    *,
+    chunk_tokens: int,
+    page_size_tokens: int,
+    kv_bytes_per_page: int,
+) -> list[dict[str, Any]]:
+    """Replay SGLang's page-aware FCFS prefill budget for one atomic wave.
+
+    SGLang's ``PrefillAdder._update_prefill_budget`` rounds every admitted
+    request/chunk up to ``page_size`` before reducing ``rem_chunk_tokens``.
+    The transmitted token range remains the real range, while the scheduling
+    budget pays for full pages.  At page size 1 this is exactly Phase40's
+    original token-debit teacher; page sizes above 1 need this explicit rule.
+    """
+    if chunk_tokens <= 0 or page_size_tokens <= 0 or kv_bytes_per_page <= 0:
+        raise ValueError("chunk, page size and KV bytes per page must be positive")
+    if chunk_tokens % page_size_tokens:
+        raise ValueError("chunk size must be page aligned")
+    rows: list[dict[str, Any]] = []
+    request_index = 0
+    token_offset = 0
+    batch_index = 0
+    while request_index < len(requests):
+        budget = chunk_tokens
+        emitted = False
+        while budget > 0 and request_index < len(requests):
+            request = requests[request_index]
+            total = int(request["prompt_tokens"])
+            if total <= 0:
+                raise ValueError("prompt tokens must be positive")
+            remaining = total - token_offset
+            send_tokens = min(remaining, budget)
+            is_last = send_tokens == remaining
+            if not is_last:
+                send_tokens -= send_tokens % page_size_tokens
+            if send_tokens <= 0:
+                break
+            page_start = token_offset // page_size_tokens
+            page_count = math.ceil(send_tokens / page_size_tokens)
+            charged_tokens = page_count * page_size_tokens
+            if charged_tokens > budget:
+                raise RuntimeError("page-aligned charge exceeds remaining chunk budget")
+            rows.append(
+                {
+                    "scenario": request["scenario"],
+                    "repeat": int(request["repeat"]),
+                    "rid": request["rid"],
+                    "batch_index": batch_index,
+                    "chunk_index": sum(1 for row in rows if row["rid"] == request["rid"]),
+                    "page_start": page_start,
+                    "page_end": page_start + page_count,
+                    "kv_page_count": page_count,
+                    "logical_bytes": page_count * kv_bytes_per_page,
+                }
+            )
+            emitted = True
+            token_offset += send_tokens
+            budget -= charged_tokens
+            if token_offset == total:
+                request_index += 1
+                token_offset = 0
+            else:
+                break
+        if not emitted:
+            raise RuntimeError("page-aware teacher made no progress")
+        batch_index += 1
+    return rows
 
 
 def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
@@ -240,6 +329,12 @@ def read_jsonl(paths: Iterable[Path]) -> list[dict[str, Any]]:
 
 def add_model_id(rows: list[dict[str, Any]], model_id: str) -> list[dict[str, Any]]:
     return [{"model_id": model_id, **row} for row in rows]
+
+
+def bin_index(logical_bytes: int) -> int:
+    """Expose the frozen Phase34 binning used by the reused Phase40 comparator."""
+    edges = load_json(HERE / "experiment.json")["phase34_bin_edges_bytes"]
+    return next((index for index in range(12) if logical_bytes < edges[index + 1]), 11)
 
 
 def repeat_histograms_exact(events: list[dict[str, Any]], scenarios: list[str]) -> bool:
