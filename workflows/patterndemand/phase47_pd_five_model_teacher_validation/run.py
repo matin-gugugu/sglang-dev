@@ -65,15 +65,15 @@ def load_phase40_run():
     return module
 
 
-def pin_bfloat16_kv_cache(p40: Any) -> None:
-    """Replace Phase40's safe Qwen auto setting with Phase47's explicit cross-model dtype."""
+def pin_bf16_kv_cache(p40: Any) -> None:
+    """Pin the explicit BF16 dtype using TRTLLM MLA's accepted CLI spelling."""
     original = p40.build_server_commands
 
     def build_server_commands(**kwargs):
         commands = original(**kwargs)
         for name in ("prefill", "decode"):
             index = commands[name].index("--kv-cache-dtype")
-            commands[name][index + 1] = "bfloat16"
+            commands[name][index + 1] = "bf16"
         return commands
 
     p40.build_server_commands = build_server_commands
@@ -378,7 +378,7 @@ def main() -> None:
         models[spec["model_id"]] = current
     p40 = load_phase40_run()
     p40.validate_smoke_events = validate_smoke_events_generic
-    pin_bfloat16_kv_cache(p40)
+    pin_bf16_kv_cache(p40)
     results = []
     for spec in model_specs():
         model_id = spec["model_id"]

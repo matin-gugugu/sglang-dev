@@ -6,7 +6,7 @@ Phase40/41已经用Qwen3-8B证明纯`P1→D1`的fixed-draining GPU发送记录�
 
 - `DeepSeek-V2-Lite`：`TRTLLM MLA + page64`，使用B200/SM100原生支持的MLA执行点；
 - 其余四模型：`FlashInfer + page1`，标准K/V公式；
-- 全部固定`P TP=PP=1`、`D TP=PP=1`、bfloat16 KV cache、Mooncake/RDMA、dma-buf、无staging、FCFS、4096-token chunk、整wave原子放行、关闭radix cache和overlap；
+- 全部固定`P TP=PP=1`、`D TP=PP=1`、BF16 KV cache（SGLang CLI固定使用其接受的`bf16`拼写）、Mooncake/RDMA、dma-buf、无staging、FCFS、4096-token chunk、整wave原子放行、关闭radix cache和overlap；
 - 不训练、不测物理时间、不做placement或scheduler资源决策。
 
 ## 远程执行

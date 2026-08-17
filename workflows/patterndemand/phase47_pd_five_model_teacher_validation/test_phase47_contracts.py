@@ -6,6 +6,7 @@ from __future__ import annotations
 import importlib.util
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 HERE = Path(__file__).resolve().parent
 P40_CONTRACTS = HERE.parent / "phase40_pure_pd_semantics_teacher/contracts.py"
@@ -21,10 +22,28 @@ def load_p40_contracts():
 
 def main() -> None:
     from contracts import model_specs, runtime_contract
+    from run import pin_bf16_kv_cache
 
     base = json.loads((HERE / "experiment.json").read_text())
     models = model_specs()
     preflight_source = (HERE / "preflight.py").read_text(encoding="utf-8")
+    run_source = (HERE / "run.py").read_text(encoding="utf-8")
+    verify_source = (HERE / "verify.py").read_text(encoding="utf-8")
+    assert base["backend_contract"]["kv_cache_dtype"] == "bf16"
+    assert 'commands[name][index + 1] = "bf16"' in run_source
+    assert 'commands[name][index + 1] = "bfloat16"' not in run_source
+    assert '== "bf16"' in verify_source
+    assert '== "bfloat16"' not in verify_source
+    p40_stub = SimpleNamespace(
+        build_server_commands=lambda **_: {
+            "prefill": ["--kv-cache-dtype", "auto"],
+            "decode": ["--kv-cache-dtype", "auto"],
+        }
+    )
+    pin_bf16_kv_cache(p40_stub)
+    commands = p40_stub.build_server_commands()
+    assert commands["prefill"] == ["--kv-cache-dtype", "bf16"]
+    assert commands["decode"] == ["--kv-cache-dtype", "bf16"]
     assert 'find_spec("sglang.srt.layers.attention.trtllm_mla_backend")' in preflight_source
     assert 'find_spec("sgl_kernel.flash_mla")' not in preflight_source
     assert len(models) == 5

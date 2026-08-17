@@ -52,7 +52,7 @@ def verify(output: Path) -> dict:
         "invariants_five": len(invariants) == 5 and all(row["exact"] == "True" for row in invariants),
         "smoke_five_pass": [row.get("model_id") for row in smoke] == model_ids and all(row.get("status") == "PASS" and all(row.get("checks", {}).values()) for row in smoke),
         "launch_policy_exact": [row.get("model_id") for row in launches] == model_ids and all((row.get("attention_backend"), int(row.get("page_size_tokens", -1))) == expected_policy[row["model_id"]] for row in launches),
-        "kv_cache_bfloat16": all(command_option(row.get("commands", {}).get(name, []), "--kv-cache-dtype") == "bfloat16" for row in launches for name in ("prefill", "decode")),
+        "kv_cache_bf16_cli": all(command_option(row.get("commands", {}).get(name, []), "--kv-cache-dtype") == "bf16" for row in launches for name in ("prefill", "decode")),
         "rdma_no_fallback": all(row.get("transport_environment", {}).get("MOONCAKE_PROTOCOL") == "rdma" and row.get("transport_environment", {}).get("WITH_NVIDIA_PEERMEM") == "0" and row.get("transport_environment", {}).get("SGLANG_DISAGG_STAGING_BUFFER") == "0" and all(row.get("transport_environment", {}).get(name) is None for name in ("MC_FORCE_TCP", "MC_FORCE_MNNVL", "MC_INTRANODE_NVLINK", "SGLANG_MOONCAKE_CUSTOM_MEM_POOL")) for row in launches),
         "atomic_barrier": all(row.get("admission_environment", {}).get("SGLANG_PD_BOOTSTRAP_BATCH_BARRIER") == "1" and row.get("admission_environment", {}).get("SGLANG_TEST_FORCE_OPTIMISTIC_PREFILL_RETRY_PROB") is None for row in launches),
         "raw_external": raw.get("raw_committed_to_git") is False and len(raw.get("models", [])) == 5 and all(int(row.get("profiler_event_count", 0)) > 0 for row in raw.get("models", [])),
