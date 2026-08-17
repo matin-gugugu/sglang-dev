@@ -1,0 +1,87 @@
+{
+  "created_at_utc": "2026-08-17T13:32:12.232633+00:00",
+  "evidence": {
+    "asset_state": {
+      "attempt1_evidence_preserved": "phase47/raw_attempt1 (empty) and phase47/smoke_attempt1 untouched",
+      "external_formal_raw_root": "phase47/raw_attempt2 - 0 bytes, EMPTY; the smoke gate held",
+      "external_smoke_root": "phase47/smoke_attempt2 - 4509 bytes, only deepseek-v2-lite/server_logs/{prefill,decode}.log",
+      "formal_result_dir_before_this_record": "did not exist",
+      "git_worktree": "clean; nothing written into the repository work tree",
+      "models_untouched": "all five frozen snapshots left as acquired",
+      "preflight_audit": "phase47/preflight_attempt2.json - PASS, preserved"
+    },
+    "blocking_failure": {
+      "both_servers_failed_identically": "prefill and decode both died at ServerArgs construction time",
+      "duration_before_failure": "run phase lasted 11 seconds (13:29:34 -> 13:29:45 UTC)",
+      "failure_is_pre_gpu": "the process aborts during CLI argument validation, before model load and before any CUDA work; this run therefore produced NO evidence about whether trtllm_mla actually executes correctly on B200",
+      "phase_of_run": "first model (deepseek-v2-lite) compatibility smoke, prefill server",
+      "raising_frame": "python/sglang/srt/arg_groups/overrides.py:1600 _mla_kv_cache_dtype_checks, reached from server_args.py:4442 _handle_attention_backend_compatibility during ServerArgs.__post_init__",
+      "root_cause": "ValueError: TensorRT-LLM MLA backend only supports kv-cache-dtype of fp8_e4m3, fp4_e2m1, bf16, or auto.",
+      "symptom_seen_by_runner": "RuntimeError: process exited before readiness: rc=1, url=http://127.0.0.1:43100/health"
+    },
+    "bypass_paths_considered_and_rejected": [
+      {
+        "path": "pass --kv-cache-dtype bf16 instead of bfloat16",
+        "rejected_because": "the literal 'bfloat16' is hardcoded in the frozen Phase47 run.py pin_bfloat16_kv_cache(); editing it is red line 1. Additionally verify.py check 'kv_cache_bfloat16' asserts command_option(...) == 'bfloat16', so the changed run could never pass its own verifier"
+      },
+      {
+        "path": "patch overrides.py to add 'bfloat16' to the trtllm_mla allowlist",
+        "rejected_because": "overrides.py is pinned input sglang_attention_overrides sha 9152d913...; editing it is red line 1 and preflight would fail the pinned-SHA check immediately"
+      },
+      {
+        "path": "let kv-cache-dtype fall back to 'auto' (which trtllm_mla accepts)",
+        "rejected_because": "backend_contract.kv_cache_dtype is frozen to bfloat16 and Phase47 deliberately replaced Phase40's 'auto' with an explicit cross-model dtype; reverting it silently changes frozen measurement semantics, red line 1 and 4"
+      },
+      {
+        "path": "switch DeepSeek to another MLA backend again",
+        "rejected_because": "backend is frozen by W47-fix2 and backend_or_page_fallback_permitted=false; changing it is a control-side contract decision"
+      },
+      {
+        "path": "skip DeepSeek and report the other four models",
+        "rejected_because": "acceptance_gates.all_five_models_must_pass=true and verify.py hard-asserts counts=={models:5,requests:225}; red line 4"
+      }
+    ],
+    "gpu": "NVIDIA B200, compute capability (10,0) = SM100, driver 580.167.08",
+    "host": "prenyx0173.a51.clusters.nvidia.com",
+    "preflight_status": {
+      "elapsed": "00:04:52",
+      "new_kernel_symbol_gates_passed": {
+        "selected_blackwell_sm100_plus": true,
+        "trtllm_batch_decode_with_kv_cache_mla": true,
+        "trtllm_ragged_attention_deepseek": true
+      },
+      "note": "the W47-fix2 preflight correctly adopted the lesson from the previous BLOCKED record - it now probes real kernel symbols rather than mere module presence - and every gate it can see passes",
+      "pinned_inputs_ok": "18/18 (now pinning trtllm_mla_backend.py instead of flashmla_backend.py)",
+      "result": "PASS",
+      "source_semantics_ok": "26 Phase40 checks + 3 new trtllm_mla checks all True"
+    },
+    "prior_attempts": {
+      "W47_fix": "3aa8107712e40de35b38dc09fc983df26fa59c02 -> BLOCKED c5a2897d69bd5fa0847c2d0ee834bfd47e0c52b8 (flashmla dense decode is SM90a-only)",
+      "W47_old": "ebaf46e673a49112a6c11b77367f91dcbb3dfd42 (never run; preflight checked nonexistent module 'flash_mla')"
+    },
+    "recommended_unblock": {
+      "alternative": "re-pin overrides.py with 'bfloat16' added to the trtllm_mla allowlist (a genuine upstream sglang fix, since the allowlist contradicts its own documented alias) and update the sglang_attention_overrides pinned SHA.",
+      "caution": "either way, the trtllm_mla-on-B200 execution risk is still entirely unretired; the next attempt is the first that will actually exercise the repinned MLA backend.",
+      "preferred": "spell the frozen KV cache dtype 'bf16' instead of 'bfloat16' in three places: backend_contract.kv_cache_dtype, run.py pin_bfloat16_kv_cache(), and verify.py's kv_cache_bfloat16 check. This is provably semantics-preserving - model_runner.py:2470 maps both spellings to the same torch.bfloat16 KV cache - so the teacher's logical byte formula is unaffected and no sglang source changes."
+    },
+    "root_cause_analysis": {
+      "consequence_for_the_contract": "the contract's intent (a bf16 KV cache) is fully achievable with trtllm_mla; only the spelling is wrong",
+      "how_phase47_hits_it": "Phase47 run.py pin_bfloat16_kv_cache() rewrites the Phase40 server command's --kv-cache-dtype from 'auto' to the literal string 'bfloat16'; with flashmla (W47-fix) this passed, with trtllm_mla (W47-fix2) it is rejected",
+      "nature": "string-vocabulary mismatch inside sglang, not a hardware or capability limitation",
+      "sglang_accepts_both_spellings": "server_args.py:567 kv_cache_dtype choices = ['auto','fp8_e5m2','fp8_e4m3','bf16','bfloat16','fp4_e2m1']; the help text states '\"bf16\" or \"bfloat16\" for BF16 KV cache'",
+      "the_defect": "overrides.py:1599 whitelists only ['fp8_e4m3','fp4_e2m1','bf16','auto'] for trtllm_mla and omits the documented synonym 'bfloat16'",
+      "they_are_true_synonyms_at_runtime": "model_runner.py:2470 branches on kv_cache_dtype in ('bf16','bfloat16') - a single branch, so both spellings resolve to the same torch.bfloat16 KV cache"
+    },
+    "run_branch": "run/phase47-nvidia-a51-20260817-w47fix2",
+    "slurm_job": "2395032 (batch, 2h limit, FAILED exit 95)",
+    "what_this_run_does_and_does_not_establish": {
+      "established": "W47-fix2's repin to trtllm_mla passes every static and preflight gate: 18 pinned SHAs, 3 trtllm_mla source checks, both TRTLLM MLA kernel symbols present, both selected GPUs SM100+",
+      "not_established": "whether trtllm_mla actually runs DeepSeek-V2-Lite correctly on B200 is still completely untested - the process died at argument validation before any GPU work. No GPU/teacher alignment evidence exists for any of the five models; zero formal requests executed across all three W47 attempts."
+    },
+    "workflow_commit_W47_fix2": "85c2cd616e3b16f958ca57a469e2c0ce0fe17647"
+  },
+  "phase": "PHASE47",
+  "reason": "W47-fix2 重pin的trtllm_mla后端与合同冻结的--kv-cache-dtype bfloat16字符串不兼容：sglang的trtllm_mla校验白名单(overrides.py:1599)只收bf16/auto/fp8_e4m3/fp4_e2m1，漏了它自己文档化的同义词bfloat16，P/D两端均在ServerArgs构造阶段即失败。这是sglang内部的字符串词表缺陷而非硬件限制(model_runner.py:2470中bf16与bfloat16解析到同一个torch.bfloat16)，但修正需改动冻结的run.py/verify.py或pinned的overrides.py，均越红线",
+  "schema_version": "patterndemand-workflow-blocked-v1",
+  "status": "BLOCKED"
+}
