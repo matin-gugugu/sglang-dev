@@ -18,6 +18,7 @@ OUTPUTS = {
     "phase38": repo_root() / "experiment-results/phase38_pp_physical_curve_cost_recompute",
     "phase39": repo_root() / "experiment-results/phase39_tp_pp_l1_l3_physical_placement_validation",
     "phase40": repo_root() / "experiment-results/phase40_pure_pd_semantics_teacher",
+    "phase41": repo_root() / "experiment-results/phase41_pd_full_window_dataset",
 }
 
 

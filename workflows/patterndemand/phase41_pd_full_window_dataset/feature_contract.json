@@ -1,0 +1,61 @@
+{
+  "schema_version": "phase41-pd-feature-contract-v1",
+  "prediction_unit": "one complete 300-second history profile under one fixed pure-PD execution configuration",
+  "identifiers_not_features": ["profile_id", "split_role", "source", "segment", "source_split", "window_id", "cutoff_ms", "model"],
+  "profile_scalar_features": [
+    "request_count", "rps", "interarrival_cv", "peak_to_mean_1s", "fano_1s",
+    "input_mean_raw", "input_p50_raw", "input_p90_raw", "input_p99_raw",
+    "input_mean_capped", "input_p50_capped", "input_p90_capped", "input_p99_capped",
+    "output_mean_raw", "output_p50_raw", "output_p90_raw", "output_p99_raw",
+    "output_mean_capped", "output_p50_capped", "output_p90_capped", "output_p99_capped",
+    "lm_correlation_capped", "survival_m_gt_1", "survival_m_gt_8", "survival_m_gt_16",
+    "survival_m_gt_32", "survival_m_gt_64", "input_multichunk_fraction", "chunk_count_mean",
+    "chunk_count_p50", "chunk_count_p90", "chunk_count_p99", "chunk_output_work_mean",
+    "chunk_output_work_p90", "chunk_output_work_p99", "multichunk_transition_rate",
+    "multichunk_run_length_mean", "multichunk_run_length_p90", "multichunk_run_length_max",
+    "rolling_multichunk_fraction_max_4", "rolling_multichunk_fraction_max_16", "rolling_multichunk_fraction_max_32"
+  ],
+  "profile_array_features": {
+    "joint_lm_4x4_json": {"output_prefix": "feature_profile_joint_lm_", "length": 16},
+    "chunk_output_bucket_joint_2x5_json": {"output_prefix": "feature_profile_chunk_output_bucket_joint_", "length": 10},
+    "chunk_class_transition_2x2_json": {"output_prefix": "feature_profile_chunk_class_transition_", "length": 4}
+  },
+  "model_structure_features": {
+    "feature_model_num_hidden_layers": 36,
+    "feature_model_hidden_size": 4096,
+    "feature_model_num_attention_heads": 32,
+    "feature_model_num_key_value_heads": 8,
+    "feature_model_head_dim": 128,
+    "feature_model_dtype_bytes": 2,
+    "feature_model_kv_bytes_per_token": 147456,
+    "feature_model_is_mla": 0
+  },
+  "execution_strategy_features": {
+    "feature_p_tp_size": 1,
+    "feature_p_pp_size": 1,
+    "feature_d_tp_size": 1,
+    "feature_d_pp_size": 1,
+    "feature_pd_wave_size": 64,
+    "feature_pd_chunk_tokens": 4096,
+    "feature_pd_page_size_tokens": 1,
+    "feature_pd_fcfs": 1,
+    "feature_pd_fixed_draining": 1,
+    "feature_pd_atomic_wave_barrier": 1,
+    "feature_pd_radix_cache": 0,
+    "feature_pd_overlap_schedule": 0
+  },
+  "h0_features": {
+    "requests": 32,
+    "columns": ["h0_calls_bin_00..11", "h0_logical_bytes_bin_00..11"],
+    "derivation": "deterministic pseudo-request reconstruction from target-free low-dimensional profile followed by the same bounded-wave teacher"
+  },
+  "development_only_outputs": [
+    "target_calls_bin_00..11", "target_logical_bytes_bin_00..11",
+    "residual_calls_bin_00..11", "residual_logical_bytes_bin_00..11"
+  ],
+  "forbidden_predictor_inputs": [
+    "complete request list", "per-request input/output lengths", "GPU trace", "raw sender events",
+    "target histogram", "residual target", "blind split label", "future arrival timestamps", "physical topology or measured communication time"
+  ],
+  "blind_rule": "blind rows contain identifiers, the exact same feature_* and h0_* columns, and no target_* or residual_* column"
+}
