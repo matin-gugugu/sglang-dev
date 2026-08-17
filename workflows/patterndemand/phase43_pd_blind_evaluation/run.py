@@ -15,7 +15,7 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 P41 = HERE.parent / "phase41_pd_full_window_dataset"
 P42 = HERE.parent / "phase42_pd_residual_training"
-sys.path.insert(0, str(HERE.parent)); sys.path.insert(0, str(P42)); sys.path.insert(0, str(P41)); sys.path.insert(0, str(HERE.parents[2] / "scripts"))
+sys.path.insert(0, str(HERE.parent)); sys.path.insert(0, str(P42)); sys.path.insert(0, str(P41)); sys.path.insert(0, str(HERE.parents[2] / "scripts")); sys.path.insert(0, str(HERE))
 from common import environment_record, load_json, refresh_manifest, repo_root, utc_now, write_json  # noqa: E402
 from contracts import profile_example_rows  # noqa: E402
 from metrics import compare_to_h0, metric_bundle  # noqa: E402
