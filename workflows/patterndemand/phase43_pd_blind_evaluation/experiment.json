@@ -55,7 +55,7 @@
     "storage": "Git-external and read-only",
     "committed_content": "only names, bytes and SHA audits; never raw rows or complete request lists"
   },
-  "supersession_note": "The initial W43 run was rejected before preflight or target reconstruction because Python resolved Phase41 preflight.py instead of the local Phase43 module. W43-fix pins the local module path first; no blind target or result directory existed in the rejected attempt.",
+  "supersession_note": "The initial W43 run was rejected before preflight or target reconstruction because Python resolved Phase41 preflight.py instead of the local Phase43 module. W43-fix then reconstructed the fixed requests and teacher targets in memory but emitted no target values, metrics or result directory: it compared a development example carrying extra target fields against the target-free frozen feature schema. W43-fix2 changes only gate ordering: reconstruct and compare target-free feature/H0 first, then generate the same fixed teacher targets. Windows, predictions, teacher, metrics and thresholds remain unchanged.",
   "required_outputs": {"target_rows": 12, "aggregate_metric_rows": 2, "per_profile_metric_rows": 24, "full_request_rows_in_git": 0},
   "accepted_result_statuses": ["PASS"],
   "stop_and_block_if": [

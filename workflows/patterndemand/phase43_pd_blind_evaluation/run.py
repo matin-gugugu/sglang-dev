@@ -88,18 +88,22 @@ def run(expected: str, raw_dir: Path, output: Path) -> dict[str, Any]:
     file_by_segment = {segment: raw_dir.expanduser().resolve() / name for name, (segment, _split) in {**BURST_FILES, **MOONCAKE_FILES}.items()}
     source_arrays = {segment: load_segment(file_by_segment[segment]) for segment in sorted({row["segment"] for row in rows})}
     frozen_by_id = {row["profile_id"]: row for row in frozen_features}
-    targets = []; reconstruction = []; total_requests = 0
+    targets = []; reconstruction = []; reconstructed = []; total_requests = 0
     kv_bytes = int(model_contract["derived"]["kv_bytes_per_page"])
     for row in rows:
         profile, requests = reconstruct_profile(row, source_arrays)
-        feature, target = profile_example_rows(profile=profile, requests=[tuple(pair) for pair in requests], contract=phase41, feature_contract=feature_contract, kv_bytes_per_page=kv_bytes)
-        assert target is not None
+        feature, no_target = profile_example_rows(profile=profile, requests=None, contract=phase41, feature_contract=feature_contract, kv_bytes_per_page=kv_bytes)
+        assert no_target is None
         difference = feature_difference(frozen_by_id[profile["profile_id"]], feature)
         difference.update({"profile_id": profile["profile_id"], "request_count": len(requests)})
-        reconstruction.append(difference); targets.append(target); total_requests += len(requests)
+        reconstruction.append(difference); reconstructed.append((profile, requests)); total_requests += len(requests)
     tolerance = float(load_json(HERE / "experiment.json")["blind_contract"]["feature_reconstruction_tolerance_lt"])
-    if total_requests != 2887 or len(targets) != 12 or not all(row["schema_exact"] and row["identifiers_exact"] and float(row["max_absolute_difference"]) < tolerance for row in reconstruction):
+    if total_requests != 2887 or len(reconstructed) != 12 or not all(row["schema_exact"] and row["identifiers_exact"] and float(row["max_absolute_difference"]) < tolerance for row in reconstruction):
         raise RuntimeError({"total_requests": total_requests, "reconstruction": reconstruction})
+    for profile, requests in reconstructed:
+        _example, target = profile_example_rows(profile=profile, requests=[tuple(pair) for pair in requests], contract=phase41, feature_contract=feature_contract, kv_bytes_per_page=kv_bytes)
+        assert target is not None
+        targets.append(target)
     profile_ids = [row["profile_id"] for row in targets]
     target_calls, target_bytes = target_arrays(targets)
     methods = {method: frozen_arrays(frozen_predictions, profile_ids, method) for method in ("h0", "h0_plus_dnn_residual")}
