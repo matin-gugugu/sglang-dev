@@ -62,7 +62,9 @@ def verify(output: Path) -> dict:
         "required_exact": actual == required,
         "status": summary.get("status") == "PASS" and (output / "DONE").read_text().strip() == "PASS",
         "contract_exact": result_contract == workflow,
-        "parent": freeze.get("workflow_parent_result_commit") == workflow["workflow_parent_result_commit"],
+        "lineage": freeze.get("workflow_base_result_commit") == workflow["workflow_base_result_commit"]
+        and freeze.get("workflow_parent_commits") == workflow["required_workflow_ancestors"][-1:]
+        and all(freeze.get("workflow_lineage", {}).values()),
         "pins": all(row.get("ok") is True for row in freeze.get("pinned_inputs", {}).values()),
         "source_commits": len(freeze.get("source_result_audits", [])) == expected_counts["source_results"]
         and all(row.get("commit_matches") and row.get("commit_is_ancestor") for row in freeze["source_result_audits"]),

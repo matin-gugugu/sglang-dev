@@ -33,8 +33,21 @@ def run_checks(expected: str) -> dict:
         cwd=repo_root(),
         text=True,
     ).strip().split()
-    if parents != [spec["workflow_parent_result_commit"]]:
-        raise RuntimeError({"W53_parent": parents, "expected_R52": spec["workflow_parent_result_commit"]})
+    required_ancestors = spec["required_workflow_ancestors"]
+    if parents != [required_ancestors[-1]]:
+        raise RuntimeError({"W53_fix_parent": parents, "expected_W53": required_ancestors[-1]})
+    lineage_commits = [spec["workflow_base_result_commit"], *required_ancestors]
+    lineage_audit = {
+        commit: subprocess.run(
+            ["git", "merge-base", "--is-ancestor", commit, head],
+            cwd=repo_root(),
+            check=False,
+        ).returncode
+        == 0
+        for commit in lineage_commits
+    }
+    if not all(lineage_audit.values()):
+        raise RuntimeError({"workflow_lineage": lineage_audit})
     output = repo_root() / spec["result_dir"]
     if output.exists():
         raise RuntimeError(f"formal result already exists: {output}")
@@ -111,7 +124,9 @@ def run_checks(expected: str) -> dict:
         "schema_version": "phase53-preflight-v1",
         "status": "PASS",
         "workflow_commit": head,
-        "workflow_parent_result_commit": parents[0],
+        "workflow_base_result_commit": spec["workflow_base_result_commit"],
+        "workflow_parent_commits": parents,
+        "workflow_lineage": lineage_audit,
         "pinned_inputs": pins,
         "source_result_audits": result_audits,
         "scientific_checks": scientific_checks,

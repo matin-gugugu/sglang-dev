@@ -12,6 +12,10 @@ def pct(value: float) -> str:
     return f"{100.0 * float(value):.2f}%"
 
 
+def pct4(value: float) -> str:
+    return f"{100.0 * float(value):.4f}%"
+
+
 def load_source_summaries(root: Path, spec: dict[str, Any]) -> dict[str, dict[str, Any]]:
     import json
 
@@ -226,8 +230,8 @@ def build_chain_rows(s: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
             "placement": (
                 f"Phase52 agreement {pct(place['h0']['agreement_rate'])}→"
                 f"{pct(place['h0_plus_dnn_residual']['agreement_rate'])}；mean regret "
-                f"{pct(place['h0']['mean_teacher_regret'])}→"
-                f"{pct(place['h0_plus_dnn_residual']['mean_teacher_regret'])}"
+                f"{pct4(place['h0']['mean_teacher_regret'])}→"
+                f"{pct4(place['h0_plus_dnn_residual']['mean_teacher_regret'])}"
             ),
             "status": "FROZEN_COMPLETE_WITHIN_SCOPE",
             "boundary": "纯P1-D1、fixed-draining；bin-mean卷积；不含在线到达、实例数或完整scheduler",
@@ -373,7 +377,7 @@ Phase39中TP/PP合计{p39['counts']['placement_decision_rows']}个communication-
 - Phase51以SGLang生产Mooncake/RDMA路径完成{p51['counts']['physical_curves']}条L1/L2/L3模型相关物理曲线、{p51['counts']['curve_knots']}个knots。
 - Phase52冻结Phase49/50/51，做12-bin平均payload卷积。H0+DNN的cost WAPE为L1 {pct(p52_cost['L1']['dnn_cost_wape'])}、L2 {pct(p52_cost['L2']['dnn_cost_wape'])}、L3 {pct(p52_cost['L3']['dnn_cost_wape'])}，三层均严格优于H0。
 
-Phase52 placement agreement从{pct(p52_place['h0']['agreement_rate'])}提升到{pct(p52_place['h0_plus_dnn_residual']['agreement_rate'])}；mean regret从{pct(p52_place['h0']['mean_teacher_regret'])}降到{pct(p52_place['h0_plus_dnn_residual']['mean_teacher_regret'])}。这是bin-mean、communication-only重复工程结果。
+Phase52 placement agreement从{pct(p52_place['h0']['agreement_rate'])}提升到{pct(p52_place['h0_plus_dnn_residual']['agreement_rate'])}；mean regret从{pct4(p52_place['h0']['mean_teacher_regret'])}降到{pct4(p52_place['h0_plus_dnn_residual']['mean_teacher_regret'])}。这是bin-mean、communication-only重复工程结果。
 
 ## 6. 当前物理代价总表
 

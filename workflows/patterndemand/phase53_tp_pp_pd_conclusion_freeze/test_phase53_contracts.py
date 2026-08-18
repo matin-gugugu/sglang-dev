@@ -51,8 +51,10 @@ class Phase53ContractTest(unittest.TestCase):
         report = render_freeze_report("W53-test", evidence, chains, claims)
         for term in ("Phase43", "DNN不如H0", "Phase50", "communication-only", "完整调度器"):
             self.assertIn(term, guide)
+        self.assertIn("0.0221%降到0.0185%", guide)
         for term in ("Phase43", "有效负结果", "Phase39", "Phase51", "完整scheduler"):
             self.assertIn(term, report)
+        self.assertIn("0.0221%→0.0185%", report)
 
 
 if __name__ == "__main__":
