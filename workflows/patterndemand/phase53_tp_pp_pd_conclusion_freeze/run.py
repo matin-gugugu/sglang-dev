@@ -79,8 +79,8 @@ def run(expected: str, output: Path) -> dict:
     guide = render_guide(summaries, evidence_rows, chain_rows, claim_scope)
     report = render_freeze_report(expected, evidence_rows, chain_rows, claim_scope)
     (output / "docs").mkdir()
-    (output / "docs/截至目前实验结构总导引_截至Phase52.md").write_text(guide, encoding="utf-8")
-    (output / "docs/Phase53_TP_PP_PD实验链与当前结论冻结报告.md").write_text(report, encoding="utf-8")
+    (output / "docs/PatternDemand_experiment_guide_through_Phase52.md").write_text(guide, encoding="utf-8")
+    (output / "docs/Phase53_TP_PP_PD_conclusion_freeze_report.md").write_text(report, encoding="utf-8")
 
     p39 = summaries["Phase39"]
     p50 = summaries["Phase50"]

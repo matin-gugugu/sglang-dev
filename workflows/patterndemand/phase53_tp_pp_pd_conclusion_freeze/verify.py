@@ -36,8 +36,8 @@ def verify(output: Path) -> dict:
     environment = load_json(output / "audit/environment.json")
     evidence = read_csv(output / "tables/evidence_index.csv")
     chains = read_csv(output / "tables/phase_chain_status.csv")
-    guide = (output / "docs/截至目前实验结构总导引_截至Phase52.md").read_text(encoding="utf-8")
-    report = (output / "docs/Phase53_TP_PP_PD实验链与当前结论冻结报告.md").read_text(encoding="utf-8")
+    guide = (output / "docs/PatternDemand_experiment_guide_through_Phase52.md").read_text(encoding="utf-8")
+    report = (output / "docs/Phase53_TP_PP_PD_conclusion_freeze_report.md").read_text(encoding="utf-8")
     expected_phases = [row["phase"] for row in workflow["source_results"]]
     expected_counts = workflow["expected_counts"]
     required_guide_terms = [
