@@ -21,7 +21,7 @@ workflow commit W
   -> 原环境验证R的父提交、路径和manifest
 ```
 
-当前十六个workflow：
+当前十七个workflow：
 
 - `phase36_cross_environment_replay`：一张GPU即可，不训练、不读teacher，复播Phase34冻结的六模型TP/PP直方图并演练commit回传。
 - `phase37_pp_single_node_p2p_curve`：至少两张GPU，实测单机PP GPU P2P连续曲线；raw逐次样本保存在仓库外，只提交紧凑曲线与审计。
@@ -39,5 +39,6 @@ workflow commit W
 - `phase49_pd_six_model_blind_prediction_freeze`：冻结300个fresh blind低维画像及六模型的H0/H0+DNN预测；不打开完整请求或Hfull，形成一次性盲测的预测先验。
 - `phase50_pd_six_model_blind_evaluation`：R49合入后才重建完整请求和六模型Hfull，一次性验证整体、逐模型和逐segment的H0保护改善；不训练或重算预测。
 - `phase51_pd_l1_l3_physical_curve_library`：不加载模型，按六模型真实KV描述符布局，直接调用SGLang生产Mooncake/RDMA batch-transfer测量L1/L2/L3；36个冻结shard汇总成18条模型相关物理曲线、396个knots，供后续Phase52确定性卷积与communication-only placement验证。
+- `phase52_pd_physical_cost_placement_validation`：在R51合入后，用CPU将Phase49冻结的H0/H0+DNN、Phase50 Hfull与Phase51六模型L1/L2/L3物理曲线做确定性bin-mean卷积，报告物理cost误差、communication-only placement agreement/regret、双replica区间robust性和单调包络敏感性；不重训、不使用GPU。
 
 完整交接见`PatternDemand跨环境GPU执行交接_Phase36_Phase37.md`。

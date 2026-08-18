@@ -1,0 +1,91 @@
+{
+  "schema_version": "phase52-pd-physical-cost-placement-contract-v1",
+  "phase": "Phase52",
+  "objective": "将Phase49冻结的六模型H0/H0+DNN预测和Phase50一次性打开的Hfull直方图，确定性卷积到Phase51六模型L1/L2/L3 Mooncake物理曲线，报告通信代价误差、communication-only placement agreement/regret及曲线方差敏感性",
+  "workflow_parent_result_commit": "1f69c5e9b2f53af3fb96711875c828b2061bf156",
+  "result_dir": "experiment-results/phase52_pd_physical_cost_placement_validation",
+  "execution_environment": "local CPU-only isolated run branch/worktree",
+  "gpu_required": false,
+  "network_required": false,
+  "training_performed": false,
+  "checkpoint_loading_permitted": false,
+  "prediction_recomputation_permitted": false,
+  "teacher_or_label_recomputation_permitted": false,
+  "physical_measurement_permitted": false,
+  "fixed_scope": {
+    "models": 6,
+    "profiles": 300,
+    "prediction_units": 1800,
+    "prediction_methods": ["h0", "h0_plus_dnn_residual"],
+    "topology_candidates": ["L1", "L2", "L3"],
+    "physical_curves": 18,
+    "parallel_configuration": "P TP=PP=1 and D TP=PP=1 remains a fixed input; Phase52 selects only topology/placement level",
+    "decision_scope": "communication-only among the three frozen Phase51 topology candidates"
+  },
+  "convolution_contract": {
+    "histogram_bins": 12,
+    "per_bin_payload": "logical_bytes_bin / calls_bin",
+    "per_bin_cost_us_per_1000": "calls_bin * interpolate_latency_us(per_bin_payload)",
+    "total_cost_us_per_1000": "sum over 12 bins",
+    "interpolation": "piecewise linear over log2(payload_bytes), preserving unsmoothed Phase51 knots",
+    "boundary_policy": "clamp only to the measured model-specific minimum/maximum and audit every clamped bin and call; never extrapolate",
+    "teacher_cost": "the same deterministic bin-mean convolution applied to the frozen Phase50 Hfull histogram; it is not an exact per-message replay cost",
+    "official_curve": "Phase51 slower direction then slower of two frozen placement replicas",
+    "lower_curve": "minimum of the two frozen placement-replica slower-direction knot values",
+    "monotone_sensitivity_curve": "cumulative maximum of unsmoothed official knots; diagnostic only and never replaces the official result"
+  },
+  "placement_contract": {
+    "predicted_choice": "minimum predicted official communication cost across L1/L2/L3 for one fixed profile/model/method",
+    "teacher_oracle": "minimum frozen-Hfull official communication cost across the same candidates",
+    "agreement": "predicted topology equals teacher topology",
+    "teacher_regret": "(teacher cost at predicted choice - teacher oracle cost) / teacher oracle cost",
+    "interval_robust_choice": "selected upper/official cost <= every alternative lower-replica cost",
+    "monotone_stability": "raw official selected/oracle topology equals the cumulative-max sensitivity selected/oracle topology",
+    "tie_break": "L1 then L2 then L3 only for exact floating-point ties",
+    "forbidden_decisions": ["TP size", "PP size", "number of P/D instances", "compute placement", "memory feasibility", "resource availability", "queueing", "congestion"]
+  },
+  "pre_registered_scientific_questions": {
+    "cost": "does H0+DNN strictly reduce overall physical-cost WAPE and MAPE versus H0 on each of L1/L2/L3?",
+    "placement": "does H0+DNN weakly improve overall agreement and mean teacher regret versus H0?",
+    "sensitivity": "are predicted and oracle choices stable under the monotone curve diagnostic, and are interval-robust decisions distinguishable from overlapping placement curves?",
+    "reporting_rule": "execution PASS is independent of whether these already-frozen scientific hypotheses are confirmed; no retuning follows"
+  },
+  "expected_counts": {
+    "prediction_rows": 3600,
+    "target_rows": 1800,
+    "unit_topology_cost_rows": 10800,
+    "placement_ranking_rows": 10800,
+    "placement_decision_rows": 3600,
+    "cost_metric_rows": 60,
+    "cost_comparison_rows": 30,
+    "placement_metric_rows": 20,
+    "placement_comparison_rows": 10
+  },
+  "accepted_result_statuses": ["PASS"],
+  "pinned_inputs": [
+    {"name":"phase49_frozen_predictions","path":"experiment-results/phase49_pd_six_model_blind_prediction_freeze/predictions/pd_six_model_blind_frozen_predictions.csv.gz","sha256":"db7278d2ca54f0f2a2c9f3170063e2530dde1b6fabf8a03b8ad827a4865eb402"},
+    {"name":"phase50_hfull_targets","path":"experiment-results/phase50_pd_six_model_blind_evaluation/labels/pd_six_model_blind_hfull_targets.csv.gz","sha256":"cfaee9add708ab0f4fc8757ed4cf778fba97b960ec2c4ee8dc4c8320875005ce"},
+    {"name":"phase50_summary","path":"experiment-results/phase50_pd_six_model_blind_evaluation/summary.json","sha256":"65b2b8537e712973538efd983b902b60a6d73c613b4cd97188a2ee1da73aa585"},
+    {"name":"phase50_manifest","path":"experiment-results/phase50_pd_six_model_blind_evaluation/manifest.sha256","sha256":"3613fb8577bc2bc16ca3592a1456f7f34f413ea9e612f4954305b0aaa2020a0c","verify_manifest_directory":"experiment-results/phase50_pd_six_model_blind_evaluation"},
+    {"name":"phase51_curves","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/curves/pd_mooncake_physical_curves.json","sha256":"e2278ced7d7ef9743b86df41c9f6d70661b4d2d95514ce28bf7031c6b26e841d"},
+    {"name":"phase51_topology_plan","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/contracts/topology_plan.json","sha256":"e8dd9cca5f1537c67f327a4646ee4bc273393d3cddf8c22f666f0448c534ac93"},
+    {"name":"phase51_model_layouts","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/contracts/model_transfer_layouts.json","sha256":"8dfbd24815e2baacccc7b786bd5fb5b2c2f33d3ad9b302d32f4172ca4f2db4d0"},
+    {"name":"phase51_quality","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/audit/measurement_quality.json","sha256":"e01fbbb9c266885c996607fba33191be64790a703fbaa7b25f186d44399581e3"},
+    {"name":"phase51_summary","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/summary.json","sha256":"ab336e7506180e0b3810dc8748aa33addd5199b80e2ae6ad954c0bc58c85a913"},
+    {"name":"phase51_manifest","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/manifest.sha256","sha256":"ebb909c06524f314ffdaf11ea58cc2553a96439f52fa29c77b7c4f05236a0b11","verify_manifest_directory":"experiment-results/phase51_pd_l1_l3_physical_curve_library"}
+  ],
+  "claim_boundary": [
+    "Phase52 validates deterministic histogram-to-physical-cost conversion and communication-only topology choice on the already-open Phase50 blind set",
+    "Phase52 is repeated engineering evidence, not a new target-isolated blind evaluation",
+    "teacher cost uses bin-average payloads and does not recover per-message cost inside each bin",
+    "results apply only to the exact Phase51 model layouts, frozen endpoint placements, RDMA path and measured payload support",
+    "no claim covers compute, memory, resource availability, queueing, congestion, overlap, online arrivals or end-to-end latency"
+  ],
+  "stop_and_block_if": [
+    "R51 is not the unique workflow parent or Phase50/51 pins and manifests fail",
+    "prediction/target keys, model roster, 12-bin vectors or curve matrix differ",
+    "any input prediction, Hfull label or physical curve would be changed or recomputed",
+    "execution would use GPU, network, model weights, checkpoint, raw trace or protected data",
+    "the scheduler is allowed to select TP/PP/P/D sizes or any non-communication resource decision"
+  ]
+}
