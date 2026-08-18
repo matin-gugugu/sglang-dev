@@ -1,0 +1,364 @@
+{
+  "accepted_result_statuses": [
+    "PASS"
+  ],
+  "checkpoint_loading_permitted": false,
+  "claim_boundary": [
+    "TP、PP、PD均已完成六个已知模型的低维画像到12-bin拓扑无关消息直方图预测验证，并保留H0+DNN residual",
+    "Hfull仅用于离线teacher标签，最终预测输入不包含完整请求列表",
+    "Phase39和Phase52只验证固定并行配置下的communication-only L1/L2/L3 placement，不构成完整调度器",
+    "Phase39和Phase52使用已打开target后的repeated-engineering卷积，不能作为新的盲测",
+    "物理曲线只适用于冻结环境、primitive、模型布局、payload support和placement；不能外推所有集群",
+    "不得声称未见第七模型、跨所有流量分布、端到端延迟或线上arrival-aware调度已经得到证明"
+  ],
+  "execution_environment": "local CPU-only isolated run branch/worktree",
+  "expected_counts": {
+    "chain_rows": 3,
+    "evidence_rows": 19,
+    "frozen_claims": 12,
+    "future_scheduler_dimensions": 6,
+    "historical_documents": 2,
+    "prohibited_claims": 10,
+    "source_manifests": 19,
+    "source_results": 19
+  },
+  "future_scheduler_dimensions": [
+    "compute_time",
+    "memory_feasibility",
+    "resource_availability",
+    "queueing_and_congestion",
+    "communication_compute_overlap",
+    "constrained_L2_L3_choice_when_L1_unavailable"
+  ],
+  "gpu_required": false,
+  "network_required": false,
+  "objective": "汇总并冻结截至Phase52的TP、PP、纯PD三条实验链，生成新的统一总导引、正式证据索引、当前结论与禁止越界声明；不产生新预测、标签、物理测量或调度器结果",
+  "phase": "Phase53",
+  "physical_measurement_permitted": false,
+  "pinned_inputs": [
+    {
+      "name": "phase32f_guide",
+      "path": "experiment-results/phase32f_tp_pp_expanded_convergence_final/docs/截至目前实验结构总导引_含Phase32F状态补充.md",
+      "sha256": "057daa5e1b7bc67af65827db4a68ec5806ffa9648ecabe1501214ebef7a21e7c"
+    },
+    {
+      "name": "phase33_final_decision",
+      "path": "experiment-results/phase33d_blind_confirmation_evaluation/docs/Phase33_TP_PP最终裁定.md",
+      "sha256": "d4fc70ef3b027755992f9c22e3fe192f2a093e7c01606327a0cfc75be99c99ac"
+    },
+    {
+      "name": "phase34d_manifest",
+      "path": "experiment-results/phase34d_six_model_blind_evaluation/manifest.sha256",
+      "sha256": "eeb330a966e37da0edaba1953f86af1dd182a15cbb67dc9413b1713dbeb2bd77",
+      "verify_manifest_directory": "experiment-results/phase34d_six_model_blind_evaluation"
+    },
+    {
+      "name": "phase35_manifest",
+      "path": "experiment-results/phase35_six_model_inference_cost_integration/manifest.sha256",
+      "sha256": "1480894bdb3a3d2f9db0d078232130f36be58ec6c5f4fb8c29877b3ce67c1892",
+      "verify_manifest_directory": "experiment-results/phase35_six_model_inference_cost_integration"
+    },
+    {
+      "name": "phase36_manifest",
+      "path": "experiment-results/phase36_cross_environment_replay/manifest.sha256",
+      "sha256": "b92299bf12d884954cc17125df008cdc01735e96e0264e30ae53d343aabf9acf",
+      "verify_manifest_directory": "experiment-results/phase36_cross_environment_replay"
+    },
+    {
+      "name": "phase37_manifest",
+      "path": "experiment-results/phase37_pp_single_node_p2p_curve/manifest.sha256",
+      "sha256": "7bc478cb83d67188130c98d176a94285061e49fc9fd88f786b1295d547cd5c8c",
+      "verify_manifest_directory": "experiment-results/phase37_pp_single_node_p2p_curve"
+    },
+    {
+      "name": "phase38_manifest",
+      "path": "experiment-results/phase38_pp_physical_curve_cost_recompute/manifest.sha256",
+      "sha256": "2b72e37e1551b1e6a0c9112b7fefcf20b0fc89296e8163d476e2a5040528675d",
+      "verify_manifest_directory": "experiment-results/phase38_pp_physical_curve_cost_recompute"
+    },
+    {
+      "name": "phase39_manifest",
+      "path": "experiment-results/phase39_tp_pp_l1_l3_physical_placement_validation/manifest.sha256",
+      "sha256": "5a0a7623147e27d85e77d05de7cbdc95e7a8a5264354817255066aadad8a0233",
+      "verify_manifest_directory": "experiment-results/phase39_tp_pp_l1_l3_physical_placement_validation"
+    },
+    {
+      "name": "phase40_manifest",
+      "path": "experiment-results/phase40_pure_pd_semantics_teacher/manifest.sha256",
+      "sha256": "67d73cfd1b10069df833004627f6c1507dbd232161a40ed5e16bfb8bf64e0ef5",
+      "verify_manifest_directory": "experiment-results/phase40_pure_pd_semantics_teacher"
+    },
+    {
+      "name": "phase41_manifest",
+      "path": "experiment-results/phase41_pd_full_window_dataset/manifest.sha256",
+      "sha256": "9415ab21a476e3efdbf4d10bce1782953045724cf10f9dda49b721e9e964404b",
+      "verify_manifest_directory": "experiment-results/phase41_pd_full_window_dataset"
+    },
+    {
+      "name": "phase42_manifest",
+      "path": "experiment-results/phase42_pd_residual_training/manifest.sha256",
+      "sha256": "e4609c45d6d70e11f3972f8b2179412d2ae850035ecf32c2bbac10e6e3fe222b",
+      "verify_manifest_directory": "experiment-results/phase42_pd_residual_training"
+    },
+    {
+      "name": "phase43_manifest",
+      "path": "experiment-results/phase43_pd_blind_evaluation/manifest.sha256",
+      "sha256": "578cc412322e70f0d27f97f8de6f06aef81ca40d0de70a9ebdc9a03b212655e5",
+      "verify_manifest_directory": "experiment-results/phase43_pd_blind_evaluation"
+    },
+    {
+      "name": "phase44_manifest",
+      "path": "experiment-results/phase44_pd_expanded_protected_training/manifest.sha256",
+      "sha256": "95bd53e9301688519fe4735aaa816dee6e1d69bb2d43592f1311a6fcaf9a5cc0",
+      "verify_manifest_directory": "experiment-results/phase44_pd_expanded_protected_training"
+    },
+    {
+      "name": "phase45_manifest",
+      "path": "experiment-results/phase45_pd_fresh_blind_prediction_freeze/manifest.sha256",
+      "sha256": "f8c0d5c5c3db19020fb9c4b701443b81c911726c3a47a15be80debba6b9e0ce9",
+      "verify_manifest_directory": "experiment-results/phase45_pd_fresh_blind_prediction_freeze"
+    },
+    {
+      "name": "phase46_manifest",
+      "path": "experiment-results/phase46_pd_fresh_blind_evaluation/manifest.sha256",
+      "sha256": "574ea4052dcec84c500f0475ee1b08a02b798e7dc6b5f54988df854c4b470af7",
+      "verify_manifest_directory": "experiment-results/phase46_pd_fresh_blind_evaluation"
+    },
+    {
+      "name": "phase47_manifest",
+      "path": "experiment-results/phase47_pd_five_model_teacher_validation/manifest.sha256",
+      "sha256": "210accc8b3c94e66290d619b06255d991d310610ba8c960a1ae400b13cd95f25",
+      "verify_manifest_directory": "experiment-results/phase47_pd_five_model_teacher_validation"
+    },
+    {
+      "name": "phase48_manifest",
+      "path": "experiment-results/phase48_pd_six_model_expanded_training/manifest.sha256",
+      "sha256": "ca3bb8727fe69f32b9402b31bfce223ae7db2b200d9c1b4a31e16e18b877901b",
+      "verify_manifest_directory": "experiment-results/phase48_pd_six_model_expanded_training"
+    },
+    {
+      "name": "phase49_manifest",
+      "path": "experiment-results/phase49_pd_six_model_blind_prediction_freeze/manifest.sha256",
+      "sha256": "e1a02c3a31f54c13684ce10dfb2527e0432c9e4e73a912cc74809b088302f3da",
+      "verify_manifest_directory": "experiment-results/phase49_pd_six_model_blind_prediction_freeze"
+    },
+    {
+      "name": "phase50_manifest",
+      "path": "experiment-results/phase50_pd_six_model_blind_evaluation/manifest.sha256",
+      "sha256": "3613fb8577bc2bc16ca3592a1456f7f34f413ea9e612f4954305b0aaa2020a0c",
+      "verify_manifest_directory": "experiment-results/phase50_pd_six_model_blind_evaluation"
+    },
+    {
+      "name": "phase51_manifest",
+      "path": "experiment-results/phase51_pd_l1_l3_physical_curve_library/manifest.sha256",
+      "sha256": "ebb909c06524f314ffdaf11ea58cc2553a96439f52fa29c77b7c4f05236a0b11",
+      "verify_manifest_directory": "experiment-results/phase51_pd_l1_l3_physical_curve_library"
+    },
+    {
+      "name": "phase52_manifest",
+      "path": "experiment-results/phase52_pd_physical_cost_placement_validation/manifest.sha256",
+      "sha256": "436857ac741eb3029dbcbde99e07bcf93bba0c83324c23f361df5ffbb2b86d1e",
+      "verify_manifest_directory": "experiment-results/phase52_pd_physical_cost_placement_validation"
+    }
+  ],
+  "prediction_recomputation_permitted": false,
+  "required_workflow_ancestors": [
+    "4a67fefe98885715e20d4f061ff5ee360a87b691",
+    "17cbf7fa4a97bdb623de4f87e680a87fe96c5a26"
+  ],
+  "result_dir": "experiment-results/phase53_tp_pp_pd_conclusion_freeze",
+  "scheduler_simulation_permitted": false,
+  "schema_version": "phase53-tp-pp-pd-conclusion-freeze-contract-v1",
+  "source_policy": {
+    "canonical_history_before_phase34": "Phase32F总导引与Phase33最终裁定只用于历史结构和最终候选口径",
+    "canonical_pd_physical_cost_and_placement": "Phase51物理曲线库与Phase52 deterministic communication-only repeated-engineering结果",
+    "canonical_pd_predictor": "Phase50六模型300画像fresh-blind结果",
+    "canonical_tp_pp_physical_cost_and_placement": "Phase39冻结L1/L2/L3物理曲线与communication-only repeated-engineering结果；Phase35 proxy和Phase37/38单机PP结果保留为演进证据",
+    "canonical_tp_pp_predictor": "Phase34D六模型fresh-blind结果",
+    "immutable_prior_results": "Phase53不得修改任何既有experiment-results目录",
+    "negative_evidence_must_remain": "Phase43的12画像初始盲测DNN composite不如H0，必须作为后续Phase44-46保护扩容的动机保留"
+  },
+  "source_results": [
+    {
+      "chain": "TP+PP",
+      "directory": "phase34d_six_model_blind_evaluation",
+      "evidence_class": "fresh_blind",
+      "expected_status": "PASS",
+      "phase": "Phase34D",
+      "result_commit": "0c4058f0dcdc18f6d273f20914563b3ebbec2383",
+      "role": "six-model TP/PP predictor confirmation"
+    },
+    {
+      "chain": "TP+PP",
+      "directory": "phase35_six_model_inference_cost_integration",
+      "evidence_class": "repeated_engineering",
+      "expected_status": "PASS",
+      "phase": "Phase35",
+      "result_commit": "d7e74bea2b2f9de4f9d1cb169e25a7e487a85f7d",
+      "role": "unified replay and proxy/physical cost interface"
+    },
+    {
+      "chain": "TP+PP",
+      "directory": "phase36_cross_environment_replay",
+      "evidence_class": "reproducibility",
+      "expected_status": "PASS",
+      "phase": "Phase36",
+      "result_commit": "3b8682fcebf772fc73fc26de8c21de5d3369c62f",
+      "role": "cross-environment frozen replay and result return"
+    },
+    {
+      "chain": "PP",
+      "directory": "phase37_pp_single_node_p2p_curve",
+      "evidence_class": "physical_measurement",
+      "expected_status": "PASS_WITH_LIMITED_TOPOLOGY",
+      "phase": "Phase37",
+      "result_commit": "6e6c74d8433aa09bde6d8314993c97418630daf8",
+      "role": "first PP single-node physical P2P curve"
+    },
+    {
+      "chain": "PP",
+      "directory": "phase38_pp_physical_curve_cost_recompute",
+      "evidence_class": "repeated_engineering",
+      "expected_status": "PASS",
+      "phase": "Phase38",
+      "result_commit": "ca6d52a291585b052737e8309f6da1a33fbb382b",
+      "role": "frozen PP histogram physical-cost recomputation"
+    },
+    {
+      "chain": "TP+PP",
+      "directory": "phase39_tp_pp_l1_l3_physical_placement_validation",
+      "evidence_class": "physical_measurement_and_repeated_engineering",
+      "expected_status": "PASS_WITH_RUNTIME_AND_PLACEMENT_VARIANCE",
+      "phase": "Phase39",
+      "result_commit": "e5697c03fffb9f9cebdc6beb2bc667d0aae5173a",
+      "role": "TP/PP L1-L3 physical curves and communication-only placement"
+    },
+    {
+      "chain": "PD",
+      "directory": "phase40_pure_pd_semantics_teacher",
+      "evidence_class": "gpu_semantics_validation",
+      "expected_status": "PASS",
+      "phase": "Phase40",
+      "result_commit": "0af31cda42b72042e1fe5a6173a440878c1a50e6",
+      "role": "pure P1-D1 scheduler-faithful teacher foundation"
+    },
+    {
+      "chain": "PD",
+      "directory": "phase41_pd_full_window_dataset",
+      "evidence_class": "gpu_sentinel_and_dataset",
+      "expected_status": "PASS",
+      "phase": "Phase41",
+      "result_commit": "914f7fb53c4ff076a5fe12f7c56624502673eb1f",
+      "role": "full-window dataset and target-free pilot blind freeze"
+    },
+    {
+      "chain": "PD",
+      "directory": "phase42_pd_residual_training",
+      "evidence_class": "training_and_prediction_freeze",
+      "expected_status": "PASS",
+      "phase": "Phase42",
+      "result_commit": "88dd1a8f5a4b9452e226118ade270aa3eb6fed7e",
+      "role": "first Qwen3 residual pilot"
+    },
+    {
+      "chain": "PD",
+      "directory": "phase43_pd_blind_evaluation",
+      "evidence_class": "fresh_blind_negative",
+      "expected_status": "PASS",
+      "phase": "Phase43",
+      "result_commit": "4e627c8f72f2568111410d57f053eb82d61b1538",
+      "role": "12-profile pilot blind negative evidence"
+    },
+    {
+      "chain": "PD",
+      "directory": "phase44_pd_expanded_protected_training",
+      "evidence_class": "protected_training",
+      "expected_status": "PASS",
+      "phase": "Phase44",
+      "result_commit": "61773b3d85f9f5c4cdce1ee92b4c287b92810f06",
+      "role": "1200-profile protected development expansion"
+    },
+    {
+      "chain": "PD",
+      "directory": "phase45_pd_fresh_blind_prediction_freeze",
+      "evidence_class": "prediction_freeze",
+      "expected_status": "PASS",
+      "phase": "Phase45",
+      "result_commit": "284f4b796b57bfee5002efb52937da26d0fe748f",
+      "role": "300-profile Qwen3 fresh-blind predictions before targets"
+    },
+    {
+      "chain": "PD",
+      "directory": "phase46_pd_fresh_blind_evaluation",
+      "evidence_class": "fresh_blind",
+      "expected_status": "PASS",
+      "phase": "Phase46",
+      "result_commit": "927a693d723a91a5a248ce332899164686e31601",
+      "role": "Qwen3 protected residual confirmation"
+    },
+    {
+      "chain": "PD",
+      "directory": "phase47_pd_five_model_teacher_validation",
+      "evidence_class": "gpu_semantics_validation",
+      "expected_status": "PASS",
+      "phase": "Phase47",
+      "result_commit": "9de1816e912056a0a0b2b91d940079540ad6454a",
+      "role": "five additional model teacher validation"
+    },
+    {
+      "chain": "PD",
+      "directory": "phase48_pd_six_model_expanded_training",
+      "evidence_class": "protected_training",
+      "expected_status": "PASS",
+      "phase": "Phase48",
+      "result_commit": "f573507abd1b59fa08cdf09030d2f62048c7ee5c",
+      "role": "six-model shared residual training"
+    },
+    {
+      "chain": "PD",
+      "directory": "phase49_pd_six_model_blind_prediction_freeze",
+      "evidence_class": "prediction_freeze",
+      "expected_status": "PASS",
+      "phase": "Phase49",
+      "result_commit": "1b9227753f941cf9c790af69bf0acb7cf8bc3796",
+      "role": "six-model 300-profile fresh-blind predictions before targets"
+    },
+    {
+      "chain": "PD",
+      "directory": "phase50_pd_six_model_blind_evaluation",
+      "evidence_class": "fresh_blind",
+      "expected_status": "PASS",
+      "phase": "Phase50",
+      "result_commit": "a8ed946e3afa9d96c71a18fb1ea7aa155fdf3e57",
+      "role": "six-model pure-PD protected residual confirmation"
+    },
+    {
+      "chain": "PD",
+      "directory": "phase51_pd_l1_l3_physical_curve_library",
+      "evidence_class": "physical_measurement",
+      "expected_status": "PASS_WITH_RUNTIME_AND_PLACEMENT_VARIANCE",
+      "phase": "Phase51",
+      "result_commit": "1f69c5e9b2f53af3fb96711875c828b2061bf156",
+      "role": "six-model PD L1-L3 Mooncake/RDMA curve library"
+    },
+    {
+      "chain": "PD",
+      "directory": "phase52_pd_physical_cost_placement_validation",
+      "evidence_class": "repeated_engineering",
+      "expected_status": "PASS",
+      "phase": "Phase52",
+      "result_commit": "400157f46b6e04eabbfa52097b7489b7fa89bd2d",
+      "role": "PD physical cost and communication-only placement validation"
+    }
+  ],
+  "stop_and_block_if": [
+    "R52不是唯一workflow父提交，任一冻结manifest、历史文档或result commit身份不匹配",
+    "Phase43负结果被省略，或Phase35 proxy被误写成最终物理证据",
+    "任何既有结果、预测、Hfull标签、checkpoint或曲线需要修改或重算",
+    "执行需要GPU、网络、模型权重、raw trace、完整请求或受保护data",
+    "文档把communication-only placement越界写成完整scheduler"
+  ],
+  "teacher_or_label_recomputation_permitted": false,
+  "training_performed": false,
+  "workflow_base_result_commit": "400157f46b6e04eabbfa52097b7489b7fa89bd2d"
+}

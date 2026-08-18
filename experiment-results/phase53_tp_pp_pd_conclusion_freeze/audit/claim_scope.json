@@ -1,0 +1,120 @@
+{
+  "frozen_claims": [
+    {
+      "claim": "最终预测输入是常态历史流量的低维画像、模型结构、固定执行策略和固定并行配置，不含完整请求列表。",
+      "evidence": "Phase26-35与Phase40-50合同",
+      "id": "F01"
+    },
+    {
+      "claim": "预测目标是在fixed-draining语义下的拓扑无关12-bin消息调用数和逻辑字节直方图。",
+      "evidence": "Phase34D、Phase40/47、Phase50",
+      "id": "F02"
+    },
+    {
+      "claim": "TP/PP size与纯PD的P1/D1均是预测器输入；当前placement模块只选冻结的L1/L2/L3，不选并行度。",
+      "evidence": "Phase35、Phase39、Phase52",
+      "id": "F03"
+    },
+    {
+      "claim": "Hfull是经过代表性GPU实验验证的scheduler-faithful离线teacher；完整请求只用于离线标签。",
+      "evidence": "TP/PP teacher链与Phase40/41/47",
+      "id": "F04"
+    },
+    {
+      "claim": "TP在六个已知模型的fresh-blind集合上保留H0+DNN residual并正式优于H0。",
+      "evidence": "Phase34D",
+      "id": "F05"
+    },
+    {
+      "claim": "PP在六个已知模型的fresh-blind集合上保留H0+DNN residual并正式优于H0。",
+      "evidence": "Phase34D",
+      "id": "F06"
+    },
+    {
+      "claim": "纯PD六模型teacher的请求级、聚合级和12-bin语义已与GPU sender-side事件精确对齐。",
+      "evidence": "Phase40、Phase47",
+      "id": "F07"
+    },
+    {
+      "claim": "纯PD在300画像×六模型fresh-blind集合上，H0+DNN residual的四项主直方图指标均严格优于H0。",
+      "evidence": "Phase49/50",
+      "id": "F08"
+    },
+    {
+      "claim": "TP2/4/8和PP的L1/L2/L3物理通信曲线已在冻结环境中补全，可用于Phase34直方图的确定性代价卷积。",
+      "evidence": "Phase39",
+      "id": "F09"
+    },
+    {
+      "claim": "纯PD六模型L1/L2/L3 Mooncake/RDMA物理曲线库已完成，共18条曲线和396个knots。",
+      "evidence": "Phase51",
+      "id": "F10"
+    },
+    {
+      "claim": "在固定并行配置与冻结候选placement内，TP/PP和PD均完成了communication-only cost与placement验证。",
+      "evidence": "Phase39、Phase52",
+      "id": "F11"
+    },
+    {
+      "claim": "Phase43的小样本负结果没有被删除；Phase44-50通过扩大互斥开发/盲测和H0保护门后才形成最终正结论。",
+      "evidence": "Phase43-50",
+      "id": "F12"
+    }
+  ],
+  "future_scheduler_dimensions": [
+    "compute_time",
+    "memory_feasibility",
+    "resource_availability",
+    "queueing_and_congestion",
+    "communication_compute_overlap",
+    "constrained_L2_L3_choice_when_L1_unavailable"
+  ],
+  "governance": {
+    "curve_status": "freeze Phase39 TP/PP and Phase51 PD physical curves as environment-specific evidence",
+    "next_research_boundary": "a new scheduler protocol must add explicit system constraints without rewriting predictor evidence",
+    "predictor_status": "freeze current TP/PP/PD predictors; no retuning on opened targets"
+  },
+  "prohibited_claims": [
+    {
+      "claim": "不能宣称对未见第七模型或任意新模型泛化。",
+      "id": "N01"
+    },
+    {
+      "claim": "不能宣称覆盖所有流量分布、所有policy或任意线上工作负载。",
+      "id": "N02"
+    },
+    {
+      "claim": "12-bin卷积不能恢复bin内每条消息的精确物理代价。",
+      "id": "N03"
+    },
+    {
+      "claim": "不能把通信代价写成端到端请求延迟或吞吐收益。",
+      "id": "N04"
+    },
+    {
+      "claim": "当前placement没有处理计算时间和显存可行性。",
+      "id": "N05"
+    },
+    {
+      "claim": "当前placement没有处理资源空闲、排队、拥塞或通信计算重叠。",
+      "id": "N06"
+    },
+    {
+      "claim": "fixed-draining结果不证明online arrival-aware调度。",
+      "id": "N07"
+    },
+    {
+      "claim": "Phase39/52不是完整scheduler验证，也不是线上收益实验。",
+      "id": "N08"
+    },
+    {
+      "claim": "纯PD结果不包含P或D内部TP/PP，也不证明混合并行PD。",
+      "id": "N09"
+    },
+    {
+      "claim": "调度器尚不能选择TP/PP size、P/D实例数或扩缩容策略。",
+      "id": "N10"
+    }
+  ],
+  "schema_version": "phase53-claim-scope-v1"
+}
