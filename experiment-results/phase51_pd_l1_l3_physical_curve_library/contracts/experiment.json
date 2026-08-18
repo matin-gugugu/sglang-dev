@@ -1,0 +1,211 @@
+{
+  "accepted_result_statuses": [
+    "PASS",
+    "PASS_WITH_RUNTIME_VARIANCE",
+    "PASS_WITH_PLACEMENT_VARIANCE",
+    "PASS_WITH_RUNTIME_AND_PLACEMENT_VARIANCE"
+  ],
+  "checkpoint_loading_permitted": false,
+  "claim_boundary": [
+    "Phase51 establishes physical Mooncake/RDMA communication curves only for the frozen endpoint placements, six descriptor layouts and measured payload support",
+    "Phase51 does not evaluate H0/H0+DNN cost accuracy or placement; Phase52 will perform deterministic convolution without retraining",
+    "L1/L2/L3 labels are topology metadata, not speed classes; measured ordering is allowed to differ",
+    "the frozen curves assume each logical chunk maps to one contiguous page-index run per layer; arbitrary physical page fragmentation is not claimed",
+    "the curves exclude model compute, memory feasibility, queueing, resource availability, congestion from other jobs, bootstrap/control metadata and communication-compute overlap"
+  ],
+  "container_contract": {
+    "formal_network_download_permitted": false,
+    "image": "lmsysorg/sglang:v0.5.15",
+    "repo_python_first": true,
+    "required_gpu_class": "CUDA GPU with GPUDirect RDMA; B200 environment already proven by Phase40/47 is acceptable",
+    "required_runtime_modules": [
+      "torch",
+      "mooncake.engine",
+      "sglang.srt.distributed.device_communicators.mooncake_transfer_engine"
+    ]
+  },
+  "execution_model": "external pre-measurement topology inventory; 36 auditable two-rank GPU measurement shards; deterministic CPU aggregation into 18 model-conditioned physical curves",
+  "expected_curve_knots": 396,
+  "expected_curves": 18,
+  "expected_measurements": 36,
+  "measurement_contract": {
+    "clock": "sender-side time.perf_counter_ns around synchronous production batch_transfer_sync; CUDA synchronized before and after the timed call",
+    "cross_replica_relative_spread_diagnostic_threshold": 0.25,
+    "curve_replica_policy": "median across repeats per direction; maximum across directions; then maximum across two frozen placement replicas; never select the faster direction or replica",
+    "data_validation": "outside timed intervals, verify every byte in the transferred payload on the receiver GPU for both directions and every payload knot",
+    "extra_repeats_per_round": 2,
+    "interpolation": "piecewise linear over log2(payload_bytes) using unsmoothed physical knots; no extrapolation claim outside each model's measured payload support",
+    "maximum_independent_repeats": 9,
+    "minimum_independent_repeats": 5,
+    "raw_storage": "all per-iteration records remain in Git-external JSONL; Git stores only compact knots, audits, hashes and variance diagnostics",
+    "repeat_median_cv_threshold": 0.15,
+    "target_bytes_per_timed_block": 2147483648,
+    "timed_iteration_rule": "clip(floor(2GiB/payload_bytes), 5, 100); warmup=clip(floor(timed/10),2,5)",
+    "timed_iterations_max": 100,
+    "timed_iterations_min": 5,
+    "warmup_iterations_max": 5,
+    "warmup_iterations_min": 2
+  },
+  "minimum_placement_replicas_per_model_topology": 2,
+  "model_layout_contract": {
+    "expected_deepseek_mla_knots_per_curve": 12,
+    "expected_non_mla_knots_per_curve": 24,
+    "grid_rule": "retain page counts <= 4096/page_size_tokens; payload_bytes = page_count * kv_bytes_per_page",
+    "maximum_chunk_tokens": 4096,
+    "models": 6,
+    "page_count_grid": [
+      1,
+      2,
+      3,
+      4,
+      6,
+      8,
+      12,
+      16,
+      24,
+      32,
+      48,
+      64,
+      96,
+      128,
+      192,
+      256,
+      384,
+      512,
+      768,
+      1024,
+      1536,
+      2048,
+      3072,
+      4096
+    ],
+    "source": "Phase48 six-model structure contract backed by Phase40/41 Qwen and Phase47 five-model GPU teacher validation"
+  },
+  "model_weights_required": false,
+  "objective": "在Phase50六模型pure-PD消息直方图fresh-blind闭环后，使用SGLang生产MooncakeTransferEngine的RDMA batch-transfer原语，实测六模型P1-D1逻辑KV chunk在L1/L2/L3上的连续物理通信代价曲线库",
+  "phase": "Phase51",
+  "phase52_cost_convolution_permitted": false,
+  "pinned_inputs": [
+    {
+      "name": "phase50_manifest",
+      "path": "experiment-results/phase50_pd_six_model_blind_evaluation/manifest.sha256",
+      "sha256": "3613fb8577bc2bc16ca3592a1456f7f34f413ea9e612f4954305b0aaa2020a0c",
+      "verify_manifest_directory": "experiment-results/phase50_pd_six_model_blind_evaluation"
+    },
+    {
+      "name": "phase50_summary",
+      "path": "experiment-results/phase50_pd_six_model_blind_evaluation/summary.json",
+      "sha256": "65b2b8537e712973538efd983b902b60a6d73c613b4cd97188a2ee1da73aa585"
+    },
+    {
+      "name": "phase47_manifest",
+      "path": "experiment-results/phase47_pd_five_model_teacher_validation/manifest.sha256",
+      "sha256": "210accc8b3c94e66290d619b06255d991d310610ba8c960a1ae400b13cd95f25",
+      "verify_manifest_directory": "experiment-results/phase47_pd_five_model_teacher_validation"
+    },
+    {
+      "name": "phase47_models",
+      "path": "experiment-results/phase47_pd_five_model_teacher_validation/contracts/models.json",
+      "sha256": "6217a25d4795bf5c6a4f9c593e2d00a884da4a9edcf0ecf10bcc1f625fd06ff0"
+    },
+    {
+      "name": "phase48_six_model_layouts",
+      "path": "workflows/patterndemand/phase48_pd_six_model_expanded_training/models.json",
+      "sha256": "89d0ffa212f4832d24bc413334505c813f3d240b5a6e9e5d377ba59729fa6687"
+    },
+    {
+      "name": "phase39_manifest",
+      "path": "experiment-results/phase39_tp_pp_l1_l3_physical_placement_validation/manifest.sha256",
+      "sha256": "5a0a7623147e27d85e77d05de7cbdc95e7a8a5264354817255066aadad8a0233",
+      "verify_manifest_directory": "experiment-results/phase39_tp_pp_l1_l3_physical_placement_validation"
+    },
+    {
+      "name": "phase39_summary",
+      "path": "experiment-results/phase39_tp_pp_l1_l3_physical_placement_validation/summary.json",
+      "sha256": "8e973f01261e34f2cd2014aaf671c87a33a5e0dd71f70309c189b3bbda3a6a1e"
+    },
+    {
+      "name": "sglang_mooncake_transfer_engine",
+      "path": "python/sglang/srt/distributed/device_communicators/mooncake_transfer_engine.py",
+      "sha256": "6b3b67ca5e65fdd78f592b43b24717014ddd4bcf464add4fb414cc89975f7030"
+    },
+    {
+      "name": "sglang_mooncake_conn",
+      "path": "python/sglang/srt/disaggregation/mooncake/conn.py",
+      "sha256": "9106dfc8deb91662bdbac850f41612104a597b7f6a5cd15c8eb7ca17a20c8a0d"
+    },
+    {
+      "name": "sglang_environment_contract",
+      "path": "python/sglang/srt/environ.py",
+      "sha256": "0f64441202e3771570133297e491df8389749701131e9cc03d419c4bfebb5540"
+    }
+  ],
+  "prediction_or_label_recomputation_permitted": false,
+  "research_scope": {
+    "decode_parallelism": {
+      "pp": 1,
+      "tp": 1
+    },
+    "not_in_scope": [
+      "TP/PP inside P or D",
+      "training",
+      "inference",
+      "model loading",
+      "histogram prediction",
+      "cost convolution",
+      "placement decision",
+      "compute",
+      "memory feasibility",
+      "queueing",
+      "availability",
+      "online arrivals"
+    ],
+    "prefill_parallelism": {
+      "pp": 1,
+      "tp": 1
+    },
+    "scheduler_decision_scope": "none in Phase51; Phase52 may compare communication-only placement",
+    "target_channel": "P_to_D_KV_only"
+  },
+  "result_dir": "experiment-results/phase51_pd_l1_l3_physical_curve_library",
+  "schema_version": "phase51-pd-l1-l3-physical-curve-contract-v1",
+  "stop_and_block_if": [
+    "the topology plan is not frozen before raw measurement or derives topology labels from speed",
+    "any of six model x three topology x two replica measurements is unavailable",
+    "the production MooncakeTransferEngine batch transfer, RDMA or dma-buf registration is unavailable",
+    "execution falls back to TCP, MNNVL, intranode NVLink transport, staging or a custom memory pool",
+    "raw samples would enter Git or any existing protected raw/model/cache/PID asset would be touched",
+    "pinned inputs/source, W51 ancestry, model descriptors, payload grid, direction policy or minimum repeats differ",
+    "running requires model weights, inference, training, a checkpoint, Phase50 prediction recomputation or Phase52 placement analysis"
+  ],
+  "topology_classification_policy": "host/rack/fabric identity and endpoint membership must be frozen before the first transfer record; labels may not be inferred from measured latency, bandwidth or benchmark output",
+  "topology_definitions": {
+    "L1": "one host, two distinct GPUs; Mooncake protocol remains RDMA and forced TCP/MNNVL/intranode-NVLink paths remain disabled",
+    "L2": "two distinct hosts in the same rack and network domain, one GPU endpoint per host",
+    "L3": "two distinct hosts in different racks but the same declared RDMA fabric/network domain, one GPU endpoint per host"
+  },
+  "training_performed": false,
+  "transport_contract": {
+    "custom_memory_pool": false,
+    "descriptor_policy": "match MooncakeKVManager._send_kvcache_generic for contiguous P1-D1 page indices: MHA/GQA uses 2*num_layers K/V descriptors; MLA uses num_layers descriptors; one batch_transfer_sync call per logical chunk",
+    "direction_policy": "measure rank0_to_rank1 and rank1_to_rank0; per-replica knot uses the slower direction",
+    "excluded": [
+      "bootstrap/control metadata",
+      "aux payload",
+      "state payload",
+      "receiver duplicate",
+      "NIC packets",
+      "transport headers",
+      "model compute",
+      "allocation wait"
+    ],
+    "forced_intranode_nvlink": false,
+    "forced_mnnvl": false,
+    "forced_tcp": false,
+    "mooncake_protocol": "rdma",
+    "production_wrapper": "sglang.srt.distributed.device_communicators.mooncake_transfer_engine.MooncakeTransferEngine.batch_transfer_sync",
+    "rdma_gpu_memory_registration": "dma-buf via WITH_NVIDIA_PEERMEM=0",
+    "staging_buffer": false
+  },
+  "workflow_parent_result_commit": "a8ed946e3afa9d96c71a18fb1ea7aa155fdf3e57"
+}
