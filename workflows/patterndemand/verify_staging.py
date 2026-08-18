@@ -30,6 +30,7 @@ PHASES = {
     "phase50": "experiment-results/phase50_pd_six_model_blind_evaluation/",
     "phase51": "experiment-results/phase51_pd_l1_l3_physical_curve_library/",
     "phase52": "experiment-results/phase52_pd_physical_cost_placement_validation/",
+    "phase53": "experiment-results/phase53_tp_pp_pd_conclusion_freeze/",
 }
 
 
