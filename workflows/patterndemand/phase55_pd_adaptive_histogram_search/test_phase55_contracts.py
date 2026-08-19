@@ -10,6 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from run import refine_candidates, seed_candidates, write_csv
+from model_loader import read_csv
 from preflight import run_checks
 from common import load_json
 
@@ -34,6 +35,7 @@ class Phase55Contracts(unittest.TestCase):
             path = Path(directory) / "trace.csv"
             write_csv(path, [{"stage": "A", "candidate_id": "a"}, {"stage": "B", "candidate_id": "b", "adaptation_policy": "tail_focus"}])
             self.assertEqual(path.read_text(encoding="utf-8").splitlines()[0], "stage,candidate_id,adaptation_policy")
+            self.assertEqual(read_csv(path)[1]["adaptation_policy"], "tail_focus")
 
 
 if __name__ == "__main__": unittest.main()

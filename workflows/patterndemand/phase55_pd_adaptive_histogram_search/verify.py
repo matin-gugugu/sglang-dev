@@ -12,13 +12,13 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE)); sys.path.insert(0, str(HERE.parent)); sys.path.insert(0, str(HERE.parent / "phase54_pd_histogram_accuracy_refinement"))
 
 from common import load_json, repo_root, verify_result_manifest  # noqa: E402
-from model_loader import read_csv_gz  # noqa: E402
+from model_loader import read_csv, read_csv_gz  # noqa: E402
 
 
 def verify(output: Path) -> dict:
     manifest = verify_result_manifest(output); summary = load_json(output / "summary.json"); expected = load_json(HERE / "expected_outputs.json")
     required = set(expected["required"]); actual = {str(path.relative_to(output)) for path in output.rglob("*") if path.is_file()}
-    trace = read_csv_gz(output / "analysis/search_trace.csv"); candidates = read_csv_gz(output / "analysis/oof_candidate_metrics.csv"); predictions = read_csv_gz(output / "predictions/development_validation_predictions.csv.gz")
+    trace = read_csv(output / "analysis/search_trace.csv"); candidates = read_csv(output / "analysis/oof_candidate_metrics.csv"); predictions = read_csv_gz(output / "predictions/development_validation_predictions.csv.gz")
     import gzip
     with gzip.open(output / "checkpoints/pd_adaptive_histogram_search.json.gz", "rt", encoding="utf-8") as source:
         checkpoint = json.load(source)
