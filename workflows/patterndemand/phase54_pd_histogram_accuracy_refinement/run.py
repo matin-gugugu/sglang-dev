@@ -20,7 +20,7 @@ sys.path.insert(0, str(HERE)); sys.path.insert(0, str(HERE.parent))
 from common import environment_record, load_json, refresh_manifest, repo_root, utc_now, write_json  # noqa: E402
 from contracts import validate_rows  # noqa: E402
 from metrics import SCORE_KEYS, compare_to_h0, metric_bundle, target_gate  # noqa: E402
-from model import decode_histograms, encode_histograms, fit_model, fit_transform, histogram_arrays, model_to_json, predict_histograms, read_csv_gz, write_csv_gz, write_json_gz  # noqa: E402
+from model import decode_histograms, encode_histograms, fit_model, fit_transform, histogram_arrays, model_to_json, predict_histograms, read_csv_gz, transform_inputs, transform_targets, write_csv_gz, write_json_gz  # noqa: E402
 import preflight as phase54_preflight  # noqa: E402
 
 
