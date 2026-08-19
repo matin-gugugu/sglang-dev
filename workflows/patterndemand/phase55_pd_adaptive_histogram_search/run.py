@@ -40,7 +40,9 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     if not rows:
         raise ValueError(f"empty CSV: {path}")
     path.parent.mkdir(parents=True, exist_ok=True)
-    fields = list(rows[0])
+    # Stage A and Stage B traces intentionally have different audit fields;
+    # preserve a deterministic union rather than rejecting the heterogeneous trace.
+    fields = list(dict.fromkeys(key for row in rows for key in row))
     with path.open("w", newline="", encoding="utf-8") as output:
         writer = csv.DictWriter(output, fieldnames=fields, lineterminator="\n"); writer.writeheader(); writer.writerows(rows)
 
