@@ -1,0 +1,84 @@
+{
+  "schema_version": "phase54-pd-histogram-accuracy-refinement-contract-v1",
+  "phase": "Phase54",
+  "objective": "在不读取Phase50盲测标签的前提下，使用Phase48已提交的开发集训练样本，比较模型专属残差头与直方图形状加权损失，目标是把pure-PD六模型的calls和logical-bytes 12-bin histogram WAPE压到10%正式目标附近，并为后续一次性盲测冻结候选模型。",
+  "workflow_parent_result_commit": "08f71defbeac2e1adc2c4eff66af83933ab83499",
+  "result_dir": "experiment-results/phase54_pd_histogram_accuracy_refinement",
+  "execution": {
+    "environment": "local CPU",
+    "gpu_permitted": false,
+    "network_permitted": false,
+    "raw_access_permitted": false,
+    "phase50_blind_access_permitted": false,
+    "training_permitted": true,
+    "complete_request_access_permitted": false,
+    "raw_mutation_permitted": false
+  },
+  "dataset_contract": {
+    "source_result_dir": "experiment-results/phase48_pd_six_model_expanded_training",
+    "profiles": 1200,
+    "train_profiles": 960,
+    "validation_profiles": 240,
+    "models": 6,
+    "example_rows": 7200,
+    "train_rows": 5760,
+    "validation_rows": 1440,
+    "group_isolation": "six model rows for one profile stay in the same split and OOF fold",
+    "complete_requests": "not read by Phase54; only the compact Phase48 examples with low-dimensional features and H0/Hfull histograms are read",
+    "phase50_blind": "not read, not used for candidate selection, and not used for validation"
+  },
+  "representation_contract": {
+    "input": "Phase48 target-free low-dimensional profile features, model structure features, fixed pure-PD P1-D1 execution features, and H0 histogram",
+    "output": "nonnegative topology-independent 12-bin calls and logical bytes per 1000 requests",
+    "total_and_shape": "encoded output contains log total plus 12-bin log-share for calls and bytes; histogram reconstruction preserves nonnegativity",
+    "h0_protection": "final prediction is H0 plus a bounded residual controlled by one alpha per model",
+    "shape_priority": "candidate loss weights share logits more than totals because Phase50 total WAPE is already low while histogram WAPE is high",
+    "model_conditioning": "shared candidates retain structure features; per-model candidates train a separate small residual head for each of the six known models"
+  },
+  "predictor_contract": {
+    "oof_folds": 4,
+    "selection_scope": "Phase48 expanded_train profiles only; profile groups never split across folds",
+    "alpha_grid": [0.25, 0.5, 0.75, 1.0],
+    "ensemble_seeds": [54001, 54002, 54003],
+    "candidate_score": "mean of absolute calls histogram WAPE, bytes histogram WAPE, calls TV, and normalized log-payload EMD; H0-protected candidates are preferred",
+    "candidate_grid": [
+      {"candidate_id": "p54_shared_uniform_w64_d2", "scope": "shared", "loss_mode": "uniform", "feature_mode": "fixed_draining_causal", "width": 64, "depth": 2, "learning_rate": 0.004, "weight_decay": 0.002, "max_epochs": 1100, "patience": 140},
+      {"candidate_id": "p54_shared_shape_w64_d2", "scope": "shared", "loss_mode": "shape_focus", "feature_mode": "fixed_draining_causal", "width": 64, "depth": 2, "learning_rate": 0.004, "weight_decay": 0.002, "max_epochs": 1100, "patience": 140},
+      {"candidate_id": "p54_per_model_shape_w64_d2", "scope": "per_model", "loss_mode": "shape_focus", "feature_mode": "fixed_draining_causal", "width": 64, "depth": 2, "learning_rate": 0.004, "weight_decay": 0.002, "max_epochs": 1100, "patience": 140},
+      {"candidate_id": "p54_per_model_tail_w96_d2", "scope": "per_model", "loss_mode": "tail_shape_focus", "feature_mode": "full_target_free", "width": 96, "depth": 2, "learning_rate": 0.003, "weight_decay": 0.002, "max_epochs": 1300, "patience": 160}
+    ]
+  },
+  "acceptance_gate": {
+    "oof_protection": "overall and every model strictly beat H0 on calls WAPE, bytes WAPE, calls TV and normalized payload EMD",
+    "development_formal_target": "overall calls histogram WAPE <= 0.10 and bytes histogram WAPE <= 0.10",
+    "development_model_guard": "each of six models has both histogram WAPE <= 0.15",
+    "development_segment_guard": "each BurstGPT segment has both histogram WAPE <= 0.15 and composite ratio < 1",
+    "total_guard": "overall calls total WAPE <= 0.05 and bytes total WAPE <= 0.05",
+    "phase55_permission": "only a candidate satisfying OOF protection and the complete development gate may be frozen for a later blind evaluation; Phase54 itself is not blind evidence",
+    "negative_policy": "integrity PASS with target_met=false is a valid development result but blocks Phase55"
+  },
+  "pinned_inputs": [
+    {"name": "phase48_manifest", "path": "experiment-results/phase48_pd_six_model_expanded_training/manifest.sha256", "sha256": "ca3bb8727fe69f32b9402b31bfce223ae7db2b200d9c1b4a31e16e18b877901b", "verify_manifest_directory": "experiment-results/phase48_pd_six_model_expanded_training"},
+    {"name": "phase48_summary", "path": "experiment-results/phase48_pd_six_model_expanded_training/summary.json", "sha256": "e9cdd860bbdbb8baca3c085e5e7d2bbc5d279fb5332852cb516523972f253e04"},
+    {"name": "phase48_examples", "path": "experiment-results/phase48_pd_six_model_expanded_training/dataset/pd_six_model_h0_residual_examples.csv.gz", "sha256": "ae8ccbb9206e3c2e7cb6e4bafc6c60fcc99c5f11d203b91ad34ea788cbcd8bcd"},
+    {"name": "phase48_targets", "path": "experiment-results/phase48_pd_six_model_expanded_training/dataset/pd_six_model_hfull_targets.csv.gz", "sha256": "b92d41eb0da6a753cb0fdbe28ec74b4b65a076a8e39c0e1cbf9c9fe7dc3f9b78"},
+    {"name": "phase48_profiles", "path": "experiment-results/phase48_pd_six_model_expanded_training/profiles/expanded_lowdim_profiles.csv.gz", "sha256": "9f003c062041de1ac625ff759a34ba5208fdeae29e242184f701accb8900cef9"},
+    {"name": "canonical_metrics", "path": "workflows/patterndemand/phase42_pd_residual_training/metrics.py", "sha256": "79784decb14c2931a4d96fcd30a5afaf4c2f7e29ead357b520e0b11ddebd583f"}
+  ],
+  "stop_and_block_if": [
+    "HEAD is not exact W54",
+    "any Phase48 pin or result manifest differs",
+    "Phase50 blind files or labels are opened",
+    "raw or complete request rows are read or written",
+    "GPU, network, model download, or original model weights are accessed",
+    "validation profiles influence candidate, alpha, or epoch selection",
+    "a result is overwritten"
+  ],
+  "claim_boundary": [
+    "development-only evidence on 1200 Phase48 profiles and six known model structures under pure P1-D1",
+    "not fresh blind evidence and not a Phase50 re-evaluation",
+    "not unseen-model or Mooncake generalization",
+    "not physical communication time, placement, latency, queueing, or online scheduling",
+    "Phase54 target_met only authorizes a separately specified blind-freeze/evaluation workflow"
+  ]
+}
