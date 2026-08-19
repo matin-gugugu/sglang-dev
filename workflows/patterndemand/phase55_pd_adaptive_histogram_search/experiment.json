@@ -1,0 +1,85 @@
+{
+  "schema_version": "phase55-pd-adaptive-histogram-search-contract-v1",
+  "phase": "Phase55",
+  "objective": "在Phase54未达到绝对10%目标后，使用固定预算的OOF自适应搜索自动探索pure-PD直方图预测候选；搜索可以依据OOF误差和OOF bin bias生成下一轮候选，但不得读取Phase50 blind，不得反复打开validation调参。",
+  "workflow_parent_result_commit": "5365b3c43bcc78e0377ae6bc777e492414271670",
+  "result_dir": "experiment-results/phase55_pd_adaptive_histogram_search",
+  "execution": {
+    "environment": "local CPU",
+    "gpu_permitted": false,
+    "network_permitted": false,
+    "raw_access_permitted": false,
+    "phase50_blind_access_permitted": false,
+    "training_permitted": true,
+    "complete_request_access_permitted": false,
+    "raw_mutation_permitted": false
+  },
+  "dataset_contract": {
+    "source_result_dir": "experiment-results/phase48_pd_six_model_expanded_training",
+    "profiles": 1200,
+    "train_profiles": 960,
+    "validation_profiles": 240,
+    "models": 6,
+    "example_rows": 7200,
+    "train_rows": 5760,
+    "validation_rows": 1440,
+    "group_isolation": "six model rows for one profile stay in the same split and OOF fold",
+    "phase50_blind": "not read, not used for candidate generation, and not used for selection",
+    "complete_requests": "not read; only compact Phase48 feature/H0/Hfull rows are used"
+  },
+  "search_contract": {
+    "stage_a_seed_candidates": 10,
+    "stage_a_max_epochs": 450,
+    "stage_a_top_k": 3,
+    "stage_b_variants_per_top_candidate": 2,
+    "max_total_candidates": 16,
+    "oof_folds": 4,
+    "adaptation_signal": "only OOF absolute score, H0 ratios, model/segment gates and 12-bin signed bias; validation is not opened until all candidates and alpha values are frozen",
+    "stage_b_policy": "for each OOF top candidate, create one deeper/wider variant and one shape/tail variant; prefer per-model scope when OOF model heterogeneity is high",
+    "candidate_selection": "first prefer complete OOF target/protection, then lower absolute four-metric score, then lower calls+bytes histogram WAPE",
+    "alpha_grid": [0.25, 0.5, 0.75, 1.0],
+    "ensemble_seeds": [55001, 55002, 55003]
+  },
+  "predictor_contract": {
+    "implementation": "Phase54 deterministic NumPy predictor code pinned by SHA; H0 plus bounded residual; shared or per-model residual heads",
+    "candidate_families": ["shared_uniform", "shared_shape", "per_model_shape", "per_model_tail"],
+    "feature_modes": ["fixed_draining_causal", "full_target_free"],
+    "target_representation": "encoded log-total plus 12-bin log-share for calls and logical bytes",
+    "h0_protection": "one alpha per model, selected only from OOF",
+    "validation_rule": "after search and alpha/epoch freeze, fit selected candidate on all 960 train profiles and open the 240 validation profiles exactly once"
+  },
+  "acceptance_gate": {
+    "oof_protection": "overall and every model strictly beat H0 on calls WAPE, bytes WAPE, calls TV and normalized payload EMD",
+    "development_formal_target": "overall calls histogram WAPE <= 0.10 and bytes histogram WAPE <= 0.10",
+    "development_model_guard": "each of six models has both histogram WAPE <= 0.15",
+    "development_segment_guard": "each BurstGPT segment has both histogram WAPE <= 0.15 and composite ratio < 1",
+    "total_guard": "overall calls total WAPE <= 0.05 and bytes total WAPE <= 0.05",
+    "phase56_permission": "only a complete OOF-protected and validation-passing candidate may authorize a separate blind-freeze/evaluation workflow",
+    "negative_policy": "integrity PASS with target_met=false is valid evidence that the fixed search budget did not reach the contract; it blocks Phase56"
+  },
+  "pinned_inputs": [
+    {"name": "phase48_manifest", "path": "experiment-results/phase48_pd_six_model_expanded_training/manifest.sha256", "sha256": "ca3bb8727fe69f32b9402b31bfce223ae7db2b200d9c1b4a31e16e18b877901b", "verify_manifest_directory": "experiment-results/phase48_pd_six_model_expanded_training"},
+    {"name": "phase48_summary", "path": "experiment-results/phase48_pd_six_model_expanded_training/summary.json", "sha256": "e9cdd860bbdbb8baca3c085e5e7d2bbc5d279fb5332852cb516523972f253e04"},
+    {"name": "phase48_examples", "path": "experiment-results/phase48_pd_six_model_expanded_training/dataset/pd_six_model_h0_residual_examples.csv.gz", "sha256": "ae8ccbb9206e3c2e7cb6e4bafc6c60fcc99c5f11d203b91ad34ea788cbcd8bcd"},
+    {"name": "phase48_targets", "path": "experiment-results/phase48_pd_six_model_expanded_training/dataset/pd_six_model_hfull_targets.csv.gz", "sha256": "b92d41eb0da6a753cb0fdbe28ec74b4b65a076a8e39c0e1cbf9c9fe7dc3f9b78"},
+    {"name": "phase54_run", "path": "workflows/patterndemand/phase54_pd_histogram_accuracy_refinement/run.py", "sha256": "29666809c59c978a7176047f1666bc318fd5b95fadf836f0f5a38877e872f8ec"},
+    {"name": "phase54_model", "path": "workflows/patterndemand/phase54_pd_histogram_accuracy_refinement/model.py", "sha256": "b099ae9b4e04d3ee09e926ccac667319a03d01456ba64d932d3b72a4b1edaf74"},
+    {"name": "phase54_metrics", "path": "workflows/patterndemand/phase54_pd_histogram_accuracy_refinement/metrics.py", "sha256": "a48297c4a7e534fde95eaa36b08493d66a16ac8871521cb160d27c4e8634d88d"}
+  ],
+  "stop_and_block_if": [
+    "HEAD is not exact W55",
+    "any pinned Phase48 or Phase54 source differs",
+    "Phase50 blind files or labels are opened",
+    "validation profiles are used to generate or rank new candidates",
+    "candidate budget exceeds 16",
+    "raw or complete request rows are read or written",
+    "GPU, network, model download, or original model weights are accessed",
+    "a result is overwritten"
+  ],
+  "claim_boundary": [
+    "development-only evidence on 1200 Phase48 profiles and six known model structures under pure P1-D1",
+    "not fresh blind evidence and not a Phase50 re-evaluation",
+    "not unseen-model or Mooncake generalization",
+    "not physical communication time, placement, latency, queueing, or online scheduling"
+  ]
+}
