@@ -195,9 +195,7 @@ def seed_candidates(round_index: int, signal: dict[str, Any]) -> list[dict[str, 
     focus = "tail_shape_focus" if signal.get("tail_abs_bias", 0.0) >= signal.get("head_abs_bias", 0.0) else "shape_focus"
     mlp = [
         ("model", "model", "none", 0.0, focus, "full_target_free", 96, 2, 0.004),
-        ("model_segment", "model_segment", "head_residual", 0.5, focus, "full_target_free", 96, 2, 0.004),
-        ("model_segment", "model_segment", "head_residual", 0.75, "tail_shape_focus", "fixed_draining_causal", 128, 2, 0.003),
-        ("segment", "model_segment", "head_residual", 0.5, "shape_focus", "full_target_free", 128, 2, 0.003),
+        ("model", "model", "head_residual", 0.5, focus, "fixed_draining_causal", 128, 2, 0.003),
     ]
     ridge = [
         ("global", "causal_with_h0_shape", "residual", 0.1, False, False),
@@ -206,16 +204,10 @@ def seed_candidates(round_index: int, signal: dict[str, Any]) -> list[dict[str, 
         ("model_segment", "causal_structural_interactions", "residual", 10.0, True, False),
         ("model_segment", "causal_structural_interactions", "direct_shape", 10.0, True, True),
         ("segment", "causal_structural_interactions", "residual", 100.0, True, True),
-        ("model", "causal_structural_interactions", "residual", 10.0, False, True),
-        ("global", "causal_structural_interactions", "direct_shape", 100.0, True, True),
-        ("segment", "causal_with_h0_shape", "residual", 1.0, True, False),
-        ("model", "causal_with_h0_shape", "direct_shape", 10.0, True, True),
-        ("model_segment", "causal_with_h0_shape", "direct_shape", 1.0, False, False),
-        ("global", "causal_structural_interactions", "residual", 10.0, True, False),
     ]
     output: list[dict[str, Any]] = []
     for index, (head, alpha_scope, calibration, strength, loss, feature, width, depth, lr) in enumerate(mlp):
-        output.append({"family": "phase56_mlp", "candidate_id": f"p57_{tag}_mlp_{index:02d}", "head_scope": head, "alpha_scope": alpha_scope, "calibration_mode": calibration, "calibration_strength": strength, "loss_mode": loss, "feature_mode": feature, "width": width, "depth": depth, "learning_rate": lr, "weight_decay": 0.002, "max_epochs": 520, "patience": 90, "stage": "seed", "round": round_index})
+        output.append({"family": "phase56_mlp", "candidate_id": f"p57_{tag}_mlp_{index:02d}", "head_scope": head, "alpha_scope": alpha_scope, "calibration_mode": calibration, "calibration_strength": strength, "loss_mode": loss, "feature_mode": feature, "width": width, "depth": depth, "learning_rate": lr, "weight_decay": 0.002, "max_epochs": 300, "patience": 60, "stage": "seed", "round": round_index})
     for index, (scope, feature, representation, l2, calibration, support) in enumerate(ridge):
         output.append({"family": "ridge", "candidate_id": f"p57_{tag}_ridge_{index:02d}", "scope": scope, "feature_mode": feature, "representation": representation, "l2": l2, "calibration": calibration, "calibration_strength": 0.5, "support_aware": support, "support_threshold": 0.08, "stage": "seed", "round": round_index})
     return output
@@ -223,13 +215,13 @@ def seed_candidates(round_index: int, signal: dict[str, Any]) -> list[dict[str, 
 
 def adaptive_candidates(top: list[dict[str, Any]], round_index: int, signal: dict[str, Any]) -> list[dict[str, Any]]:
     output: list[dict[str, Any]] = []
-    for parent_index, parent in enumerate(top[:4]):
+    for parent_index, parent in enumerate(top[:2]):
         cfg = copy.deepcopy(parent["config"]); cfg["stage"] = "adaptive"; cfg["round"] = round_index
         if cfg["family"] == "phase56_mlp":
             cfg["candidate_id"] = f"p57_r{round_index}_from_{parent_index}_mlp_adapt"
-            cfg["head_scope"] = "model_segment"; cfg["alpha_scope"] = "model_segment"
+            cfg["head_scope"] = "model"; cfg["alpha_scope"] = "model"
             cfg["loss_mode"] = "tail_shape_focus" if signal.get("tail_abs_bias", 0.0) >= signal.get("head_abs_bias", 0.0) else "shape_focus"
-            cfg["width"] = min(192, int(cfg["width"]) + 32); cfg["depth"] = min(3, int(cfg["depth"]) + 1); cfg["max_epochs"] = 760; cfg["patience"] = 140
+            cfg["width"] = min(160, int(cfg["width"]) + 16); cfg["depth"] = min(2, int(cfg["depth"])); cfg["max_epochs"] = 360; cfg["patience"] = 70
         elif cfg["family"] == "ridge":
             cfg["candidate_id"] = f"p57_r{round_index}_from_{parent_index}_ridge_adapt"
             cfg["scope"] = "model_segment"; cfg["feature_mode"] = "causal_structural_interactions"; cfg["l2"] = float(cfg["l2"]) * (10.0 if parent_index % 2 else 0.1)
@@ -332,11 +324,15 @@ def run(expected: str, output: Path) -> dict[str, Any]:
         seeds = seed_candidates(round_index, signal); seed_results: list[dict[str, Any]] = []
         for cfg in seeds:
             result = evaluate_candidate(train, cfg, folds, contract, carry); seed_results.append(result); config_map[cfg["candidate_id"]] = cfg; trace.append({"round": round_index, "stage": "seed", "candidate_id": cfg["candidate_id"], "family": cfg["family"], "oof_target": result["oof_target"], "oof_protection": result["oof_protection"], "oof_score": score(result["overall"]["h0_plus_dnn_refined"]), "calls_histogram_wape": result["overall"]["h0_plus_dnn_refined"]["calls_histogram_wape"], "bytes_histogram_wape": result["overall"]["h0_plus_dnn_refined"]["bytes_histogram_wape"]})
-        seed_top = sorted(seed_results, key=lambda value: value["sort"])[:4]; parent_pool = {value["config"]["candidate_id"]: {"base_calls": value["base_calls"], "base_bytes": value["base_bytes"]} for value in seed_top}; carry.update(parent_pool)
+        if len(seeds) != int(contract["search_contract"]["seed_candidates_per_round"]):
+            raise RuntimeError({"seed_candidate_count": len(seeds), "expected": contract["search_contract"]["seed_candidates_per_round"]})
+        seed_top = sorted(seed_results, key=lambda value: value["sort"])[:2]; parent_pool = {value["config"]["candidate_id"]: {"base_calls": value["base_calls"], "base_bytes": value["base_bytes"]} for value in seed_top}; carry.update(parent_pool)
         adaptive = adaptive_candidates(seed_top, round_index, signal); adaptive_results: list[dict[str, Any]] = []
         for cfg in adaptive:
             if cfg["family"] == "blend" and any(parent not in carry for parent in cfg["parent_ids"]): continue
             result = evaluate_candidate(train, cfg, folds, contract, carry); adaptive_results.append(result); config_map[cfg["candidate_id"]] = cfg; trace.append({"round": round_index, "stage": "adaptive", "candidate_id": cfg["candidate_id"], "family": cfg["family"], "parent_ids": json.dumps(cfg.get("parent_ids", []), sort_keys=True), "oof_target": result["oof_target"], "oof_protection": result["oof_protection"], "oof_score": score(result["overall"]["h0_plus_dnn_refined"]), "calls_histogram_wape": result["overall"]["h0_plus_dnn_refined"]["calls_histogram_wape"], "bytes_histogram_wape": result["overall"]["h0_plus_dnn_refined"]["bytes_histogram_wape"]})
+        if len(adaptive) != int(contract["search_contract"]["adaptive_candidates_per_round"]) or len(adaptive_results) != len(adaptive):
+            raise RuntimeError({"adaptive_candidate_count": len(adaptive_results), "expected": contract["search_contract"]["adaptive_candidates_per_round"]})
         round_results = seed_results + adaptive_results; all_results.extend(round_results); all_bias.extend([row for value in round_results for row in value["bias"]]); rounds_completed = round_index + 1
         best = sorted(all_results, key=lambda value: value["sort"])[0]
         carry.update({value["config"]["candidate_id"]: {"base_calls": value["base_calls"], "base_bytes": value["base_bytes"]} for value in sorted(round_results, key=lambda value: value["sort"])[:4]})

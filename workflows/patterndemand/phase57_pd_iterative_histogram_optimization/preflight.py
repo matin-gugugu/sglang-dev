@@ -51,10 +51,11 @@ def run_checks(expected: str) -> dict:
         "validation_profiles_240": len(validation_profiles) == 240,
         "six_rows_per_profile": all(sum(row["profile_id"] == profile for row in rows) == 6 for profile in train_profiles | validation_profiles),
         "no_arrival_semantic_drift": all(row["feature_pd_fixed_draining"] == "1" for row in rows),
-        "round_budget": int(contract["search_contract"]["max_rounds"]) == 6
-        and int(contract["search_contract"]["seed_candidates_per_round"]) == 16
-        and int(contract["search_contract"]["adaptive_candidates_per_round"]) == 8
-        and int(contract["search_contract"]["max_total_candidates"]) == 144,
+        "round_budget": int(contract["search_contract"]["max_rounds"]) == 3
+        and int(contract["search_contract"]["seed_candidates_per_round"]) == 8
+        and int(contract["search_contract"]["adaptive_candidates_per_round"]) == 4
+        and int(contract["search_contract"]["max_total_candidates"]) == 36
+        and float(contract["search_contract"]["estimated_cpu_budget_hours"]) <= 8.0,
         "blind_not_opened": True,
         "complete_requests_not_opened": True,
     }

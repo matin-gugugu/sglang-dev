@@ -1,8 +1,8 @@
 {
-  "schema_version": "phase57-pd-iterative-histogram-optimization-contract-v1",
+  "schema_version": "phase57-pd-iterative-histogram-optimization-contract-fix1",
   "phase": "Phase57-development",
   "objective": "在Phase56结构搜索仍明显高于合同阈值后，执行预注册的多模型族、误差驱动、多轮OOF优化；只有OOF和一次性development validation同时满足合同，才允许后续blind freeze。",
-  "workflow_parent_commit": "e21d935d0b98b4d26a131fd6de3600e64500f3c5",
+  "workflow_parent_commit": "7f95fe9aae865cde3abee91a00abac2c6a63a758",
   "result_dir": "experiment-results/phase57_pd_iterative_histogram_optimization",
   "execution": {
     "environment": "remote CPU or local CPU; GPU is unnecessary",
@@ -31,10 +31,12 @@
     "complete_requests": "never read"
   },
   "search_contract": {
-    "max_rounds": 6,
-    "seed_candidates_per_round": 16,
-    "adaptive_candidates_per_round": 8,
-    "max_total_candidates": 144,
+    "max_rounds": 3,
+    "seed_candidates_per_round": 8,
+    "adaptive_candidates_per_round": 4,
+    "max_total_candidates": 36,
+    "estimated_cpu_budget_hours": 8,
+    "runtime_policy": "keep the search bounded below the 10-hour operational budget; do not restore the old 144-candidate or model_segment-MLP expansion",
     "oof_folds": 4,
     "stop_early_only_if": "OOF target, strict H0 protection, and all model/segment guards are true",
     "candidate_families": [

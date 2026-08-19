@@ -6,7 +6,7 @@ Phase55/56 已经证明 H0+DNN 能稳定优于 H0，但 histogram WAPE 仍约为
 
 每个 profile 的六个 model 行在同一 fold。arrival 特征被排除，输入仍是低维画像、模型结构和固定 P1/D1 执行配置；不会把完整请求列表放进最终 predictor。候选、分组校准、alpha、融合权重和 epoch 都只能从 train OOF 得到。只有 OOF 保护和所有合同门同时成立后，才冻结一次并打开 240 个 validation profiles；validation 不能再反馈到任何搜索步骤。
 
-硬上限是 6 轮 × (16 个 seed + 8 个 adaptive/blend) = 144 个候选。OOF 先达标可以提前停止；到达上限仍未达标则完整记录负结果，`next_phase_permitted=false`，不得读取 Phase50 blind 继续调参。
+W57-fix 将运行预算收紧为最多 3 轮 × (8 个 seed + 4 个 adaptive/blend) = 36 个候选。seed 只保留 2 个代表性 MLP 配置和 6 个便宜的 ridge 配置；adaptive MLP 固定在 model scope、最多 360 epochs，不再把 MLP 放大到 model×segment 的 72 次训练。按 W57 实测的 25 分钟/MLP seed 估计，整个 run 预留约 8 小时预算，目标控制在 10 小时以内。OOF 先达标可以提前停止；到达上限仍未达标则完整记录负结果，`next_phase_permitted=false`，不得读取 Phase50 blind 继续调参。
 
 ## 合同门槛
 

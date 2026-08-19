@@ -29,7 +29,7 @@ class Phase57ContractTests(unittest.TestCase):
 
     def test_budget_shape(self) -> None:
         contract = RUN.load_json(HERE / "experiment.json")
-        self.assertEqual(contract["search_contract"]["max_rounds"] * (contract["search_contract"]["seed_candidates_per_round"] + contract["search_contract"]["adaptive_candidates_per_round"]), 144)
+        self.assertEqual(contract["search_contract"]["max_rounds"] * (contract["search_contract"]["seed_candidates_per_round"] + contract["search_contract"]["adaptive_candidates_per_round"]), 36)
 
 
 if __name__ == "__main__": unittest.main()
