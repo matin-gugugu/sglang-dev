@@ -1,0 +1,88 @@
+{
+  "schema_version": "phase56-pd-structural-histogram-search-contract-v1",
+  "phase": "Phase56-development",
+  "objective": "在Phase55整体改进但仍未达到10%/15%合同门槛后，针对bin形状误差开展一次预注册的结构级OOF搜索；探索model×segment head、分组residual calibration、分组alpha和不同残差损失，最终只在所有候选冻结后打开一次development validation。",
+  "workflow_parent_commit": "a629efc1f0308658d510baad3834e32c9aec7c28",
+  "result_dir": "experiment-results/phase56_pd_structural_histogram_search",
+  "execution": {
+    "environment": "local CPU",
+    "gpu_permitted": false,
+    "network_permitted": false,
+    "raw_access_permitted": false,
+    "phase50_blind_access_permitted": false,
+    "training_permitted": true,
+    "complete_request_access_permitted": false,
+    "raw_mutation_permitted": false
+  },
+  "dataset_contract": {
+    "source_result_dir": "experiment-results/phase48_pd_six_model_expanded_training",
+    "profiles": 1200,
+    "train_profiles": 960,
+    "validation_profiles": 240,
+    "models": 6,
+    "segments": 3,
+    "example_rows": 7200,
+    "train_rows": 5760,
+    "validation_rows": 1440,
+    "group_isolation": "six model rows of one profile stay in the same split and OOF fold",
+    "categorical_inputs": ["segment", "model"],
+    "phase50_blind": "not read, not used for candidate generation, and not used for selection",
+    "complete_requests": "not read; only Phase48 compact feature/H0/Hfull rows are used"
+  },
+  "search_contract": {
+    "stage_a_seed_candidates": 20,
+    "stage_a_max_epochs": 420,
+    "stage_a_top_k": 6,
+    "stage_b_variants_per_top_candidate": 2,
+    "max_total_candidates": 32,
+    "oof_folds": 4,
+    "adaptation_signal": "OOF absolute score, model/segment heterogeneity, 12-bin signed bias and calibration residual; no validation signal may generate or rank candidates",
+    "stage_b_policy": "each OOF top candidate gets one capacity/head specialization variant and one calibration/shape variant",
+    "candidate_selection": "prefer complete OOF target/protection, then lower four-metric score, then lower histogram WAPE",
+    "alpha_grid": [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.65, 0.8, 1.0, 1.2],
+    "calibration_strength_grid": [0.0, 0.25, 0.5, 0.75, 1.0],
+    "ensemble_seeds": [56001, 56002, 56003]
+  },
+  "predictor_contract": {
+    "implementation": "Phase54 deterministic NumPy residual predictor pinned by SHA, with target-free segment/model one-hot features and optional per-head OOF calibration",
+    "head_scopes": ["shared", "model", "segment", "model_segment"],
+    "alpha_scopes": ["global", "model", "model_segment"],
+    "calibration": "calibration offsets are estimated from fit folds for OOF predictions and from honest OOF residuals for the final validation prediction; no validation target is used",
+    "target_representation": "encoded log-total plus 12-bin log-share residual from H0",
+    "validation_rule": "freeze candidate, calibration strength, alpha map and epoch from OOF; fit selected heads on all 960 train profiles; open 240 validation profiles exactly once"
+  },
+  "acceptance_gate": {
+    "oof_protection": "overall and every model strictly beat H0 on calls WAPE, bytes WAPE, calls TV and normalized payload EMD",
+    "development_formal_target": "overall calls histogram WAPE <= 0.10 and bytes histogram WAPE <= 0.10",
+    "development_model_guard": "each of six models has both histogram WAPE <= 0.15",
+    "development_segment_guard": "each BurstGPT segment has both histogram WAPE <= 0.15 and composite ratio < 1",
+    "total_guard": "overall calls total WAPE <= 0.05 and bytes total WAPE <= 0.05",
+    "next_permission": "only a complete OOF-protected and validation-passing candidate may authorize a separate blind-freeze/evaluation workflow",
+    "negative_policy": "integrity PASS with target_met=false is valid evidence that this structural budget did not reach the contract; it blocks blind evaluation and requires a new pre-registered workflow"
+  },
+  "pinned_inputs": [
+    {"name": "phase48_manifest", "path": "experiment-results/phase48_pd_six_model_expanded_training/manifest.sha256", "sha256": "ca3bb8727fe69f32b9402b31bfce223ae7db2b200d9c1b4a31e16e18b877901b", "verify_manifest_directory": "experiment-results/phase48_pd_six_model_expanded_training"},
+    {"name": "phase48_summary", "path": "experiment-results/phase48_pd_six_model_expanded_training/summary.json", "sha256": "e9cdd860bbdbb8baca3c085e5e7d2bbc5d279fb5332852cb516523972f253e04"},
+    {"name": "phase48_examples", "path": "experiment-results/phase48_pd_six_model_expanded_training/dataset/pd_six_model_h0_residual_examples.csv.gz", "sha256": "ae8ccbb9206e3c2e7cb6e4bafc6c60fcc99c5f11d203b91ad34ea788cbcd8bcd"},
+    {"name": "phase48_targets", "path": "experiment-results/phase48_pd_six_model_expanded_training/dataset/pd_six_model_hfull_targets.csv.gz", "sha256": "b92d41eb0da6a753cb0fdbe28ec74b4b65a076a8e39c0e1cbf9c9fe7dc3f9b78"},
+    {"name": "phase54_run", "path": "workflows/patterndemand/phase54_pd_histogram_accuracy_refinement/run.py", "sha256": "29666809c59c978a7176047f1666bc318fd5b95fadf836f0f5a38877e872f8ec"},
+    {"name": "phase54_model", "path": "workflows/patterndemand/phase54_pd_histogram_accuracy_refinement/model.py", "sha256": "b099ae9b4e04d3ee09e926ccac667319a03d01456ba64d932d3b72a4b1edaf74"},
+    {"name": "phase54_metrics", "path": "workflows/patterndemand/phase54_pd_histogram_accuracy_refinement/metrics.py", "sha256": "a48297c4a7e534fde95eaa36b08493d66a16ac8871521cb160d27c4e8634d88d"}
+  ],
+  "stop_and_block_if": [
+    "HEAD is not exact W56",
+    "any pinned Phase48 or Phase54 source differs",
+    "Phase50 blind files or labels are opened",
+    "validation profiles are used to generate or rank candidates",
+    "candidate budget exceeds 32",
+    "raw or complete request rows are read or written",
+    "GPU, network, model download, original weights or cache are accessed",
+    "a result is overwritten"
+  ],
+  "claim_boundary": [
+    "development-only evidence on 1200 Phase48 profiles and six known model structures under pure P1-D1",
+    "not fresh blind evidence and not a Phase50 re-evaluation",
+    "not unseen-model or Mooncake generalization",
+    "not physical communication time, placement, latency, queueing, or online scheduling"
+  ]
+}
