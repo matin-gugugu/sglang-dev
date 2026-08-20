@@ -1,0 +1,65 @@
+{
+  "schema_version": "phase58-pd-shape-aware-iterative-refinement-contract-v1",
+  "phase": "Phase58-development",
+  "objective": "在TP/PP已达标、PD总量已达标但12-bin形状仍未达标后，预注册地搜索shape-aware和multiplicative-bin residual predictor；OOF未达标就进入下一轮，只有完整合同通过才允许blind freeze。",
+  "workflow_parent_commit": "04f0ca65cdfe08d93f1420a638a7ae7d313e097a",
+  "result_dir": "experiment-results/phase58_pd_shape_aware_iterative_refinement",
+  "execution": {"environment": "remote CPU or local CPU", "gpu_permitted": false, "network_permitted": false, "raw_access_permitted": false, "phase50_blind_access_permitted": false, "training_permitted": true, "complete_request_access_permitted": false},
+  "dataset_contract": {
+    "source_result_dir": "experiment-results/phase48_pd_six_model_expanded_training",
+    "profiles": 1200,
+    "train_profiles": 960,
+    "validation_profiles": 240,
+    "models": 6,
+    "segments": 3,
+    "example_rows": 7200,
+    "train_rows": 5760,
+    "validation_rows": 1440,
+    "group_isolation": "six model rows belonging to one profile stay in one fold",
+    "final_input": "low-dimensional causal profile, model structure, fixed P1/D1 execution features and H0 only",
+    "arrival_features": "excluded for fixed-draining semantics",
+    "phase50_blind": "never read",
+    "complete_requests": "never read"
+  },
+  "search_contract": {
+    "max_rounds": 3,
+    "seed_candidates_per_round": 8,
+    "adaptive_candidates_per_round": 4,
+    "max_total_candidates": 36,
+    "estimated_cpu_budget_hours": 8,
+    "runtime_policy": "bounded below ten hours; no model_segment MLP expansion and no restoration of the old 144-candidate budget",
+    "oof_folds": 4,
+    "candidate_families": ["phase56_mlp_residual", "engineered_ridge", "multiplicative_bin_ridge", "shape_only_ridge", "oof_blend"],
+    "adaptive_signal": "OOF-only per-bin signed bias, support mismatch, model/segment guard failures and multiplicative residual dispersion",
+    "alpha_grid": [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.65, 0.8, 1.0, 1.2],
+    "ridge_l2_grid": [0.1, 1.0, 10.0, 100.0],
+    "ensemble_seeds": [58001, 58002, 58003]
+  },
+  "predictor_contract": {
+    "semantic": "H0 plus target-free residual; TP/PP/PD execution configuration is input and placement/topology is not selected here",
+    "new_hypothesis": "predict log1p(target_bin)-log1p(H0_bin) per calls/bytes bin, then apply fit-fold support masks and H0-protected alpha",
+    "feature_modes": ["causal_with_h0_shape", "causal_structural_interactions"],
+    "group_scopes": ["global", "model", "segment", "model_segment"],
+    "support_rule": "support masks are estimated only from fit-fold target rows and applied to held-out rows",
+    "validation_rule": "freeze candidate, round, alpha, support threshold, blend weights and epochs from OOF before opening validation once"
+  },
+  "acceptance_gate": {
+    "oof_protection": "overall and every model/segment strictly beat H0 on calls WAPE, bytes WAPE, calls TV and normalized payload EMD",
+    "overall_histogram": "calls and bytes histogram WAPE <= 0.10",
+    "model_histogram": "each six-model row has calls and bytes histogram WAPE <= 0.15",
+    "segment_histogram": "each BurstGPT segment has calls and bytes histogram WAPE <= 0.15 and composite ratio < 1",
+    "total_wape": "overall calls and bytes total WAPE <= 0.05",
+    "next_phase_permitted": "only when all OOF and one-shot validation gates pass",
+    "negative_policy": "complete integrity with target_met=false is a valid negative result and blocks blind evaluation"
+  },
+  "pinned_inputs": [
+    {"name": "phase48_manifest", "path": "experiment-results/phase48_pd_six_model_expanded_training/manifest.sha256", "sha256": "ca3bb8727fe69f32b9402b31bfce223ae7db2b200d9c1b4a31e16e18b877901b", "verify_manifest_directory": "experiment-results/phase48_pd_six_model_expanded_training"},
+    {"name": "phase48_examples", "path": "experiment-results/phase48_pd_six_model_expanded_training/dataset/pd_six_model_h0_residual_examples.csv.gz", "sha256": "ae8ccbb9206e3c2e7cb6e4bafc6c60fcc99c5f11d203b91ad34ea788cbcd8bcd"},
+    {"name": "phase54_run", "path": "workflows/patterndemand/phase54_pd_histogram_accuracy_refinement/run.py", "sha256": "29666809c59c978a7176047f1666bc318fd5b95fadf836f0f5a38877e872f8ec"},
+    {"name": "phase54_model", "path": "workflows/patterndemand/phase54_pd_histogram_accuracy_refinement/model.py", "sha256": "b099ae9b4e04d3ee09e926ccac667319a03d01456ba64d932d3b72a4b1edaf74"},
+    {"name": "phase54_metrics", "path": "workflows/patterndemand/phase54_pd_histogram_accuracy_refinement/metrics.py", "sha256": "a48297c4a7e534fde95eaa36b08493d66a16ac8871521cb160d27c4e8634d88d"},
+    {"name": "phase57_fix_run", "path": "workflows/patterndemand/phase57_pd_iterative_histogram_optimization/run.py", "sha256": "dee372c71ea2763b502464d7d557713f6b8f7d3ff3aafe23c6345c3d2ca16139"}
+  ],
+  "stop_and_block_if": ["HEAD is not exact W58", "pinned source differs", "Phase50 blind/raw/complete requests are opened", "validation targets affect candidate or round selection", "candidate count exceeds 36", "GPU/network/model download/cache is accessed", "existing result directory is overwritten"],
+  "claim_boundary": ["development-only evidence on frozen Phase48 compact six-model data", "not fresh blind evidence or Phase50 re-evaluation", "not unseen-model generalization", "not physical communication time, placement, latency, queueing, overlap or online scheduling"]
+}
