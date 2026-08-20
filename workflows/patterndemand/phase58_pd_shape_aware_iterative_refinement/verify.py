@@ -2,7 +2,7 @@
 from __future__ import annotations
 import argparse, gzip, json, sys
 from pathlib import Path
-HERE=Path(__file__).resolve().parent; P57=HERE.parent/"phase57_pd_iterative_histogram_optimization"; sys.path.insert(0,str(P57)); sys.path.insert(0,str(HERE)); sys.path.insert(0,str(HERE.parent))
+HERE=Path(__file__).resolve().parent; P57=HERE.parent/"phase57_pd_iterative_histogram_optimization"; P56=HERE.parent/"phase56_pd_structural_histogram_search"; sys.path.insert(0,str(P56)); sys.path.insert(0,str(P57)); sys.path.insert(0,str(HERE)); sys.path.insert(0,str(HERE.parent))
 from common import load_json, repo_root, run_git, verify_result_manifest  # noqa: E402
 from model_loader import read_csv, read_csv_gz  # noqa: E402
 def verify(output: Path) -> dict:

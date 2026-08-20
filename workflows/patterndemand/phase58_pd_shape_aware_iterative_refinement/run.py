@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Any
 import numpy as np
 
-HERE = Path(__file__).resolve().parent; P57 = HERE.parent / "phase57_pd_iterative_histogram_optimization"
-sys.path.insert(0, str(P57)); sys.path.insert(0, str(HERE)); sys.path.insert(0, str(HERE.parent))
+HERE = Path(__file__).resolve().parent; P57 = HERE.parent / "phase57_pd_iterative_histogram_optimization"; P56 = HERE.parent / "phase56_pd_structural_histogram_search"
+sys.path.insert(0, str(P56)); sys.path.insert(0, str(P57)); sys.path.insert(0, str(HERE)); sys.path.insert(0, str(HERE.parent))
 from common import environment_record, load_json, refresh_manifest, repo_root, utc_now, write_json  # noqa: E402
 from model_loader import read_csv_gz  # noqa: E402
 
