@@ -9,6 +9,9 @@ import gzip
 import hashlib
 import importlib.util
 import json
+import os
+import pickle
+import shutil
 import statistics
 import sys
 import time
@@ -37,6 +40,7 @@ SHAPE = load_module("phase59_shape_model", HERE / "model.py")
 MODEL_IDS = P54RUN.MODEL_IDS
 SEGMENTS = P54RUN.SEGMENTS
 BIN_COUNT = 12
+RUNTIME_STATE_SCHEMA = "phase59-pd-metric-aligned-runtime-state-v2"
 
 
 def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
@@ -49,6 +53,41 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
 
 def stable_seed(candidate_id: str, fold: int, group: str, extra: int = 0) -> int:
     digest = hashlib.sha256(f"phase59:{candidate_id}:{fold}:{group}:{extra}".encode()).hexdigest(); return 590000 + int(digest[:8], 16) % 900000
+
+
+def compact_result(value: dict[str, Any]) -> dict[str, Any]:
+    """Keep scientific/audit fields while dropping large prediction arrays."""
+    return {key: item for key, item in value.items() if key not in {"base_calls", "base_bytes", "calls", "bytes"}}
+
+
+def checkpoint_partial_result(value: dict[str, Any]) -> dict[str, Any]:
+    """A partial-round train result must retain raw OOF arrays for later blends."""
+    return {key: item for key, item in value.items() if key not in {"calls", "bytes"}}
+
+
+def atomic_save_runtime_state(path: Path, state: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp-{os.getpid()}")
+    try:
+        with gzip.open(temporary, "wb", compresslevel=3) as stream:
+            pickle.dump(state, stream, protocol=pickle.HIGHEST_PROTOCOL)
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def load_runtime_state(path: Path, expected: str, output: Path) -> dict[str, Any]:
+    with gzip.open(path, "rb") as stream:
+        state = pickle.load(stream)
+    identity = {
+        "schema_version": state.get("schema_version"),
+        "workflow_commit": state.get("workflow_commit"),
+        "output_dir": state.get("output_dir"),
+    }
+    required = {"schema_version": RUNTIME_STATE_SCHEMA, "workflow_commit": expected, "output_dir": str(output)}
+    if identity != required:
+        raise RuntimeError({"runtime_state_identity": identity, "required": required})
+    return state
 
 
 def model_groups(rows: list[dict[str, str]]) -> dict[str, list[int]]:
@@ -164,7 +203,7 @@ def fit_final_base(train: list[dict[str, str]], rows: list[dict[str, str]], conf
     return calls, bytes_, bundle
 
 
-def fit_final(train: list[dict[str, str]], rows: list[dict[str, str]], config: dict[str, Any], config_map: dict[str, dict[str, Any]], cache: dict[str, tuple[np.ndarray, np.ndarray, dict[str, Any]]]) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
+def fit_final(train: list[dict[str, str]], rows: list[dict[str, str]], config: dict[str, Any], config_map: dict[str, dict[str, Any]], cache: dict[str, tuple[np.ndarray, np.ndarray, dict[str, Any]]], on_cache_update: Any = None) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
     candidate_id = config["candidate_id"]
     if candidate_id in cache:
         return cache[candidate_id]
@@ -173,9 +212,12 @@ def fit_final(train: list[dict[str, str]], rows: list[dict[str, str]], config: d
     else:
         weights = np.asarray(config["weights"], dtype=np.float64); weights /= weights.sum(); calls = np.zeros((len(rows), BIN_COUNT)); bytes_ = np.zeros_like(calls); bundles = []
         for weight, parent_id in zip(weights, config["parent_ids"]):
-            pc, pb, bundle = fit_final(train, rows, config_map[parent_id], config_map, cache); calls += float(weight) * pc; bytes_ += float(weight) * pb; bundles.append(bundle)
+            pc, pb, bundle = fit_final(train, rows, config_map[parent_id], config_map, cache, on_cache_update); calls += float(weight) * pc; bytes_ += float(weight) * pb; bundles.append(bundle)
         result = (calls, bytes_, {"family": "oof_blend", "candidate_id": candidate_id, "parent_ids": config["parent_ids"], "weights": weights.tolist(), "bundles": bundles})
-    cache[candidate_id] = result; return result
+    cache[candidate_id] = result
+    if on_cache_update is not None:
+        on_cache_update(candidate_id, result)
+    return result
 
 
 def prediction_rows(rows: list[dict[str, str]], calls: np.ndarray, bytes_: np.ndarray, method: str) -> list[dict[str, Any]]:
@@ -188,45 +230,93 @@ def prediction_rows(rows: list[dict[str, str]], calls: np.ndarray, bytes_: np.nd
     return output
 
 
-def run(expected: str, output: Path) -> dict[str, Any]:
-    started = time.monotonic(); started_utc = utc_now(); preflight = PREFLIGHT.run_checks(expected); contract = load_json(HERE / "experiment.json"); search = contract["search_contract"]
+def run(expected: str, output: Path, runtime_state_path: Path | None = None) -> dict[str, Any]:
+    session_started = time.monotonic(); current_started_utc = utc_now(); preflight = PREFLIGHT.run_checks(expected); contract = load_json(HERE / "experiment.json"); search = contract["search_contract"]
     if output.exists():
         raise RuntimeError(f"refuse overwrite: {output}")
+    if runtime_state_path is None:
+        runtime_state_path = Path("/tmp") / f"patterndemand-phase59-{expected[:12]}.resume.pkl.gz"
+    runtime_state_path = runtime_state_path.resolve()
     rows = P54RUN.read_csv_gz(repo_root() / contract["pinned_inputs"][1]["path"]); train = [row for row in rows if row["split_role"] == "expanded_train"]; validation = [row for row in rows if row["split_role"] == "expanded_validation"]; folds = P54RUN.fold_map(train)
-    all_results: list[dict[str, Any]] = []; trace: list[dict[str, Any]] = []; all_bias: list[dict[str, Any]] = []; result_map: dict[str, dict[str, Any]] = {}; config_map: dict[str, dict[str, Any]] = {}; durations: list[float] = []; signal: dict[str, Any] = {}; rounds_completed = 0; stop_reason = "max_rounds"
-    for round_index in range(int(search["max_rounds"])):
-        elapsed = time.monotonic() - started; median_duration = statistics.median(durations) if durations else 0.0; forecast = elapsed + 1.25 * median_duration * int(search["train_candidates_per_round"])
-        if round_index >= int(search["minimum_rounds"]) and (elapsed >= float(search["search_time_budget_seconds"]) or forecast >= float(search["search_time_budget_seconds"])):
-            stop_reason = "search_time_budget"; break
-        base_results = []
+    resumed = runtime_state_path.exists()
+    if resumed:
+        saved = load_runtime_state(runtime_state_path, expected, output)
+        started_utc = str(saved["started_at_utc"]); prior_elapsed = float(saved["elapsed_seconds"]); all_results = saved["all_results"]; trace = saved["trace"]; all_bias = saved["all_bias"]; config_map = saved["config_map"]; durations = saved["durations"]; signal = saved["signal"]; rounds_completed = int(saved["rounds_completed"]); partial_round_index = saved["partial_round_index"]; partial_train_results = saved["partial_train_results"]; search_complete = bool(saved["search_complete"]); stop_reason = str(saved["stop_reason"]); search_elapsed_at_completion = saved.get("search_elapsed_at_completion"); final_cache = saved.get("final_cache", {}); checkpoint_writes = int(saved.get("checkpoint_writes", 0)); restart_count = int(saved.get("restart_count", 0)) + 1
+        print(json.dumps({"event": "runtime_state_restored", "path": str(runtime_state_path), "rounds_completed": rounds_completed, "partial_round_index": partial_round_index, "candidates": len(all_results), "elapsed_seconds": round(prior_elapsed, 3), "restart_count": restart_count}, sort_keys=True), flush=True)
+    else:
+        started_utc = current_started_utc; prior_elapsed = 0.0; all_results: list[dict[str, Any]] = []; trace: list[dict[str, Any]] = []; all_bias: list[dict[str, Any]] = []; config_map: dict[str, dict[str, Any]] = {}; durations: list[float] = []; signal: dict[str, Any] = {}; rounds_completed = 0; partial_round_index = None; partial_train_results: list[dict[str, Any]] = []; search_complete = False; stop_reason = "max_rounds"; search_elapsed_at_completion = None; final_cache: dict[str, tuple[np.ndarray, np.ndarray, dict[str, Any]]] = {}; checkpoint_writes = 0; restart_count = 0
+
+    def active_elapsed() -> float:
+        return prior_elapsed + time.monotonic() - session_started
+
+    def save_progress() -> None:
+        nonlocal checkpoint_writes
+        checkpoint_writes += 1
+        state = {
+            "schema_version": RUNTIME_STATE_SCHEMA, "workflow_commit": expected, "output_dir": str(output), "started_at_utc": started_utc,
+            "elapsed_seconds": active_elapsed(), "all_results": all_results, "trace": trace, "all_bias": all_bias, "config_map": config_map,
+            "durations": durations, "signal": signal, "rounds_completed": rounds_completed, "partial_round_index": partial_round_index,
+            "partial_train_results": [checkpoint_partial_result(value) for value in partial_train_results], "search_complete": search_complete,
+            "stop_reason": stop_reason, "search_elapsed_at_completion": search_elapsed_at_completion, "final_cache": final_cache, "checkpoint_writes": checkpoint_writes, "restart_count": restart_count,
+        }
+        atomic_save_runtime_state(runtime_state_path, state)
+
+    start_round = int(partial_round_index) if partial_round_index is not None else rounds_completed
+    for round_index in range(start_round, int(search["max_rounds"])) if not search_complete else []:
+        elapsed = active_elapsed(); median_duration = statistics.median(durations) if durations else 0.0; forecast = elapsed + 1.25 * median_duration * int(search["train_candidates_per_round"])
+        if round_index >= int(search["minimum_rounds"]) and partial_round_index is None and (elapsed >= float(search["search_time_budget_seconds"]) or forecast >= float(search["search_time_budget_seconds"])):
+            stop_reason = "search_time_budget"; search_complete = True; search_elapsed_at_completion = active_elapsed(); save_progress(); break
+        if partial_round_index == round_index:
+            base_results = partial_train_results
+        else:
+            partial_round_index = round_index; partial_train_results = []; base_results = partial_train_results; save_progress()
+        result_map = {value["config"]["candidate_id"]: value for value in base_results}; completed_ids = {value["config"]["candidate_id"] for value in all_results}
         for config in train_configs(round_index, signal, contract):
-            candidate_started = time.monotonic(); raw_calls, raw_bytes, epochs = fit_predict_oof(train, config, folds); value = evaluate_arrays(train, config, raw_calls, raw_bytes, epochs, contract); duration = time.monotonic() - candidate_started; durations.append(duration); value["duration_seconds"] = duration; selected_epochs = int(np.clip(round(statistics.median(epochs)), 50, int(config["max_epochs"]))); value["config"] = {**config, "selected_epochs": selected_epochs}; config_map[config["candidate_id"]] = value["config"]; result_map[config["candidate_id"]] = value; base_results.append(value); all_results.append(value); all_bias.extend(value["bias"])
+            if config["candidate_id"] in completed_ids:
+                continue
+            candidate_started = time.monotonic(); raw_calls, raw_bytes, epochs = fit_predict_oof(train, config, folds); value = evaluate_arrays(train, config, raw_calls, raw_bytes, epochs, contract); duration = time.monotonic() - candidate_started; durations.append(duration); value["duration_seconds"] = duration; selected_epochs = int(np.clip(round(statistics.median(epochs)), 50, int(config["max_epochs"]))); value["config"] = {**config, "selected_epochs": selected_epochs}; config_map[config["candidate_id"]] = value["config"]; result_map[config["candidate_id"]] = value; base_results.append(value); all_results.append(compact_result(value)); all_bias.extend(value["bias"])
             trace.append({"round": round_index, "stage": "train", "candidate_id": config["candidate_id"], "family": config["family"], "duration_seconds": duration, "oof_target": value["oof_target"], "oof_protection": value["oof_protection"], "violation_score": value["violation_score"], "calls_histogram_wape": value["overall"]["h0_plus_dnn_refined"]["calls_histogram_wape"], "bytes_histogram_wape": value["overall"]["h0_plus_dnn_refined"]["bytes_histogram_wape"]})
-            print(json.dumps({"event": "candidate_complete", "candidate": config["candidate_id"], "round": round_index, "duration_seconds": round(duration, 3), "oof_target": value["oof_target"], "oof_protection": value["oof_protection"], "violation_score": value["violation_score"], "elapsed_seconds": round(time.monotonic() - started, 3)}, sort_keys=True), flush=True)
+            save_progress(); print(json.dumps({"event": "candidate_complete", "candidate": config["candidate_id"], "round": round_index, "duration_seconds": round(duration, 3), "oof_target": value["oof_target"], "oof_protection": value["oof_protection"], "violation_score": value["violation_score"], "elapsed_seconds": round(active_elapsed(), 3)}, sort_keys=True), flush=True)
         for config in blend_configs(base_results, round_index):
-            value = evaluate_blend(train, config, result_map, contract); value["duration_seconds"] = 0.0; config_map[config["candidate_id"]] = config; result_map[config["candidate_id"]] = value; all_results.append(value); all_bias.extend(value["bias"])
+            if config["candidate_id"] in completed_ids:
+                continue
+            value = evaluate_blend(train, config, result_map, contract); value["duration_seconds"] = 0.0; config_map[config["candidate_id"]] = config; all_results.append(compact_result(value)); all_bias.extend(value["bias"])
             trace.append({"round": round_index, "stage": "blend", "candidate_id": config["candidate_id"], "family": config["family"], "duration_seconds": 0.0, "oof_target": value["oof_target"], "oof_protection": value["oof_protection"], "violation_score": value["violation_score"], "calls_histogram_wape": value["overall"]["h0_plus_dnn_refined"]["calls_histogram_wape"], "bytes_histogram_wape": value["overall"]["h0_plus_dnn_refined"]["bytes_histogram_wape"]})
-        rounds_completed = round_index + 1; best = sorted(all_results, key=lambda value: value["sort"])[0]; signal = refinement_signal(best)
-        print(json.dumps({"event": "round_complete", "round": round_index, "best": best["config"]["candidate_id"], "oof_target": best["oof_target"], "oof_protection": best["oof_protection"], "signal": signal, "elapsed_seconds": round(time.monotonic() - started, 3)}, sort_keys=True), flush=True)
+            completed_ids.add(config["candidate_id"]); save_progress()
+        rounds_completed = round_index + 1; best = sorted(all_results, key=lambda value: value["sort"])[0]; signal = refinement_signal(best); partial_round_index = None; partial_train_results = []
+        print(json.dumps({"event": "round_complete", "round": round_index, "best": best["config"]["candidate_id"], "oof_target": best["oof_target"], "oof_protection": best["oof_protection"], "signal": signal, "elapsed_seconds": round(active_elapsed(), 3)}, sort_keys=True), flush=True)
         if rounds_completed >= int(search["minimum_rounds"]) and best["oof_target"] and best["oof_protection"]:
-            stop_reason = "oof_contract_met"; break
+            stop_reason = "oof_contract_met"; search_complete = True; search_elapsed_at_completion = active_elapsed()
+        save_progress()
+        if search_complete:
+            break
+    if not search_complete:
+        search_complete = True; stop_reason = "max_rounds"; search_elapsed_at_completion = active_elapsed(); save_progress()
     if not all_results or len(all_results) > int(search["max_total_candidates"]):
         raise RuntimeError({"candidate_count": len(all_results), "max": search["max_total_candidates"]})
-    search_elapsed = time.monotonic() - started; selected = sorted(all_results, key=lambda value: value["sort"])[0]; selected_config = copy.deepcopy(selected["config"]); validation_base_calls, validation_base_bytes, final_bundle = fit_final(train, validation, selected_config, config_map, {}); validation_calls, validation_bytes = apply_alpha(validation, validation_base_calls, validation_base_bytes, selected["alpha_map"]); overall, model_audits, segment_audits, validation_gate = P54RUN.development_audits(validation, validation_calls, validation_bytes); target_met = bool(selected["oof_target"] and selected["oof_protection"] and validation_gate); total_elapsed = time.monotonic() - started
-    output.mkdir(parents=True); candidate_rows = [{"round": value["config"]["round"], "stage": value["config"]["stage"], "candidate_id": value["config"]["candidate_id"], "family": value["config"]["family"], "duration_seconds": value["duration_seconds"], "oof_target": value["oof_target"], "oof_protection": value["oof_protection"], "violation_score": value["violation_score"], "oof_score": P54RUN.score(value["overall"]["h0_plus_dnn_refined"]), "oof_calls_histogram_wape": value["overall"]["h0_plus_dnn_refined"]["calls_histogram_wape"], "oof_bytes_histogram_wape": value["overall"]["h0_plus_dnn_refined"]["bytes_histogram_wape"], "selected": value is selected} for value in all_results]
-    write_csv(output / "analysis/search_trace.csv", trace); write_csv(output / "analysis/oof_candidate_metrics.csv", candidate_rows); write_csv(output / "analysis/oof_bin_bias.csv", all_bias)
-    write_json(output / "analysis/oof_selection.json", {"selected_candidate": selected_config, "alpha_map": selected["alpha_map"], "oof_overall": selected["overall"], "oof_models": selected["models"], "oof_segments": selected["segments"], "oof_target": selected["oof_target"], "oof_protection": selected["oof_protection"], "violation_score": selected["violation_score"], "candidate_count": len(all_results), "rounds_completed": rounds_completed, "stop_reason": stop_reason, "final_signal": signal})
-    write_csv(output / "analysis/development_validation_metrics.csv", [{"method": "h0", **overall["h0"], "composite_ratio_to_h0": 1.0, "formal_target_gate": False}, {"method": "h0_plus_dnn_metric_aligned", **overall["h0_plus_dnn_refined"], "composite_ratio_to_h0": overall["composite_ratio"], "formal_target_gate": overall["target_gate"]}]); write_json(output / "analysis/model_validation.json", model_audits); write_json(output / "analysis/segment_validation.json", segment_audits)
-    continuation = {"continuation_required": not target_met, "reason": None if target_met else "unchanged accuracy contract not met within Phase59 OOF/time budget", "thresholds_must_remain_unchanged": True, "phase50_blind_must_remain_closed": True, "last_oof_signal": signal, "selected_oof_violation_score": selected["violation_score"], "next_action": "freeze successful predictor for later blind evaluation" if target_met else "design the next development-only refinement from Phase59 OOF diagnostics; do not tune on development validation or Phase50 blind labels"}; write_json(output / "analysis/continuation_spec.json", continuation)
-    h0_calls, h0_bytes = P54RUN.histogram_arrays(validation, "h0"); P54RUN.write_csv_gz(output / "predictions/development_validation_predictions.csv.gz", prediction_rows(validation, h0_calls, h0_bytes, "h0") + prediction_rows(validation, validation_calls, validation_bytes, "h0_plus_dnn_metric_aligned"))
-    checkpoint = {"schema_version": "phase59-pd-metric-aligned-shape-checkpoint-v1", "workflow_commit": expected, "selected_candidate": selected_config, "alpha_map": selected["alpha_map"], "bundle": final_bundle, "phase50_blind_accessed": False, "complete_requests_accessed": False}; P54RUN.write_json_gz(output / "checkpoints/pd_metric_aligned_shape_search.json.gz", checkpoint)
-    write_json(output / "audit/input_freeze.json", preflight); write_json(output / "audit/search.json", {"candidate_budget": len(all_results), "max_candidate_budget": search["max_total_candidates"], "rounds_completed": rounds_completed, "selected_candidate_id": selected_config["candidate_id"], "stop_reason": stop_reason, "search_elapsed_seconds": search_elapsed, "total_elapsed_seconds": total_elapsed, "search_time_budget_seconds": search["search_time_budget_seconds"], "hard_total_runtime_seconds": search["hard_total_runtime_seconds"], "runtime_budget_respected": total_elapsed <= float(search["hard_total_runtime_seconds"]), "oof_target": selected["oof_target"], "oof_protection": selected["oof_protection"], "development_target_met": validation_gate, "validation_opened_once_after_freeze": True, "phase50_blind_accessed": False, "complete_requests_accessed": False, "adaptive_signal_source": "OOF only"}); write_json(output / "audit/environment.json", {**environment_record(), "gpu_used": False, "network_used": False, "raw_accessed": False, "phase50_blind_accessed": False, "complete_requests_accessed": False, "training_used": True})
+    if search_elapsed_at_completion is None:
+        raise RuntimeError("search marked complete without frozen elapsed time")
+    search_elapsed = float(search_elapsed_at_completion); selected = sorted(all_results, key=lambda value: value["sort"])[0]; selected_config = copy.deepcopy(selected["config"])
+    def cache_update(candidate_id: str, value: tuple[np.ndarray, np.ndarray, dict[str, Any]]) -> None:
+        final_cache[candidate_id] = value; save_progress()
+    validation_base_calls, validation_base_bytes, final_bundle = fit_final(train, validation, selected_config, config_map, final_cache, cache_update); validation_calls, validation_bytes = apply_alpha(validation, validation_base_calls, validation_base_bytes, selected["alpha_map"]); overall, model_audits, segment_audits, validation_gate = P54RUN.development_audits(validation, validation_calls, validation_bytes); target_met = bool(selected["oof_target"] and selected["oof_protection"] and validation_gate); total_elapsed = active_elapsed()
+    staging = output.parent / f".{output.name}.staging-{expected[:12]}"
+    if staging.exists():
+        shutil.rmtree(staging)
+    staging.mkdir(parents=True); candidate_rows = [{"round": value["config"]["round"], "stage": value["config"]["stage"], "candidate_id": value["config"]["candidate_id"], "family": value["config"]["family"], "duration_seconds": value["duration_seconds"], "oof_target": value["oof_target"], "oof_protection": value["oof_protection"], "violation_score": value["violation_score"], "oof_score": P54RUN.score(value["overall"]["h0_plus_dnn_refined"]), "oof_calls_histogram_wape": value["overall"]["h0_plus_dnn_refined"]["calls_histogram_wape"], "oof_bytes_histogram_wape": value["overall"]["h0_plus_dnn_refined"]["bytes_histogram_wape"], "selected": value is selected} for value in all_results]
+    write_csv(staging / "analysis/search_trace.csv", trace); write_csv(staging / "analysis/oof_candidate_metrics.csv", candidate_rows); write_csv(staging / "analysis/oof_bin_bias.csv", all_bias)
+    write_json(staging / "analysis/oof_selection.json", {"selected_candidate": selected_config, "alpha_map": selected["alpha_map"], "oof_overall": selected["overall"], "oof_models": selected["models"], "oof_segments": selected["segments"], "oof_target": selected["oof_target"], "oof_protection": selected["oof_protection"], "violation_score": selected["violation_score"], "candidate_count": len(all_results), "rounds_completed": rounds_completed, "stop_reason": stop_reason, "final_signal": signal})
+    write_csv(staging / "analysis/development_validation_metrics.csv", [{"method": "h0", **overall["h0"], "composite_ratio_to_h0": 1.0, "formal_target_gate": False}, {"method": "h0_plus_dnn_metric_aligned", **overall["h0_plus_dnn_refined"], "composite_ratio_to_h0": overall["composite_ratio"], "formal_target_gate": overall["target_gate"]}]); write_json(staging / "analysis/model_validation.json", model_audits); write_json(staging / "analysis/segment_validation.json", segment_audits)
+    continuation = {"continuation_required": not target_met, "reason": None if target_met else "unchanged accuracy contract not met within Phase59 OOF/time budget", "thresholds_must_remain_unchanged": True, "phase50_blind_must_remain_closed": True, "last_oof_signal": signal, "selected_oof_violation_score": selected["violation_score"], "next_action": "freeze successful predictor for later blind evaluation" if target_met else "design the next development-only refinement from Phase59 OOF diagnostics; do not tune on development validation or Phase50 blind labels"}; write_json(staging / "analysis/continuation_spec.json", continuation)
+    h0_calls, h0_bytes = P54RUN.histogram_arrays(validation, "h0"); P54RUN.write_csv_gz(staging / "predictions/development_validation_predictions.csv.gz", prediction_rows(validation, h0_calls, h0_bytes, "h0") + prediction_rows(validation, validation_calls, validation_bytes, "h0_plus_dnn_metric_aligned"))
+    checkpoint = {"schema_version": "phase59-pd-metric-aligned-shape-checkpoint-v1", "workflow_commit": expected, "selected_candidate": selected_config, "alpha_map": selected["alpha_map"], "bundle": final_bundle, "phase50_blind_accessed": False, "complete_requests_accessed": False}; P54RUN.write_json_gz(staging / "checkpoints/pd_metric_aligned_shape_search.json.gz", checkpoint)
+    write_json(staging / "audit/input_freeze.json", preflight); write_json(staging / "audit/search.json", {"candidate_budget": len(all_results), "max_candidate_budget": search["max_total_candidates"], "rounds_completed": rounds_completed, "selected_candidate_id": selected_config["candidate_id"], "stop_reason": stop_reason, "search_elapsed_seconds": search_elapsed, "total_elapsed_seconds": total_elapsed, "search_time_budget_seconds": search["search_time_budget_seconds"], "hard_total_runtime_seconds": search["hard_total_runtime_seconds"], "runtime_budget_respected": total_elapsed <= float(search["hard_total_runtime_seconds"]), "resumed_from_checkpoint": resumed, "restart_count": restart_count, "runtime_checkpoint_writes": checkpoint_writes, "oof_target": selected["oof_target"], "oof_protection": selected["oof_protection"], "development_target_met": validation_gate, "validation_opened_once_after_freeze": True, "phase50_blind_accessed": False, "complete_requests_accessed": False, "adaptive_signal_source": "OOF only"}); write_json(staging / "audit/environment.json", {**environment_record(), "gpu_used": False, "network_used": False, "raw_accessed": False, "phase50_blind_accessed": False, "complete_requests_accessed": False, "training_used": True})
     summary = {"schema_version": "phase59-pd-metric-aligned-shape-result-v1", "status": "PASS", "workflow_commit": expected, "started_at_utc": started_utc, "completed_at_utc": utc_now(), "counts": {"profiles": 1200, "train_profiles": 960, "validation_profiles": 240, "models": 6, "segments": 3, "example_rows": 7200, "train_rows": 5760, "validation_rows": 1440, "candidates": len(all_results), "rounds_completed": rounds_completed, "complete_request_rows_in_git": 0}, "runtime": {"search_elapsed_seconds": search_elapsed, "total_elapsed_seconds": total_elapsed, "stop_reason": stop_reason}, "selected": {"candidate_id": selected_config["candidate_id"], "family": selected_config["family"], "alpha_map": selected["alpha_map"]}, "gates": {"oof_target": selected["oof_target"], "oof_protection": selected["oof_protection"], "development_overall": overall["target_gate"], "development_all_models": all(value["target_guard"] for value in model_audits.values()), "development_all_segments": all(value["target_guard"] for value in segment_audits.values()), "target_met": target_met, "next_phase_permitted": target_met}, "development_validation": overall, "models": model_audits, "segments": segment_audits, "scientific_outcome": "DEVELOPMENT_TARGET_MET" if target_met else "DEVELOPMENT_TARGET_NOT_MET", "proved": "time-bounded OOF metric-aligned total-preserving H0+DNN shape search with one-shot development validation", "not_proved": "fresh blind generalization, unseen-model extrapolation, physical communication time, placement, latency or online scheduling"}
-    write_json(output / "summary.json", summary); (output / "README.md").write_text(f"# Phase59：PD metric-aligned shape搜索\n\n状态：`PASS`（流程完整）。完成 {rounds_completed} 轮、{len(all_results)} 个候选，停止原因 `{stop_reason}`，选中 `{selected_config['candidate_id']}`；最终合同通过={target_met}。\n\n搜索只使用OOF；validation在冻结后打开一次；未读取Phase50 blind、raw或完整请求。\n", encoding="utf-8"); (output / "logs").mkdir(); (output / "logs/runtime.log").write_text(f"started={started_utc}\ncompleted={utc_now()} workflow_commit={expected}\nrounds={rounds_completed} candidates={len(all_results)} selected={selected_config['candidate_id']} stop_reason={stop_reason}\nsearch_elapsed_seconds={search_elapsed:.3f} total_elapsed_seconds={total_elapsed:.3f}\noof_target={selected['oof_target']} oof_protection={selected['oof_protection']} development_target={validation_gate} final_target={target_met}\ngpu=false network=false phase50_blind=false complete_requests=false\n", encoding="utf-8"); (output / "DONE").write_text("PASS\n", encoding="utf-8"); refresh_manifest(output); return summary
+    write_json(staging / "summary.json", summary); (staging / "README.md").write_text(f"# Phase59：PD metric-aligned shape搜索\n\n状态：`PASS`（流程完整）。完成 {rounds_completed} 轮、{len(all_results)} 个候选，停止原因 `{stop_reason}`，选中 `{selected_config['candidate_id']}`；最终合同通过={target_met}。\n\n搜索只使用OOF；validation在冻结后打开一次；未读取Phase50 blind、raw或完整请求。\n", encoding="utf-8"); (staging / "logs").mkdir(); (staging / "logs/runtime.log").write_text(f"started={started_utc}\ncompleted={utc_now()} workflow_commit={expected}\nrounds={rounds_completed} candidates={len(all_results)} selected={selected_config['candidate_id']} stop_reason={stop_reason}\nsearch_elapsed_seconds={search_elapsed:.3f} total_elapsed_seconds={total_elapsed:.3f}\nresumed_from_checkpoint={resumed} restart_count={restart_count} checkpoint_writes={checkpoint_writes}\noof_target={selected['oof_target']} oof_protection={selected['oof_protection']} development_target={validation_gate} final_target={target_met}\ngpu=false network=false phase50_blind=false complete_requests=false\n", encoding="utf-8"); (staging / "DONE").write_text("PASS\n", encoding="utf-8"); refresh_manifest(staging); staging.replace(output); runtime_state_path.unlink(missing_ok=True); return summary
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(); parser.add_argument("--expected-workflow-commit", required=True); parser.add_argument("--output-dir", type=Path, default=repo_root() / "experiment-results/phase59_pd_metric_aligned_shape_search"); args = parser.parse_args(); print(json.dumps(run(args.expected_workflow_commit, args.output_dir.resolve()), ensure_ascii=False, indent=2))
+    parser = argparse.ArgumentParser(); parser.add_argument("--expected-workflow-commit", required=True); parser.add_argument("--output-dir", type=Path, default=repo_root() / "experiment-results/phase59_pd_metric_aligned_shape_search"); parser.add_argument("--runtime-state", type=Path); args = parser.parse_args(); print(json.dumps(run(args.expected_workflow_commit, args.output_dir.resolve(), args.runtime_state), ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

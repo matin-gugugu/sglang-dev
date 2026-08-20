@@ -31,12 +31,7 @@ def require_safe_worktree(contract: dict) -> dict:
     staged = run_git(["-c", "core.quotePath=false", "diff", "--cached", "--name-only"]).splitlines()
     tracked_paths = sorted({path for path in unstaged + staged if path})
     unexpected_tracked = [path for path in tracked_paths if path not in allowed_tracked]
-    allowed_untracked = (
-        "data/",
-        "experiment-results/phase54_pd_histogram_accuracy_refinement/",
-        "experiment-results/phase55_pd_adaptive_histogram_search/",
-        "experiment-results/phase56_pd_structural_histogram_search/",
-    )
+    allowed_untracked = tuple(contract.get("allowed_protected_untracked_prefixes", []))
     untracked = [path for path in run_git(["ls-files", "--others", "--exclude-standard"]).splitlines() if path]
     unexpected_untracked = [path for path in untracked if not any(path == prefix.rstrip("/") or path.startswith(prefix) for prefix in allowed_untracked)]
     if unexpected_tracked or unexpected_untracked:

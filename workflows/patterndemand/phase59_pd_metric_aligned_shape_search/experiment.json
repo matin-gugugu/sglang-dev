@@ -2,7 +2,7 @@
   "schema_version": "phase59-pd-metric-aligned-shape-search-contract-v1",
   "phase": "Phase59-development",
   "objective": "在Phase58完整36候选仍未达到PD histogram合同后，直接优化最终12-bin calls/bytes WAPE并联合约束TV/EMD；OOF未达标就持续生成下一轮候选，达到目标或约10小时总预算才停止。",
-  "workflow_parent_commit": "3e4277424b79659b3f17dc8080faa3da713b958d",
+  "workflow_parent_commit": "59ca4d3188b6e17b722c478739d2fba72c7257ab",
   "result_dir": "experiment-results/phase59_pd_metric_aligned_shape_search",
   "execution": {
     "environment": "local CPU",
@@ -49,6 +49,7 @@
     "final_fit_reserve_seconds": 3600,
     "hard_total_runtime_seconds": 37800,
     "runtime_policy": "stop at first complete OOF contract pass; otherwise continue adaptive rounds until the rolling candidate-duration guard reaches the 9h search budget, then reserve about 1h for final fit and one-shot validation",
+    "recovery_policy": "atomically checkpoint after every completed candidate and final-fit cache update; resume only when workflow commit and output path match exactly; publish the formal result directory atomically",
     "alpha_grid": [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.65, 0.8, 1.0, 1.2],
     "width_grid": [64, 96, 128, 160],
     "depth_grid": [1, 2, 3],
@@ -77,9 +78,21 @@
     {"name": "phase54_metrics", "path": "workflows/patterndemand/phase54_pd_histogram_accuracy_refinement/metrics.py", "sha256": "a48297c4a7e534fde95eaa36b08493d66a16ac8871521cb160d27c4e8634d88d"},
     {"name": "phase58_run", "path": "workflows/patterndemand/phase58_pd_shape_aware_iterative_refinement/run.py", "sha256": "b00ff18baa36d753379fc802e1a07a060a580a015f92bf82faa66608babc0058"}
   ],
-  "allowed_protected_dirty_paths": ["docs/patterndemand/kaiti_patternDemand实验.md"],
+  "allowed_protected_dirty_paths": [
+    "docs/patterndemand/kaiti_patternDemand实验.md",
+    "docs/patterndemand/patterndemand_figures/generate_patterndemand_figures.py"
+  ],
+  "allowed_protected_untracked_prefixes": [
+    "data/",
+    "docs/patterndemand/figures0820/",
+    "docs/patterndemand/figures08201618/",
+    "experiment-results/phase54_pd_histogram_accuracy_refinement/",
+    "experiment-results/phase55_pd_adaptive_histogram_search/",
+    "experiment-results/phase56_pd_structural_histogram_search/",
+    "experiment-results/.phase59_pd_metric_aligned_shape_search.staging-"
+  ],
   "stop_and_block_if": [
-    "HEAD is not exact W59",
+    "HEAD is not the exact W59-fix commit supplied to the runner",
     "pinned input differs",
     "Phase50 blind/raw/complete requests are opened",
     "validation targets influence search",

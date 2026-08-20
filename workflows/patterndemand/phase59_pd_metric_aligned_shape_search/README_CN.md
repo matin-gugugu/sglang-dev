@@ -6,6 +6,8 @@ DNN 不再预测总量。每个画像的 H0 calls/bytes 总量原样保留，只
 
 搜索按 4-fold profile-group OOF 进行。每轮训练 4 个 metric-aligned model-head DNN，再评估 4 个 OOF blend；若合同未通过，就根据 OOF 的最差指标、模型、segment 和安全 bin bias 进入下一轮。达到完整 OOF 合同立即停止；否则使用最多 9 小时搜索预算，并预留约 1 小时完成最终三种子训练和一次 development validation。实际若提前达标或候选运行很快，可以早于 10 小时结束。
 
+W59-fix 在每个训练/混合候选完成后把搜索状态原子写到 Git 外 runtime checkpoint，最终拟合也按已完成候选缓存。进程异常退出后，只有 workflow commit 和正式输出路径都完全一致时才允许恢复；已完成候选不会重算。正式结果先写入专用 staging 目录，完整生成 manifest 后再原子发布，避免把半成品误认为正式结果。
+
 合同阈值完全不变：overall calls/bytes histogram WAPE ≤10%；六模型各自两项 ≤15%；三个 BurstGPT segment 各自两项 ≤15%；calls/bytes total WAPE ≤5%；四项核心指标严格优于 H0。预算用尽仍不达标时必须输出负结果和 continuation spec，不能降低阈值或读取 Phase50 blind 继续调参。
 
 本 workflow 仅使用 CPU、Phase48 冻结低维数据和已提交的 Phase58 诊断，不读取 raw、完整请求、模型权重或缓存。
