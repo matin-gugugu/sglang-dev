@@ -32,7 +32,9 @@ def target_logdiff(rows: list[dict[str, str]]) -> np.ndarray:
 
 def decode_logdiff(rows: list[dict[str, str]], value: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     h0c, h0b = P54.histogram_arrays(rows, "h0"); value = np.clip(value, -8.0, 8.0)
-    return np.expm1(np.clip(np.log1p(h0c) + value[:, :BINS], -20.0, 40.0)), np.expm1(np.clip(np.log1p(h0b) + value[:, BINS:], -20.0, 50.0))
+    calls = np.expm1(np.clip(np.log1p(h0c) + value[:, :BINS], -20.0, 40.0))
+    bytes_ = np.expm1(np.clip(np.log1p(h0b) + value[:, BINS:], -20.0, 50.0))
+    return np.maximum(calls, 0.0), np.maximum(bytes_, 0.0)
 
 def ratio_oof(train: list[dict[str, str]], config: dict[str, Any], folds: dict[str, int]):
     calls = np.zeros((len(train), BINS)); bytes_ = np.zeros_like(calls); masks_c = np.ones_like(calls, dtype=bool); masks_b = np.ones_like(calls, dtype=bool); epochs = []
