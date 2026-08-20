@@ -87,7 +87,7 @@ def evaluate(train, cfg, folds, contract, carry):
     else: raise ValueError(cfg["family"])
     h0c, h0b = P54.histogram_arrays(train, "h0"); h0metrics = P54.metric_bundle(h0c, h0b, *P54.histogram_arrays(train, "target")); alpha, audits, _ = P54.choose_alphas(train, base_c, base_b, h0metrics, [float(x) for x in contract["search_contract"]["alpha_grid"]]); calls, bytes_ = apply_alpha(train, base_c, base_b, alpha)
     if cfg.get("support_aware", False): calls, bytes_ = P57RUN.support_project(calls, bytes_, masks_c, masks_b)
-    overall, models, segments, target = P54.development_audits(train, calls, bytes_); protection = P57RUN.strict_h0(overall) and all(P57RUN.strict_h0(v) for v in models.values()) and all(P57RUN.strict_h0(v) for v in segments.values())
+    overall, models, segments, target = P54.development_audits(train, calls, bytes_); protection = P54.strict_h0(overall) and all(P54.strict_h0(v) for v in models.values()) and all(P54.strict_h0(v) for v in segments.values())
     return {"config":cfg,"base_calls":base_c,"base_bytes":base_b,"calls":calls,"bytes":bytes_,"epochs":epochs,"alpha_map":alpha,"alpha_audits":audits,"overall":overall,"models":models,"segments":segments,"oof_target":bool(target),"oof_protection":bool(protection),"bias":P57RUN.bias_rows(train,calls,bytes_,cfg["candidate_id"],int(cfg["round"])),"sort":(not target,not protection,P57RUN.score(overall["h0_plus_dnn_refined"]),cfg["candidate_id"])}
 
 def fit_ratio_final(train, rows, cfg):
