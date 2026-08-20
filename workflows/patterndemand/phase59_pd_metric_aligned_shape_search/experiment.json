@@ -1,0 +1,94 @@
+{
+  "schema_version": "phase59-pd-metric-aligned-shape-search-contract-v1",
+  "phase": "Phase59-development",
+  "objective": "在Phase58完整36候选仍未达到PD histogram合同后，直接优化最终12-bin calls/bytes WAPE并联合约束TV/EMD；OOF未达标就持续生成下一轮候选，达到目标或约10小时总预算才停止。",
+  "workflow_parent_commit": "3e4277424b79659b3f17dc8080faa3da713b958d",
+  "result_dir": "experiment-results/phase59_pd_metric_aligned_shape_search",
+  "execution": {
+    "environment": "local CPU",
+    "gpu_permitted": false,
+    "network_permitted": false,
+    "raw_access_permitted": false,
+    "phase50_blind_access_permitted": false,
+    "complete_request_access_permitted": false,
+    "training_permitted": true
+  },
+  "dataset_contract": {
+    "source_result_dir": "experiment-results/phase48_pd_six_model_expanded_training",
+    "profiles": 1200,
+    "train_profiles": 960,
+    "validation_profiles": 240,
+    "models": 6,
+    "segments": 3,
+    "example_rows": 7200,
+    "train_rows": 5760,
+    "validation_rows": 1440,
+    "group_isolation": "one profile and its six model rows stay in one fold",
+    "final_input": "low-dimensional causal history profile, model structure, fixed P1/D1 features and H0",
+    "arrival_features": "excluded under fixed-draining semantics",
+    "phase50_blind": "never read",
+    "complete_requests": "never read"
+  },
+  "predictor_contract": {
+    "semantic": "H0 plus DNN shape residual",
+    "total_policy": "preserve each H0 calls/bytes total; only redistribute mass across 12 bins",
+    "shape_parameterization": "softmax(log(smoothed H0 share) + bounded DNN residual)",
+    "training_objective": "smooth calls WAPE + smooth bytes WAPE + calls TV + calls normalized EMD",
+    "head_scope": "model",
+    "feature_mode": "fixed_draining_causal",
+    "inference_target_free": true
+  },
+  "search_contract": {
+    "oof_folds": 4,
+    "max_rounds": 128,
+    "train_candidates_per_round": 4,
+    "blend_candidates_per_round": 4,
+    "max_total_candidates": 1024,
+    "minimum_rounds": 2,
+    "search_time_budget_seconds": 32400,
+    "final_fit_reserve_seconds": 3600,
+    "hard_total_runtime_seconds": 37800,
+    "runtime_policy": "stop at first complete OOF contract pass; otherwise continue adaptive rounds until the rolling candidate-duration guard reaches the 9h search budget, then reserve about 1h for final fit and one-shot validation",
+    "alpha_grid": [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.65, 0.8, 1.0, 1.2],
+    "width_grid": [64, 96, 128, 160],
+    "depth_grid": [1, 2, 3],
+    "residual_bound_grid": [1.0, 2.0, 3.0, 4.0],
+    "max_epochs_grid": [500, 650, 800, 950],
+    "adaptive_signal": "OOF-only worst metric, worst model, worst segment and safe per-bin signed bias; zero-target bins never divide by an epsilon denominator",
+    "validation_rule": "all architecture, loss weights, segment focus, alpha, blend weights and epochs freeze from OOF before validation is opened once"
+  },
+  "acceptance_gate": {
+    "oof_protection": "overall and every model/segment strictly beat H0 on calls histogram WAPE, bytes histogram WAPE, calls TV and normalized payload EMD",
+    "overall_histogram": "calls and bytes histogram WAPE <= 0.10",
+    "model_histogram": "each of six models has calls and bytes histogram WAPE <= 0.15",
+    "segment_histogram": "each BurstGPT segment has calls and bytes histogram WAPE <= 0.15",
+    "total_wape": "overall/model/segment calls and bytes total WAPE <= 0.05",
+    "next_phase_permitted": "only when all OOF and one-shot development validation gates pass",
+    "negative_policy": "if the time budget ends before the target, emit an honest negative result plus continuation_spec; never weaken thresholds or use validation/blind labels to continue the same search"
+  },
+  "pinned_inputs": [
+    {"name": "phase48_manifest", "path": "experiment-results/phase48_pd_six_model_expanded_training/manifest.sha256", "sha256": "ca3bb8727fe69f32b9402b31bfce223ae7db2b200d9c1b4a31e16e18b877901b", "verify_manifest_directory": "experiment-results/phase48_pd_six_model_expanded_training"},
+    {"name": "phase48_examples", "path": "experiment-results/phase48_pd_six_model_expanded_training/dataset/pd_six_model_h0_residual_examples.csv.gz", "sha256": "ae8ccbb9206e3c2e7cb6e4bafc6c60fcc99c5f11d203b91ad34ea788cbcd8bcd"},
+    {"name": "phase58_manifest", "path": "experiment-results/phase58_pd_shape_aware_iterative_refinement/manifest.sha256", "sha256": "bb61bf920475a6a42d8cd0ff1ce904f3ac02a38c52f57cc9b766daf441018892", "verify_manifest_directory": "experiment-results/phase58_pd_shape_aware_iterative_refinement"},
+    {"name": "phase58_summary", "path": "experiment-results/phase58_pd_shape_aware_iterative_refinement/summary.json", "sha256": "4298a6244de946ab883421d21d50b6e82f8461196b49029606657175062a1d7a"},
+    {"name": "phase58_candidates", "path": "experiment-results/phase58_pd_shape_aware_iterative_refinement/analysis/oof_candidate_metrics.csv", "sha256": "fdb67aca010e5a0209f42da2cfd529b771bfd0a01090b44720f790dcd142a084"},
+    {"name": "phase54_run", "path": "workflows/patterndemand/phase54_pd_histogram_accuracy_refinement/run.py", "sha256": "29666809c59c978a7176047f1666bc318fd5b95fadf836f0f5a38877e872f8ec"},
+    {"name": "phase54_model", "path": "workflows/patterndemand/phase54_pd_histogram_accuracy_refinement/model.py", "sha256": "b099ae9b4e04d3ee09e926ccac667319a03d01456ba64d932d3b72a4b1edaf74"},
+    {"name": "phase54_metrics", "path": "workflows/patterndemand/phase54_pd_histogram_accuracy_refinement/metrics.py", "sha256": "a48297c4a7e534fde95eaa36b08493d66a16ac8871521cb160d27c4e8634d88d"},
+    {"name": "phase58_run", "path": "workflows/patterndemand/phase58_pd_shape_aware_iterative_refinement/run.py", "sha256": "b00ff18baa36d753379fc802e1a07a060a580a015f92bf82faa66608babc0058"}
+  ],
+  "allowed_protected_dirty_paths": ["docs/patterndemand/kaiti_patternDemand实验.md"],
+  "stop_and_block_if": [
+    "HEAD is not exact W59",
+    "pinned input differs",
+    "Phase50 blind/raw/complete requests are opened",
+    "validation targets influence search",
+    "GPU/network/model weights/cache are accessed",
+    "existing Phase59 result directory would be overwritten"
+  ],
+  "claim_boundary": [
+    "development-only evidence on frozen Phase48 compact six-model data",
+    "not fresh blind evidence or unseen-model generalization",
+    "not physical communication time, placement, latency, queueing, overlap or online scheduling"
+  ]
+}
