@@ -1,0 +1,150 @@
+{
+  "schema_version": "phase63-pd-contention-four-model-external-contract-v1",
+  "phase": "Phase63-four-model-external-physical-validation",
+  "objective": "冻结R61全局max/min两流并发修正公式，在四个完全未参与拟合的模型KV布局上运行生产Mooncake RDMA物理测量，并与已通过的R62合并形成六模型证据。",
+  "workflow_parent_result_commit": "262f6f1debd285d5cb6843b493f2e103684bb003",
+  "source_correction_result_commit": "241043e480457145bcaadc26b6cd750c05693f5e",
+  "source_two_model_validation_result_commit": "262f6f1debd285d5cb6843b493f2e103684bb003",
+  "result_dir": "experiment-results/phase63_pd_contention_four_model_external",
+  "execution_model": "external topology inventory; 48 auditable three-rank GPU shards; frozen-model CPU aggregation with no fitting",
+  "training_permitted": false,
+  "model_recalibration_permitted": false,
+  "model_weights_required": false,
+  "selected_models": [
+    "qwen3-30b-a3b",
+    "llama-3.2-3b-instruct",
+    "qwen2.5-14b-instruct",
+    "mixtral-8x7b-instruct-v0.1"
+  ],
+  "prior_validated_models": ["qwen3-8b", "deepseek-v2-lite"],
+  "research_scope": {
+    "fixed_configurations": ["P1D2", "P2D1"],
+    "prefill_parallelism": {"tp": 1, "pp": 1},
+    "decode_parallelism": {"tp": 1, "pp": 1},
+    "wave_admission": "all three ranks and both transfers are ready before synchronized release",
+    "decision_scope": "none; model layout, P/D counts, routing, payload and placement are frozen inputs",
+    "not_in_scope": ["P2D2", "more than two flows", "TP or PP inside P/D", "model inference", "histogram retraining", "online arrivals", "dynamic routing", "queueing", "background congestion", "compute overlap", "memory feasibility"]
+  },
+  "frozen_correction_contract": {
+    "source": "experiment-results/phase62_pd_contention_fresh_blind/contracts/frozen_contention_correction.json",
+    "sha256": "609b3f0cb86d6817f03a5c1712f16340d9a17fe297545bc65bd07fdb874e0f9f",
+    "candidate_id": "global_affine_max_min",
+    "formula": "max(1.0, intercept_us + beta_max * max(C0,C1) + beta_min * min(C0,C1))",
+    "coefficients": {"intercept_us": -109.83183764072692, "beta_max": 0.9764784060893607, "beta_min": 0.8501015546505344},
+    "runtime_inputs": "C0/C1 are frozen Phase51 official P1D1 curve interpolations for the two payloads",
+    "forbidden": ["refit", "recalibration", "threshold tuning", "model/config/topology-specific coefficient override", "using matched-solo or Phase63 targets as an inference input"]
+  },
+  "external_payload_contract": {
+    "source": "workflows/patterndemand/phase63_pd_contention_four_model_external/payload_pair_grid.json",
+    "selection_policy": "six symmetric and four asymmetric pairs at pre-existing Phase51 knots, frozen in W63 before any Phase63 raw exists",
+    "pairs_per_model": 10,
+    "expected_unique_pairs": 40,
+    "expected_official_points": 240,
+    "expected_replica_points": 480,
+    "target_opening_policy": "pair identities and payloads are known from Phase51 single-flow curves; Phase63 concurrent-wave targets are unopened and forbidden until W63 is frozen",
+    "label_leakage_forbidden": true
+  },
+  "topology_definitions": {
+    "L1": "one physical node, three launched GPU ranks per shard",
+    "L2": "two physical nodes in one rack/network domain, three launched GPU ranks per shard",
+    "L3": "two physical nodes in different racks but one RDMA domain, three launched GPU ranks per shard"
+  },
+  "resource_allocation_contract": {
+    "endpoint_slots": "A0/A1/B0/B1 are four GPU slots, not four nodes",
+    "simultaneous_world_size_per_shard": 3,
+    "simultaneous_gpu_processes_per_shard": 3,
+    "simultaneous_nodes_per_shard": {"L1": 1, "L2": 2, "L3": 2},
+    "slot_mapping": {"P1D2": ["A0", "B0", "B1"], "P2D1": ["A0", "A1", "B0"]},
+    "fourth_slot": "unused in each individual shard",
+    "scheduling": "all model/topology/configuration/replica shards may run sequentially; four-node simultaneous allocation is never required"
+  },
+  "placement_contract": {
+    "placements_per_topology": 2,
+    "phase62_endpoint_reuse_preferred": true,
+    "phase62_endpoint_reuse_required": false,
+    "replacement_policy": "if Phase62 endpoints cannot be allocated, choose same-class GPU/RDMA endpoints from scheduler asset and rack/fabric metadata before raw; never benchmark then select",
+    "replicas_distinct": "the two endpoint signatures within each topology must differ",
+    "selection_before_raw": true,
+    "selection_source": "scheduler/asset host, rack and fabric metadata only; never Phase63 latency or frozen-model error",
+    "claim_boundary": "model-layout external validation across the measured placements; exact Phase62-placement isolation is reported separately when achieved"
+  },
+  "transport_contract": {
+    "production_wrapper": "sglang.srt.distributed.device_communicators.mooncake_transfer_engine.MooncakeTransferEngine.batch_transfer_sync",
+    "mooncake_protocol": "rdma",
+    "rdma_gpu_memory_registration": "dma-buf via WITH_NVIDIA_PEERMEM=0",
+    "concurrent_call_policy": "P1D2 has one shared engine with two worker threads; P2D1 has one sender engine per P rank",
+    "forced_tcp": false,
+    "forced_mnnvl": false,
+    "forced_intranode_nvlink": false,
+    "staging_buffer": false,
+    "custom_memory_pool": false
+  },
+  "measurement_contract": {
+    "world_size": 3,
+    "warmup_iterations_min": 2,
+    "warmup_iterations_max": 3,
+    "timed_iterations_min": 5,
+    "timed_iterations_max": 30,
+    "target_bytes_per_mode_block": 536870912,
+    "modes": ["solo_flow0", "solo_flow1", "concurrent_wave"],
+    "wave_latency_semantic": "maximum sender-side synchronous call latency across the two concurrently admitted flows",
+    "data_validation": "outside timed intervals verify every destination byte after each mode",
+    "minimum_independent_repeats": 5,
+    "extra_repeats_per_round": 2,
+    "maximum_independent_repeats": 9,
+    "repeat_median_cv_threshold": 0.15,
+    "cross_replica_relative_spread_diagnostic_threshold": 0.25,
+    "official_point_policy": "median across repeats inside each replica, then maximum actual concurrent latency across the two pre-frozen replicas",
+    "raw_storage": "all JSONL and per-iteration samples remain outside Git"
+  },
+  "external_validation_gate": {
+    "four_model_overall_wape_max": 0.10,
+    "each_model_overall_wape_max": 0.10,
+    "each_model_configuration_topology_wape_max": 0.15,
+    "four_model_overall_absolute_signed_bias_max": 0.10,
+    "each_model_overall_absolute_signed_bias_max": 0.10,
+    "each_model_configuration_topology_absolute_signed_bias_max": 0.15,
+    "all_predictions_positive": true,
+    "strictly_improves_uncorrected_phase51_max_overall": true,
+    "strictly_improves_uncorrected_phase51_max_each_model": true,
+    "six_model_conclusion_requires_phase62_pass": true,
+    "selection": "mechanical evaluation only; failure is retained honestly and never triggers refit on Phase63 labels"
+  },
+  "expected_measurements": 48,
+  "expected_official_points": 240,
+  "expected_replica_points": 480,
+  "container_contract": {
+    "image": "lmsysorg/sglang:v0.5.15",
+    "repo_python_first": true,
+    "formal_network_download_permitted": false,
+    "required_gpu_class": "CUDA GPU with GPUDirect RDMA; NVIDIA A51 B200 is acceptable",
+    "required_runtime_modules": ["torch", "mooncake.engine", "sglang.srt.distributed.device_communicators.mooncake_transfer_engine"]
+  },
+  "accepted_result_statuses": ["PASS", "PASS_WITH_RUNTIME_VARIANCE", "PASS_WITH_PLACEMENT_VARIANCE", "PASS_WITH_RUNTIME_AND_PLACEMENT_VARIANCE"],
+  "pinned_inputs": [
+    {"name":"phase62_manifest","path":"experiment-results/phase62_pd_contention_fresh_blind/manifest.sha256","sha256":"5cd66564b8b475a374eae9d6a7aaed8a207caed745c9595517e925813051650a","verify_manifest_directory":"experiment-results/phase62_pd_contention_fresh_blind"},
+    {"name":"phase62_summary","path":"experiment-results/phase62_pd_contention_fresh_blind/summary.json","sha256":"c5678b5765e0c6950691fab7bae87c891146eb5bbaef56b6bf1d4c7801728356"},
+    {"name":"phase62_frozen_model","path":"experiment-results/phase62_pd_contention_fresh_blind/contracts/frozen_contention_correction.json","sha256":"609b3f0cb86d6817f03a5c1712f16340d9a17fe297545bc65bd07fdb874e0f9f"},
+    {"name":"phase51_manifest","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/manifest.sha256","sha256":"ebb909c06524f314ffdaf11ea58cc2553a96439f52fa29c77b7c4f05236a0b11","verify_manifest_directory":"experiment-results/phase51_pd_l1_l3_physical_curve_library"},
+    {"name":"phase51_curves","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/curves/pd_mooncake_physical_curves.json","sha256":"e2278ced7d7ef9743b86df41c9f6d70661b4d2d95514ce28bf7031c6b26e841d"},
+    {"name":"phase51_layouts","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/contracts/model_transfer_layouts.json","sha256":"8dfbd24815e2baacccc7b786bd5fb5b2c2f33d3ad9b302d32f4172ca4f2db4d0"},
+    {"name":"phase60_benchmark","path":"workflows/patterndemand/phase60_pd_multi_endpoint_composability/benchmark_mooncake_multi.py","sha256":"c3b8e336c6f553240af15ccbed78e3ccca24e4f5309a9d745128cc595d67d818"},
+    {"name":"phase60_raw_validator","path":"workflows/patterndemand/phase60_pd_multi_endpoint_composability/measurement.py","sha256":"2db0c450cdf494ea2477a840973a71682b0c7f92caa5ea8fc2839da2caae52dc"},
+    {"name":"sglang_mooncake_transfer_engine","path":"python/sglang/srt/distributed/device_communicators/mooncake_transfer_engine.py","sha256":"6b3b67ca5e65fdd78f592b43b24717014ddd4bcf464add4fb414cc89975f7030"},
+    {"name":"sglang_mooncake_conn","path":"python/sglang/srt/disaggregation/mooncake/conn.py","sha256":"9106dfc8deb91662bdbac850f41612104a597b7f6a5cd15c8eb7ca17a20c8a0d"}
+  ],
+  "claim_boundary": [
+    "Phase63 is physical external-model validation of the frozen R61 correction for exactly two flows in P1D2/P2D1",
+    "a Phase63 PASS plus pinned R62 PASS supports six-model evidence across measured L1/L2/L3 and placements",
+    "it does not support P2D2, more flows, end-to-end serving, compute, memory, queueing, unrelated-job congestion, online arrivals or scheduling"
+  ],
+  "stop_and_block_if": [
+    "HEAD is not exact W63 or any pinned input differs",
+    "any prior validated model replaces one of the four held-out models or any R61 coefficient/threshold is changed",
+    "payload pairs or topology inventory are edited after Phase63 raw begins, or placement is selected by observed speed/error",
+    "an executor requests more than two simultaneous nodes for one shard",
+    "production Mooncake RDMA/dma-buf is unavailable or falls back to TCP, MNNVL, NVLink bypass, staging or custom pool",
+    "model weights, inference, training, downloads, protected raw/cache/PID assets are accessed",
+    "raw would enter Git or an existing Phase63 result directory would be overwritten"
+  ]
+}

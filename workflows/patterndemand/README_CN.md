@@ -44,5 +44,6 @@ workflow commit W
 - `phase60_pd_multi_endpoint_composability`：冻结P1D1预测链和Phase51曲线，使用Qwen3-8B与DeepSeek-V2-Lite实测P1D2/P2D1两路同wave的L1/L2/L3 Mooncake/RDMA行为；以同批次solo锚点区分真实contention与环境漂移，只生成development可组合性证据，不拟合修正项或打开未来blind pair。
 - `phase61_pd_contention_correction`：在本地CPU上只使用Phase60的120个development official point，以leave-one-payload-pair-out选择最简单达标的P1D2/P2D1 contention修正公式；冻结后才允许Phase62打开reserved payload和未见placement做GPU fresh-blind。
 - `phase62_pd_contention_fresh_blind`：冻结R61全局max/min修正公式，在生产Mooncake RDMA上只测Phase60预留的20个reserved payload pair，并使用与Phase60 endpoint tuple完全不重合、每种拓扑至少一套host signature全新的placement；不训练、不调参，机械验证P1D2/P2D1两流修正是否达到整体10%、各配置拓扑15%的fresh-blind合同。
+- `phase63_pd_contention_four_model_external`：冻结R61修正公式，对Qwen3-30B-A3B、Llama-3.2-3B、Qwen2.5-14B和Mixtral-8x7B四个held-out KV布局做P1D2/P2D1、L1–L3外部物理验证；48个三rank shard，与R62合并形成六模型证据。
 
 完整交接见`PatternDemand跨环境GPU执行交接_Phase36_Phase37.md`。
