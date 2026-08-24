@@ -35,6 +35,12 @@ PHASE_PREFIX = {
     "phase60": "experiment-results/phase60_pd_multi_endpoint_composability/",
 }
 
+ALLOWED_COMPACT_DATA_PATHS = {
+    "phase60": {
+        "experiment-results/phase60_pd_multi_endpoint_composability/data/development_composability_points.json",
+    },
+}
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -53,12 +59,22 @@ def main() -> None:
     invalid = [path for path in paths if not path.startswith(prefix)]
     if not paths or invalid:
         raise RuntimeError(f"result commit路径越界：invalid={invalid}, paths={paths}")
-    forbidden = [
-        path
-        for path in paths
-        if Path(path).suffix.lower() in {".pid", ".pt", ".pth", ".ckpt", ".safetensors", ".jsonl"}
-        or any(part.lower() in {"data", "raw_samples", "raw_trace", "cache"} for part in Path(path).parts)
-    ]
+    allowed_compact_data = ALLOWED_COMPACT_DATA_PATHS.get(args.phase, set())
+    forbidden = []
+    for path in paths:
+        parts = {part.lower() for part in Path(path).parts}
+        forbidden_suffix = Path(path).suffix.lower() in {
+            ".pid",
+            ".pt",
+            ".pth",
+            ".ckpt",
+            ".safetensors",
+            ".jsonl",
+        }
+        forbidden_directory = bool(parts & {"raw_samples", "raw_trace", "cache"})
+        unapproved_data_directory = "data" in parts and path not in allowed_compact_data
+        if forbidden_suffix or forbidden_directory or unapproved_data_directory:
+            forbidden.append(path)
     if forbidden:
         raise RuntimeError(f"result commit含禁止资产：{forbidden}")
     manifest = prefix + "manifest.sha256"
