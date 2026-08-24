@@ -32,6 +32,7 @@ PHASES = {
     "phase52": "experiment-results/phase52_pd_physical_cost_placement_validation/",
     "phase53": "experiment-results/phase53_tp_pp_pd_conclusion_freeze/",
     "phase60": "experiment-results/phase60_pd_multi_endpoint_composability/",
+    "phase61": "experiment-results/phase61_pd_contention_correction/",
 }
 
 

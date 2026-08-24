@@ -1,0 +1,111 @@
+{
+  "schema_version": "phase61-pd-contention-correction-contract-v1",
+  "phase": "Phase61-development",
+  "objective": "使用Phase60冻结的120个development物理点，在不打开reserved future blind payload或新增GPU数据的前提下，选择并冻结一个最简单且达到精度合同的P1D2/P2D1并发通信修正公式。",
+  "workflow_parent_result_commit": "31a718aaf9ded590f8940342038f58210ce5962e",
+  "result_dir": "experiment-results/phase61_pd_contention_correction",
+  "execution": {
+    "environment": "local CPU",
+    "gpu_permitted": false,
+    "network_permitted": false,
+    "new_physical_measurement_permitted": false,
+    "training_permitted": true,
+    "reserved_future_blind_labels_permitted": false
+  },
+  "dataset_contract": {
+    "source": "experiment-results/phase60_pd_multi_endpoint_composability/analysis/composability_points.csv",
+    "rows": 120,
+    "models": ["qwen3-8b", "deepseek-v2-lite"],
+    "configurations": ["P1D2", "P2D1"],
+    "topology_levels": ["L1", "L2", "L3"],
+    "development_pairs_per_model": 10,
+    "replica_policy": "use Phase60 official max-over-two-replicas point only",
+    "target": "actual_concurrent_wave_us",
+    "runtime_inputs": ["phase51_flow0_us", "phase51_flow1_us"],
+    "forbidden_inputs": ["matched_solo_ideal_us", "actual_concurrent_wave_us at inference", "reserved future blind measurements"]
+  },
+  "baseline": {
+    "name": "phase51_max",
+    "formula": "max(phase51_flow0_us, phase51_flow1_us)"
+  },
+  "candidate_contract": {
+    "selection_order": [
+      "global_scale",
+      "global_affine_max_min",
+      "configuration_affine_max_min",
+      "model_affine_max_min",
+      "model_configuration_affine_max_min",
+      "model_configuration_topology_affine_max_min"
+    ],
+    "global_scale": "k * max(C0,C1)",
+    "affine_max_min": "intercept_us + beta_max * max(C0,C1) + beta_min * min(C0,C1)",
+    "fit": "deterministic ordinary least squares with centered/scaled features and partial-pivot linear solve",
+    "prediction_floor_us": 1.0,
+    "selection_policy": "choose the first and simplest candidate whose leave-one-payload-pair-out OOF predictions pass every acceptance gate; never choose a more complex candidate for a smaller already-passing error"
+  },
+  "cross_validation_contract": {
+    "method": "leave-one-payload-pair-out",
+    "folds": 20,
+    "held_out_unit": "one model-specific payload pair and all six configuration/topology rows belonging to it",
+    "selection_uses_oof_only": true,
+    "final_refit": "after selection, refit the selected family once on all 120 development rows"
+  },
+  "acceptance_gate": {
+    "oof_overall_wape_max": 0.10,
+    "oof_each_configuration_topology_wape_max": 0.15,
+    "oof_overall_absolute_signed_bias_max": 0.10,
+    "oof_each_configuration_topology_absolute_signed_bias_max": 0.15,
+    "all_predictions_positive": true,
+    "must_improve_over_phase51_max": true
+  },
+  "blind_boundary": {
+    "reserved_pair_definitions_may_be_audited_only_to_prove_zero_overlap": true,
+    "reserved_pair_features_may_influence_fit_or_selection": false,
+    "reserved_pair_measurements_or_targets_may_be_read": false,
+    "next_phase": "Phase62 freezes this model before GPU measurement of reserved pairs and unseen placements"
+  },
+  "pinned_inputs": [
+    {
+      "name": "phase60_manifest",
+      "path": "experiment-results/phase60_pd_multi_endpoint_composability/manifest.sha256",
+      "sha256": "64964993e3138113b205801094a86aab0a57deefbba8afc4a82cd4331c70bfde",
+      "verify_manifest_directory": "experiment-results/phase60_pd_multi_endpoint_composability"
+    },
+    {
+      "name": "phase60_summary",
+      "path": "experiment-results/phase60_pd_multi_endpoint_composability/summary.json",
+      "sha256": "c6a4a9cdd95666fc33009d064d66be60f2ef73e1a3e318b7a45f92a00ea0f309"
+    },
+    {
+      "name": "phase60_points",
+      "path": "experiment-results/phase60_pd_multi_endpoint_composability/analysis/composability_points.csv",
+      "sha256": "9798dc5da1fd40ecdbccaeda5d452ed04b9c426620597a5839c0291b58bad86f"
+    },
+    {
+      "name": "phase60_pair_grid",
+      "path": "experiment-results/phase60_pd_multi_endpoint_composability/contracts/payload_pair_grid.json",
+      "sha256": "c444481c1aabd240bb986fa5a6d0133ca226543e4da2ee6b608ef837b2f9143e"
+    },
+    {
+      "name": "phase60_topology_plan",
+      "path": "experiment-results/phase60_pd_multi_endpoint_composability/contracts/topology_plan.json",
+      "sha256": "ab902df32ae3424fe4437f09fa94c177779d7e3d2f0fe31ca643ff04c7da81bf"
+    }
+  ],
+  "accepted_result_statuses": ["PASS", "PASS_TARGET_NOT_MET"],
+  "stop_and_block_if": [
+    "HEAD is not the exact W61 supplied to the runner",
+    "any pinned Phase60 input differs",
+    "Phase60 result is not PASS/CONTENTION_CORRECTION_CANDIDATE",
+    "the 120-row development matrix or pair roles differ",
+    "reserved future blind measurement or target is opened",
+    "GPU, network or a new physical measurement is used",
+    "the existing Phase61 result directory would be overwritten"
+  ],
+  "claim_boundary": [
+    "development-only correction selection for two-flow P1D2/P2D1 physical communication time",
+    "not fresh blind validation",
+    "not P2D2 or more than two simultaneous flows",
+    "not end-to-end latency, compute, memory, queueing, scheduling or unrelated-job congestion"
+  ]
+}
