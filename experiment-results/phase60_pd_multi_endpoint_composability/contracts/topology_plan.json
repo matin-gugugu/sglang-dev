@@ -1,0 +1,1557 @@
+{
+  "development_pairs_sha256": "812bf09114208ae815bec5760074c89d8f457081f9326c0b5e1c1b938d3a8704",
+  "generated_at_utc": "2026-08-24T05:50:36.104091+00:00",
+  "inventory_metadata": {
+    "classification_frozen_before_measurement": true,
+    "classification_not_inferred_from_benchmark": true,
+    "classification_source": "nvidia-a51 Slurm allocation and fabric metadata captured before any Phase60 transfer: `scontrol show topology` InfiniBand leaf/core tree plus per-node Slurm feature tags at 2026-08-24T05:50:18+00:00, and per-GPU HCA PCIe proximity from `nvidia-smi topo -m`. rack_id is the node's InfiniBand leaf switch, network_domain is the core switch above that leaf. No measured timing was consulted.",
+    "created_at_utc": "2026-08-24T05:50:35.130557+00:00",
+    "created_by": "GPU environment agent (Claude Code) on the nvidia-a51 Slurm allocation",
+    "fabric_notes": "nvidia-a51 B200 cluster, NDR InfiniBand three-level tree (root a51 -> ibccore* -> ibcleaf*). L1 replicas keep all four endpoint slots inside one host (prenyx0238 and prenyx0269) and still transfer over Mooncake RDMA. L2 replicas stay inside a single leaf switch (ibcleaf01-03: prenyx0238+prenyx0239; ibcleaf01-04: prenyx0269+prenyx0270). L3 replicas cross from ibcleaf01-03 to ibcleaf01-04 through core ibccore01. The two replicas of each level use disjoint hosts. Each host exposes 8x NVIDIA B200 and RDMA NICs ['mlx5_10', 'mlx5_13', 'mlx5_14', 'mlx5_15', 'mlx5_4', 'mlx5_7', 'mlx5_8', 'mlx5_9']; each endpoint uses the HCA with the closest PCIe proximity to its GPU."
+  },
+  "inventory_schema_version": "phase60-topology-inventory-v1",
+  "inventory_sha256": "ede6398a55a0e72cc10443e720d8e46df4ab38804c8ec98fa42cdbbd1aa8b51a",
+  "measurements": [
+    {
+      "classification_evidence": "single-host allocation metadata: prenyx0238 on leaf ibcleaf01-03 under core ibccore01, four distinct GPUs (0, 1, 2, 3)",
+      "configuration": "P1D2",
+      "development_pairs_sha256": "b94e6b72e8f5676628c174f0ccf9441ea30a454c9b30f88f570090252b81dc6f",
+      "measurement_id": "qwen3-8b__p1d2__l1__r0",
+      "measurement_sha256": "4c0389b458dc49eb0b23707f210db53087fb4ed9834d6afd1713bca9b98e5638",
+      "model_id": "qwen3-8b",
+      "model_layout_sha256": "6a8d3cce08590bc6c19562d81831a0a6ac41665970bb54c4b943d87118c52af5",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l1_r0_prenyx0238",
+      "ranks": [
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_8",
+          "network_domain": "ibccore01",
+          "physical_gpu": 2,
+          "rack_id": "ibcleaf01-03",
+          "rank": 1,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_9",
+          "network_domain": "ibccore01",
+          "physical_gpu": 3,
+          "rack_id": "ibcleaf01-03",
+          "rank": 2,
+          "role": "D1",
+          "side": "B",
+          "slot": "B1",
+          "transfer_hostname": "10.52.36.167"
+        }
+      ],
+      "replica_id": 0,
+      "topology_level": "L1",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "single-host allocation metadata: prenyx0269 on leaf ibcleaf01-04 under core ibccore01, four distinct GPUs (0, 1, 2, 3)",
+      "configuration": "P1D2",
+      "development_pairs_sha256": "b94e6b72e8f5676628c174f0ccf9441ea30a454c9b30f88f570090252b81dc6f",
+      "measurement_id": "qwen3-8b__p1d2__l1__r1",
+      "measurement_sha256": "b9202d39db47b1e0eb3e1d752ad6ad9dd158ddcd4d123f77b5fd6ef2643e5903",
+      "model_id": "qwen3-8b",
+      "model_layout_sha256": "6a8d3cce08590bc6c19562d81831a0a6ac41665970bb54c4b943d87118c52af5",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l1_r1_prenyx0269",
+      "ranks": [
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_8",
+          "network_domain": "ibccore01",
+          "physical_gpu": 2,
+          "rack_id": "ibcleaf01-04",
+          "rank": 1,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_9",
+          "network_domain": "ibccore01",
+          "physical_gpu": 3,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D1",
+          "side": "B",
+          "slot": "B1",
+          "transfer_hostname": "10.52.36.230"
+        }
+      ],
+      "replica_id": 1,
+      "topology_level": "L1",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "same-rack allocation metadata: prenyx0238 and prenyx0239 both attached to leaf switch ibcleaf01-03 under core ibccore01",
+      "configuration": "P1D2",
+      "development_pairs_sha256": "b94e6b72e8f5676628c174f0ccf9441ea30a454c9b30f88f570090252b81dc6f",
+      "measurement_id": "qwen3-8b__p1d2__l2__r0",
+      "measurement_sha256": "94c7f6a5fea498095e322260d6019c017bb465901d1cd120c19f839b3843c8d4",
+      "model_id": "qwen3-8b",
+      "model_layout_sha256": "6a8d3cce08590bc6c19562d81831a0a6ac41665970bb54c4b943d87118c52af5",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l2_r0_prenyx0238_prenyx0239",
+      "ranks": [
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0239.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0239",
+            "prenyx0239.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 1,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.168"
+        },
+        {
+          "host": "prenyx0239.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0239",
+            "prenyx0239.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-03",
+          "rank": 2,
+          "role": "D1",
+          "side": "B",
+          "slot": "B1",
+          "transfer_hostname": "10.52.36.168"
+        }
+      ],
+      "replica_id": 0,
+      "topology_level": "L2",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "same-rack allocation metadata: prenyx0269 and prenyx0270 both attached to leaf switch ibcleaf01-04 under core ibccore01",
+      "configuration": "P1D2",
+      "development_pairs_sha256": "b94e6b72e8f5676628c174f0ccf9441ea30a454c9b30f88f570090252b81dc6f",
+      "measurement_id": "qwen3-8b__p1d2__l2__r1",
+      "measurement_sha256": "9a8c26a71614a2faa8f8de8c79eafef0b3c8cf5973906cb3aa4057efa1b02c64",
+      "model_id": "qwen3-8b",
+      "model_layout_sha256": "6a8d3cce08590bc6c19562d81831a0a6ac41665970bb54c4b943d87118c52af5",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l2_r1_prenyx0269_prenyx0270",
+      "ranks": [
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0270.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0270",
+            "prenyx0270.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 1,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.231"
+        },
+        {
+          "host": "prenyx0270.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0270",
+            "prenyx0270.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D1",
+          "side": "B",
+          "slot": "B1",
+          "transfer_hostname": "10.52.36.231"
+        }
+      ],
+      "replica_id": 1,
+      "topology_level": "L2",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "cross-rack allocation metadata: prenyx0238 on leaf ibcleaf01-03 and prenyx0269 on leaf ibcleaf01-04, both under core ibccore01",
+      "configuration": "P1D2",
+      "development_pairs_sha256": "b94e6b72e8f5676628c174f0ccf9441ea30a454c9b30f88f570090252b81dc6f",
+      "measurement_id": "qwen3-8b__p1d2__l3__r0",
+      "measurement_sha256": "472135f1a3a223be3715946794eb990cca5b38bdbec8335acfd731c10c23db3f",
+      "model_id": "qwen3-8b",
+      "model_layout_sha256": "6a8d3cce08590bc6c19562d81831a0a6ac41665970bb54c4b943d87118c52af5",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l3_r0_prenyx0238_prenyx0269",
+      "ranks": [
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 1,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D1",
+          "side": "B",
+          "slot": "B1",
+          "transfer_hostname": "10.52.36.230"
+        }
+      ],
+      "replica_id": 0,
+      "topology_level": "L3",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "cross-rack allocation metadata: prenyx0239 on leaf ibcleaf01-03 and prenyx0270 on leaf ibcleaf01-04, both under core ibccore01",
+      "configuration": "P1D2",
+      "development_pairs_sha256": "b94e6b72e8f5676628c174f0ccf9441ea30a454c9b30f88f570090252b81dc6f",
+      "measurement_id": "qwen3-8b__p1d2__l3__r1",
+      "measurement_sha256": "6cacbc9bb7eaca4e57883e17da3eba9e247412082b12c79e1b56e3ce86185f5b",
+      "model_id": "qwen3-8b",
+      "model_layout_sha256": "6a8d3cce08590bc6c19562d81831a0a6ac41665970bb54c4b943d87118c52af5",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l3_r1_prenyx0239_prenyx0270",
+      "ranks": [
+        {
+          "host": "prenyx0239.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0239",
+            "prenyx0239.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.168"
+        },
+        {
+          "host": "prenyx0270.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0270",
+            "prenyx0270.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 1,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.231"
+        },
+        {
+          "host": "prenyx0270.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0270",
+            "prenyx0270.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D1",
+          "side": "B",
+          "slot": "B1",
+          "transfer_hostname": "10.52.36.231"
+        }
+      ],
+      "replica_id": 1,
+      "topology_level": "L3",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "single-host allocation metadata: prenyx0238 on leaf ibcleaf01-03 under core ibccore01, four distinct GPUs (0, 1, 2, 3)",
+      "configuration": "P2D1",
+      "development_pairs_sha256": "b94e6b72e8f5676628c174f0ccf9441ea30a454c9b30f88f570090252b81dc6f",
+      "measurement_id": "qwen3-8b__p2d1__l1__r0",
+      "measurement_sha256": "375d0251049c0bdb5e2d533e83af51354216605419d49144fe29254697059d50",
+      "model_id": "qwen3-8b",
+      "model_layout_sha256": "6a8d3cce08590bc6c19562d81831a0a6ac41665970bb54c4b943d87118c52af5",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l1_r0_prenyx0238",
+      "ranks": [
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-03",
+          "rank": 1,
+          "role": "P1",
+          "side": "A",
+          "slot": "A1",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_8",
+          "network_domain": "ibccore01",
+          "physical_gpu": 2,
+          "rack_id": "ibcleaf01-03",
+          "rank": 2,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.167"
+        }
+      ],
+      "replica_id": 0,
+      "topology_level": "L1",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "single-host allocation metadata: prenyx0269 on leaf ibcleaf01-04 under core ibccore01, four distinct GPUs (0, 1, 2, 3)",
+      "configuration": "P2D1",
+      "development_pairs_sha256": "b94e6b72e8f5676628c174f0ccf9441ea30a454c9b30f88f570090252b81dc6f",
+      "measurement_id": "qwen3-8b__p2d1__l1__r1",
+      "measurement_sha256": "81c8640e80a91eacf66b96430fcfb1db8857d05fb6b4a762de97d8ce722af7f9",
+      "model_id": "qwen3-8b",
+      "model_layout_sha256": "6a8d3cce08590bc6c19562d81831a0a6ac41665970bb54c4b943d87118c52af5",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l1_r1_prenyx0269",
+      "ranks": [
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-04",
+          "rank": 1,
+          "role": "P1",
+          "side": "A",
+          "slot": "A1",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_8",
+          "network_domain": "ibccore01",
+          "physical_gpu": 2,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.230"
+        }
+      ],
+      "replica_id": 1,
+      "topology_level": "L1",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "same-rack allocation metadata: prenyx0238 and prenyx0239 both attached to leaf switch ibcleaf01-03 under core ibccore01",
+      "configuration": "P2D1",
+      "development_pairs_sha256": "b94e6b72e8f5676628c174f0ccf9441ea30a454c9b30f88f570090252b81dc6f",
+      "measurement_id": "qwen3-8b__p2d1__l2__r0",
+      "measurement_sha256": "7744809c3c040974716eb9f44d7dd0f162adad35b3435c6ebfa6845e507b6b2f",
+      "model_id": "qwen3-8b",
+      "model_layout_sha256": "6a8d3cce08590bc6c19562d81831a0a6ac41665970bb54c4b943d87118c52af5",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l2_r0_prenyx0238_prenyx0239",
+      "ranks": [
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-03",
+          "rank": 1,
+          "role": "P1",
+          "side": "A",
+          "slot": "A1",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0239.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0239",
+            "prenyx0239.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 2,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.168"
+        }
+      ],
+      "replica_id": 0,
+      "topology_level": "L2",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "same-rack allocation metadata: prenyx0269 and prenyx0270 both attached to leaf switch ibcleaf01-04 under core ibccore01",
+      "configuration": "P2D1",
+      "development_pairs_sha256": "b94e6b72e8f5676628c174f0ccf9441ea30a454c9b30f88f570090252b81dc6f",
+      "measurement_id": "qwen3-8b__p2d1__l2__r1",
+      "measurement_sha256": "fdff125bf18cfc040ab505a4ee2a7ad91632bf4c073ecac9b94f4561f9a8136f",
+      "model_id": "qwen3-8b",
+      "model_layout_sha256": "6a8d3cce08590bc6c19562d81831a0a6ac41665970bb54c4b943d87118c52af5",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l2_r1_prenyx0269_prenyx0270",
+      "ranks": [
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-04",
+          "rank": 1,
+          "role": "P1",
+          "side": "A",
+          "slot": "A1",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0270.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0270",
+            "prenyx0270.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.231"
+        }
+      ],
+      "replica_id": 1,
+      "topology_level": "L2",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "cross-rack allocation metadata: prenyx0238 on leaf ibcleaf01-03 and prenyx0269 on leaf ibcleaf01-04, both under core ibccore01",
+      "configuration": "P2D1",
+      "development_pairs_sha256": "b94e6b72e8f5676628c174f0ccf9441ea30a454c9b30f88f570090252b81dc6f",
+      "measurement_id": "qwen3-8b__p2d1__l3__r0",
+      "measurement_sha256": "8731654621b519f9cc17b4904d558b8b6f23bbeb79976c3c7abff7a2f37267df",
+      "model_id": "qwen3-8b",
+      "model_layout_sha256": "6a8d3cce08590bc6c19562d81831a0a6ac41665970bb54c4b943d87118c52af5",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l3_r0_prenyx0238_prenyx0269",
+      "ranks": [
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-03",
+          "rank": 1,
+          "role": "P1",
+          "side": "A",
+          "slot": "A1",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.230"
+        }
+      ],
+      "replica_id": 0,
+      "topology_level": "L3",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "cross-rack allocation metadata: prenyx0239 on leaf ibcleaf01-03 and prenyx0270 on leaf ibcleaf01-04, both under core ibccore01",
+      "configuration": "P2D1",
+      "development_pairs_sha256": "b94e6b72e8f5676628c174f0ccf9441ea30a454c9b30f88f570090252b81dc6f",
+      "measurement_id": "qwen3-8b__p2d1__l3__r1",
+      "measurement_sha256": "854f3fb65a13ddacd6e9e5ac19b50da41c5d84fad4a31f57084070d99f849165",
+      "model_id": "qwen3-8b",
+      "model_layout_sha256": "6a8d3cce08590bc6c19562d81831a0a6ac41665970bb54c4b943d87118c52af5",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l3_r1_prenyx0239_prenyx0270",
+      "ranks": [
+        {
+          "host": "prenyx0239.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0239",
+            "prenyx0239.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.168"
+        },
+        {
+          "host": "prenyx0239.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0239",
+            "prenyx0239.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-03",
+          "rank": 1,
+          "role": "P1",
+          "side": "A",
+          "slot": "A1",
+          "transfer_hostname": "10.52.36.168"
+        },
+        {
+          "host": "prenyx0270.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0270",
+            "prenyx0270.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.231"
+        }
+      ],
+      "replica_id": 1,
+      "topology_level": "L3",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "single-host allocation metadata: prenyx0238 on leaf ibcleaf01-03 under core ibccore01, four distinct GPUs (0, 1, 2, 3)",
+      "configuration": "P1D2",
+      "development_pairs_sha256": "4e01ff3ca05062ff67469eaf2d22b3950125e49c7dc1b946e035db387a6b41ef",
+      "measurement_id": "deepseek-v2-lite__p1d2__l1__r0",
+      "measurement_sha256": "fd21f53cf9757841b29c26fd33ae858de11d9eff5f530de6dd8fc60dba617744",
+      "model_id": "deepseek-v2-lite",
+      "model_layout_sha256": "88e70c8261dbd6a423470aaae60a30dbfc92975897f54c2988ab34de2edc1794",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l1_r0_prenyx0238",
+      "ranks": [
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_8",
+          "network_domain": "ibccore01",
+          "physical_gpu": 2,
+          "rack_id": "ibcleaf01-03",
+          "rank": 1,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_9",
+          "network_domain": "ibccore01",
+          "physical_gpu": 3,
+          "rack_id": "ibcleaf01-03",
+          "rank": 2,
+          "role": "D1",
+          "side": "B",
+          "slot": "B1",
+          "transfer_hostname": "10.52.36.167"
+        }
+      ],
+      "replica_id": 0,
+      "topology_level": "L1",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "single-host allocation metadata: prenyx0269 on leaf ibcleaf01-04 under core ibccore01, four distinct GPUs (0, 1, 2, 3)",
+      "configuration": "P1D2",
+      "development_pairs_sha256": "4e01ff3ca05062ff67469eaf2d22b3950125e49c7dc1b946e035db387a6b41ef",
+      "measurement_id": "deepseek-v2-lite__p1d2__l1__r1",
+      "measurement_sha256": "cef6d0663aafa28eea5c73d922c18c1a778ef49db4a204d34d3f3b12db2e223e",
+      "model_id": "deepseek-v2-lite",
+      "model_layout_sha256": "88e70c8261dbd6a423470aaae60a30dbfc92975897f54c2988ab34de2edc1794",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l1_r1_prenyx0269",
+      "ranks": [
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_8",
+          "network_domain": "ibccore01",
+          "physical_gpu": 2,
+          "rack_id": "ibcleaf01-04",
+          "rank": 1,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_9",
+          "network_domain": "ibccore01",
+          "physical_gpu": 3,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D1",
+          "side": "B",
+          "slot": "B1",
+          "transfer_hostname": "10.52.36.230"
+        }
+      ],
+      "replica_id": 1,
+      "topology_level": "L1",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "same-rack allocation metadata: prenyx0238 and prenyx0239 both attached to leaf switch ibcleaf01-03 under core ibccore01",
+      "configuration": "P1D2",
+      "development_pairs_sha256": "4e01ff3ca05062ff67469eaf2d22b3950125e49c7dc1b946e035db387a6b41ef",
+      "measurement_id": "deepseek-v2-lite__p1d2__l2__r0",
+      "measurement_sha256": "668cad89989bdb1bf8624350b6924bfdd064ac05b0349d7f1e86bd2b16ee1042",
+      "model_id": "deepseek-v2-lite",
+      "model_layout_sha256": "88e70c8261dbd6a423470aaae60a30dbfc92975897f54c2988ab34de2edc1794",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l2_r0_prenyx0238_prenyx0239",
+      "ranks": [
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0239.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0239",
+            "prenyx0239.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 1,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.168"
+        },
+        {
+          "host": "prenyx0239.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0239",
+            "prenyx0239.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-03",
+          "rank": 2,
+          "role": "D1",
+          "side": "B",
+          "slot": "B1",
+          "transfer_hostname": "10.52.36.168"
+        }
+      ],
+      "replica_id": 0,
+      "topology_level": "L2",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "same-rack allocation metadata: prenyx0269 and prenyx0270 both attached to leaf switch ibcleaf01-04 under core ibccore01",
+      "configuration": "P1D2",
+      "development_pairs_sha256": "4e01ff3ca05062ff67469eaf2d22b3950125e49c7dc1b946e035db387a6b41ef",
+      "measurement_id": "deepseek-v2-lite__p1d2__l2__r1",
+      "measurement_sha256": "c8d7d632159ca208532ae60d97a502f338dd8f00204a955bbaddee5cddf2e2a5",
+      "model_id": "deepseek-v2-lite",
+      "model_layout_sha256": "88e70c8261dbd6a423470aaae60a30dbfc92975897f54c2988ab34de2edc1794",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l2_r1_prenyx0269_prenyx0270",
+      "ranks": [
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0270.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0270",
+            "prenyx0270.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 1,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.231"
+        },
+        {
+          "host": "prenyx0270.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0270",
+            "prenyx0270.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D1",
+          "side": "B",
+          "slot": "B1",
+          "transfer_hostname": "10.52.36.231"
+        }
+      ],
+      "replica_id": 1,
+      "topology_level": "L2",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "cross-rack allocation metadata: prenyx0238 on leaf ibcleaf01-03 and prenyx0269 on leaf ibcleaf01-04, both under core ibccore01",
+      "configuration": "P1D2",
+      "development_pairs_sha256": "4e01ff3ca05062ff67469eaf2d22b3950125e49c7dc1b946e035db387a6b41ef",
+      "measurement_id": "deepseek-v2-lite__p1d2__l3__r0",
+      "measurement_sha256": "546fbdc4e62947819a8954851efe64bd5cd4395003973a84ba85d02e0de8235d",
+      "model_id": "deepseek-v2-lite",
+      "model_layout_sha256": "88e70c8261dbd6a423470aaae60a30dbfc92975897f54c2988ab34de2edc1794",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l3_r0_prenyx0238_prenyx0269",
+      "ranks": [
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 1,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D1",
+          "side": "B",
+          "slot": "B1",
+          "transfer_hostname": "10.52.36.230"
+        }
+      ],
+      "replica_id": 0,
+      "topology_level": "L3",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "cross-rack allocation metadata: prenyx0239 on leaf ibcleaf01-03 and prenyx0270 on leaf ibcleaf01-04, both under core ibccore01",
+      "configuration": "P1D2",
+      "development_pairs_sha256": "4e01ff3ca05062ff67469eaf2d22b3950125e49c7dc1b946e035db387a6b41ef",
+      "measurement_id": "deepseek-v2-lite__p1d2__l3__r1",
+      "measurement_sha256": "d70d962060f905340d14cb190afa634f12df87d38182fcad10803b8c6b778355",
+      "model_id": "deepseek-v2-lite",
+      "model_layout_sha256": "88e70c8261dbd6a423470aaae60a30dbfc92975897f54c2988ab34de2edc1794",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l3_r1_prenyx0239_prenyx0270",
+      "ranks": [
+        {
+          "host": "prenyx0239.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0239",
+            "prenyx0239.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.168"
+        },
+        {
+          "host": "prenyx0270.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0270",
+            "prenyx0270.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 1,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.231"
+        },
+        {
+          "host": "prenyx0270.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0270",
+            "prenyx0270.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D1",
+          "side": "B",
+          "slot": "B1",
+          "transfer_hostname": "10.52.36.231"
+        }
+      ],
+      "replica_id": 1,
+      "topology_level": "L3",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "single-host allocation metadata: prenyx0238 on leaf ibcleaf01-03 under core ibccore01, four distinct GPUs (0, 1, 2, 3)",
+      "configuration": "P2D1",
+      "development_pairs_sha256": "4e01ff3ca05062ff67469eaf2d22b3950125e49c7dc1b946e035db387a6b41ef",
+      "measurement_id": "deepseek-v2-lite__p2d1__l1__r0",
+      "measurement_sha256": "547a9426480f0a18748e6c3d1c089ffa9ccf8821346fdb3f7dd0e85be2151588",
+      "model_id": "deepseek-v2-lite",
+      "model_layout_sha256": "88e70c8261dbd6a423470aaae60a30dbfc92975897f54c2988ab34de2edc1794",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l1_r0_prenyx0238",
+      "ranks": [
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-03",
+          "rank": 1,
+          "role": "P1",
+          "side": "A",
+          "slot": "A1",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_8",
+          "network_domain": "ibccore01",
+          "physical_gpu": 2,
+          "rack_id": "ibcleaf01-03",
+          "rank": 2,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.167"
+        }
+      ],
+      "replica_id": 0,
+      "topology_level": "L1",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "single-host allocation metadata: prenyx0269 on leaf ibcleaf01-04 under core ibccore01, four distinct GPUs (0, 1, 2, 3)",
+      "configuration": "P2D1",
+      "development_pairs_sha256": "4e01ff3ca05062ff67469eaf2d22b3950125e49c7dc1b946e035db387a6b41ef",
+      "measurement_id": "deepseek-v2-lite__p2d1__l1__r1",
+      "measurement_sha256": "673459238a0489602ed79e62d63d2b37386e248b64e52ba42998ff11b7b990cb",
+      "model_id": "deepseek-v2-lite",
+      "model_layout_sha256": "88e70c8261dbd6a423470aaae60a30dbfc92975897f54c2988ab34de2edc1794",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l1_r1_prenyx0269",
+      "ranks": [
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-04",
+          "rank": 1,
+          "role": "P1",
+          "side": "A",
+          "slot": "A1",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_8",
+          "network_domain": "ibccore01",
+          "physical_gpu": 2,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.230"
+        }
+      ],
+      "replica_id": 1,
+      "topology_level": "L1",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "same-rack allocation metadata: prenyx0238 and prenyx0239 both attached to leaf switch ibcleaf01-03 under core ibccore01",
+      "configuration": "P2D1",
+      "development_pairs_sha256": "4e01ff3ca05062ff67469eaf2d22b3950125e49c7dc1b946e035db387a6b41ef",
+      "measurement_id": "deepseek-v2-lite__p2d1__l2__r0",
+      "measurement_sha256": "50039a3e4ba9b3dd8bac8a0a211c4b6ddf7d29728b41aca38700f00a0bb96ee6",
+      "model_id": "deepseek-v2-lite",
+      "model_layout_sha256": "88e70c8261dbd6a423470aaae60a30dbfc92975897f54c2988ab34de2edc1794",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l2_r0_prenyx0238_prenyx0239",
+      "ranks": [
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-03",
+          "rank": 1,
+          "role": "P1",
+          "side": "A",
+          "slot": "A1",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0239.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0239",
+            "prenyx0239.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 2,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.168"
+        }
+      ],
+      "replica_id": 0,
+      "topology_level": "L2",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "same-rack allocation metadata: prenyx0269 and prenyx0270 both attached to leaf switch ibcleaf01-04 under core ibccore01",
+      "configuration": "P2D1",
+      "development_pairs_sha256": "4e01ff3ca05062ff67469eaf2d22b3950125e49c7dc1b946e035db387a6b41ef",
+      "measurement_id": "deepseek-v2-lite__p2d1__l2__r1",
+      "measurement_sha256": "103b76fdc8450d60ea1214c2676f177ee34627a063b64719b6bea9dc9c468320",
+      "model_id": "deepseek-v2-lite",
+      "model_layout_sha256": "88e70c8261dbd6a423470aaae60a30dbfc92975897f54c2988ab34de2edc1794",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l2_r1_prenyx0269_prenyx0270",
+      "ranks": [
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-04",
+          "rank": 1,
+          "role": "P1",
+          "side": "A",
+          "slot": "A1",
+          "transfer_hostname": "10.52.36.230"
+        },
+        {
+          "host": "prenyx0270.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0270",
+            "prenyx0270.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.231"
+        }
+      ],
+      "replica_id": 1,
+      "topology_level": "L2",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "cross-rack allocation metadata: prenyx0238 on leaf ibcleaf01-03 and prenyx0269 on leaf ibcleaf01-04, both under core ibccore01",
+      "configuration": "P2D1",
+      "development_pairs_sha256": "4e01ff3ca05062ff67469eaf2d22b3950125e49c7dc1b946e035db387a6b41ef",
+      "measurement_id": "deepseek-v2-lite__p2d1__l3__r0",
+      "measurement_sha256": "1d8f32676a372d2c9e9a283281a3bf09dd7b57a66bdfbc208db4636390ba55f6",
+      "model_id": "deepseek-v2-lite",
+      "model_layout_sha256": "88e70c8261dbd6a423470aaae60a30dbfc92975897f54c2988ab34de2edc1794",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l3_r0_prenyx0238_prenyx0269",
+      "ranks": [
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0238.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0238",
+            "prenyx0238.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-03",
+          "rank": 1,
+          "role": "P1",
+          "side": "A",
+          "slot": "A1",
+          "transfer_hostname": "10.52.36.167"
+        },
+        {
+          "host": "prenyx0269.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0269",
+            "prenyx0269.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.230"
+        }
+      ],
+      "replica_id": 0,
+      "topology_level": "L3",
+      "world_size": 3
+    },
+    {
+      "classification_evidence": "cross-rack allocation metadata: prenyx0239 on leaf ibcleaf01-03 and prenyx0270 on leaf ibcleaf01-04, both under core ibccore01",
+      "configuration": "P2D1",
+      "development_pairs_sha256": "4e01ff3ca05062ff67469eaf2d22b3950125e49c7dc1b946e035db387a6b41ef",
+      "measurement_id": "deepseek-v2-lite__p2d1__l3__r1",
+      "measurement_sha256": "a922d70298d080e1de4959e657407b36856694d4230687a68447867bdea9ef11",
+      "model_id": "deepseek-v2-lite",
+      "model_layout_sha256": "88e70c8261dbd6a423470aaae60a30dbfc92975897f54c2988ab34de2edc1794",
+      "op": "sglang_mooncake_two_flow_batch_transfer_sync",
+      "placement_id": "l3_r1_prenyx0239_prenyx0270",
+      "ranks": [
+        {
+          "host": "prenyx0239.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0239",
+            "prenyx0239.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-03",
+          "rank": 0,
+          "role": "P0",
+          "side": "A",
+          "slot": "A0",
+          "transfer_hostname": "10.52.36.168"
+        },
+        {
+          "host": "prenyx0239.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0239",
+            "prenyx0239.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_7",
+          "network_domain": "ibccore01",
+          "physical_gpu": 1,
+          "rack_id": "ibcleaf01-03",
+          "rank": 1,
+          "role": "P1",
+          "side": "A",
+          "slot": "A1",
+          "transfer_hostname": "10.52.36.168"
+        },
+        {
+          "host": "prenyx0270.a51.clusters.nvidia.com",
+          "host_aliases": [
+            "prenyx0270",
+            "prenyx0270.a51.clusters.nvidia.com"
+          ],
+          "ib_device": "mlx5_4",
+          "network_domain": "ibccore01",
+          "physical_gpu": 0,
+          "rack_id": "ibcleaf01-04",
+          "rank": 2,
+          "role": "D0",
+          "side": "B",
+          "slot": "B0",
+          "transfer_hostname": "10.52.36.231"
+        }
+      ],
+      "replica_id": 1,
+      "topology_level": "L3",
+      "world_size": 3
+    }
+  ],
+  "plan_sha256": "b6f02b2a6fa217662d9b4aa0f6af49c0f5147523ea80e2e5d0d20625e7bd0b8e",
+  "reserved_future_blind_pairs_sha256": "4f9a9922441d56e0437920f54ad49bb01ea7aeb0ea3fcc21e96648777f9d6643",
+  "schema_version": "phase60-topology-plan-v1",
+  "selected_layouts_sha256": "4ade740889b45cc7e0d85409fabd7dab6b6123836cec554cfe130fb785e80eb1",
+  "workflow_commit": "ff2e8a104400909b67f509dfa7bdb9f2c194324c"
+}

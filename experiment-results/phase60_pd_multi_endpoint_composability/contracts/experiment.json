@@ -1,0 +1,365 @@
+{
+  "accepted_result_statuses": [
+    "PASS",
+    "PASS_WITH_RUNTIME_VARIANCE",
+    "PASS_WITH_PLACEMENT_VARIANCE",
+    "PASS_WITH_RUNTIME_AND_PLACEMENT_VARIANCE"
+  ],
+  "claim_boundary": [
+    "Phase60 characterizes two-flow P1D2/P2D1 communication only on frozen development payload pairs and placements",
+    "Phase60 does not train a contention correction, open future blind pairs, choose P/D counts or alter the P1D1 histogram predictor",
+    "a Phase51 mismatch is not automatically contention; matched solo anchors must distinguish environment/placement drift",
+    "results exclude end-to-end serving, compute, memory feasibility, queueing, unrelated-job congestion, online arrivals and communication-compute overlap"
+  ],
+  "container_contract": {
+    "formal_network_download_permitted": false,
+    "image": "lmsysorg/sglang:v0.5.15",
+    "repo_python_first": true,
+    "required_gpu_class": "CUDA GPU with GPUDirect RDMA; the frozen NVIDIA A51 B200 environment is acceptable",
+    "required_runtime_modules": [
+      "torch",
+      "mooncake.engine",
+      "sglang.srt.distributed.device_communicators.mooncake_transfer_engine"
+    ]
+  },
+  "contention_model_fitting_permitted": false,
+  "development_decision_contract": {
+    "config_topology_wape_threshold": 0.15,
+    "contention_correction_candidate": "matched-solo baseline fails overall or any configuration x topology slice",
+    "curve_drift_review": "Phase51 baseline fails but matched-solo baseline passes; do not mislabel environment/placement drift as contention",
+    "directly_composable": "Phase51 baseline passes overall and every configuration x topology slice",
+    "evidence_boundary": "development physical characterization only; no correction model or blind generalization claim",
+    "overall_wape_threshold": 0.1
+  },
+  "execution_model": "external topology inventory; 24 auditable three-rank GPU measurement shards; deterministic CPU aggregation against frozen Phase51 curves",
+  "expected_development_points": 120,
+  "expected_measurements": 24,
+  "expected_replica_points": 240,
+  "measurement_contract": {
+    "cross_replica_relative_spread_diagnostic_threshold": 0.25,
+    "data_validation": "outside timed intervals verify every byte of the destination region after each mode",
+    "extra_repeats_per_round": 2,
+    "matched_solo_baseline": "max(median solo0, median solo1) measured in the same shard; diagnostic separates environment drift from concurrency contention",
+    "maximum_independent_repeats": 9,
+    "minimum_independent_repeats": 5,
+    "modes": [
+      "solo_flow0",
+      "solo_flow1",
+      "concurrent_wave"
+    ],
+    "official_point_policy": "median across repeats within each replica, then maximum concurrent-wave latency across two frozen replicas; never select the faster replica",
+    "phase51_baseline": "max(C_model_topology(payload0), C_model_topology(payload1)) using frozen Phase51 official knots",
+    "raw_storage": "all per-iteration samples remain outside Git; Git stores compact official points, metrics, audits and raw hashes only",
+    "repeat_median_cv_threshold": 0.15,
+    "target_bytes_per_mode_block": 536870912,
+    "timed_iteration_rule": "clip(floor(512MiB/(payload0+payload1)),5,30); the same count is used for solo0, solo1 and concurrent mode",
+    "timed_iterations_max": 30,
+    "timed_iterations_min": 5,
+    "warmup_iterations_max": 3,
+    "warmup_iterations_min": 2,
+    "wave_latency_semantic": "maximum sender-side synchronous call latency across the two concurrently admitted flows; start skew is retained as a diagnostic",
+    "world_size": 3
+  },
+  "model_weights_required": false,
+  "objective": "在冻结P1D1消息预测链和Phase51单链路物理曲线的前提下，使用生产Mooncake RDMA实测P1D2 fan-out与P2D1 fan-in两路同wave传输，判断P1D1曲线是否可直接组合，并为后续轻量contention修正保留不含未来blind标签的development物理数据。",
+  "pair_grid_contract": {
+    "development_pairs": {
+      "deepseek-v2-lite": [
+        [
+          1,
+          1
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          16,
+          16
+        ],
+        [
+          32,
+          32
+        ],
+        [
+          64,
+          64
+        ],
+        [
+          1,
+          8
+        ],
+        [
+          2,
+          16
+        ],
+        [
+          4,
+          32
+        ],
+        [
+          8,
+          64
+        ]
+      ],
+      "qwen3-8b": [
+        [
+          1,
+          1
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          16,
+          16
+        ],
+        [
+          64,
+          64
+        ],
+        [
+          256,
+          256
+        ],
+        [
+          4096,
+          4096
+        ],
+        [
+          1,
+          64
+        ],
+        [
+          4,
+          256
+        ],
+        [
+          16,
+          1024
+        ],
+        [
+          64,
+          4096
+        ]
+      ]
+    },
+    "pair_order": "flow0 page count, flow1 page count",
+    "policy": "Phase60 may measure development_pairs only; reserved_future_blind_pairs must not be measured or opened until a later workflow freezes the correction model",
+    "reserved_future_blind_pairs": {
+      "deepseek-v2-lite": [
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          12,
+          12
+        ],
+        [
+          24,
+          24
+        ],
+        [
+          48,
+          48
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          3,
+          12
+        ],
+        [
+          6,
+          24
+        ],
+        [
+          12,
+          48
+        ]
+      ],
+      "qwen3-8b": [
+        [
+          2,
+          2
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          32,
+          32
+        ],
+        [
+          128,
+          128
+        ],
+        [
+          512,
+          512
+        ],
+        [
+          2048,
+          2048
+        ],
+        [
+          2,
+          32
+        ],
+        [
+          8,
+          128
+        ],
+        [
+          32,
+          512
+        ],
+        [
+          128,
+          2048
+        ]
+      ]
+    }
+  },
+  "phase": "Phase60-development-physical",
+  "pinned_inputs": [
+    {
+      "name": "phase50_manifest",
+      "path": "experiment-results/phase50_pd_six_model_blind_evaluation/manifest.sha256",
+      "sha256": "3613fb8577bc2bc16ca3592a1456f7f34f413ea9e612f4954305b0aaa2020a0c",
+      "verify_manifest_directory": "experiment-results/phase50_pd_six_model_blind_evaluation"
+    },
+    {
+      "name": "phase51_manifest",
+      "path": "experiment-results/phase51_pd_l1_l3_physical_curve_library/manifest.sha256",
+      "sha256": "ebb909c06524f314ffdaf11ea58cc2553a96439f52fa29c77b7c4f05236a0b11",
+      "verify_manifest_directory": "experiment-results/phase51_pd_l1_l3_physical_curve_library"
+    },
+    {
+      "name": "phase51_curves",
+      "path": "experiment-results/phase51_pd_l1_l3_physical_curve_library/curves/pd_mooncake_physical_curves.json",
+      "sha256": "e2278ced7d7ef9743b86df41c9f6d70661b4d2d95514ce28bf7031c6b26e841d"
+    },
+    {
+      "name": "phase51_layouts",
+      "path": "experiment-results/phase51_pd_l1_l3_physical_curve_library/contracts/model_transfer_layouts.json",
+      "sha256": "8dfbd24815e2baacccc7b786bd5fb5b2c2f33d3ad9b302d32f4172ca4f2db4d0"
+    },
+    {
+      "name": "phase52_manifest",
+      "path": "experiment-results/phase52_pd_physical_cost_placement_validation/manifest.sha256",
+      "sha256": "436857ac741eb3029dbcbde99e07bcf93bba0c83324c23f361df5ffbb2b86d1e",
+      "verify_manifest_directory": "experiment-results/phase52_pd_physical_cost_placement_validation"
+    },
+    {
+      "name": "phase52_summary",
+      "path": "experiment-results/phase52_pd_physical_cost_placement_validation/summary.json",
+      "sha256": "a276b515b36a824f293a20dce8559efc579d9075ce753b666a56b4ba32d0b673"
+    },
+    {
+      "name": "phase59_manifest",
+      "path": "experiment-results/phase59_pd_metric_aligned_shape_search/manifest.sha256",
+      "sha256": "57a1e283a7c7bf0b367f1007e46c9e159b8dfc59973a0c658aa2dffe1ff190a9",
+      "verify_manifest_directory": "experiment-results/phase59_pd_metric_aligned_shape_search"
+    },
+    {
+      "name": "phase59_summary",
+      "path": "experiment-results/phase59_pd_metric_aligned_shape_search/summary.json",
+      "sha256": "63017d5a6ea4299d8513aac65a03541954b9614463e9a7c4376b56e7482a2c2d"
+    },
+    {
+      "name": "sglang_mooncake_transfer_engine",
+      "path": "python/sglang/srt/distributed/device_communicators/mooncake_transfer_engine.py",
+      "sha256": "6b3b67ca5e65fdd78f592b43b24717014ddd4bcf464add4fb414cc89975f7030"
+    },
+    {
+      "name": "sglang_mooncake_conn",
+      "path": "python/sglang/srt/disaggregation/mooncake/conn.py",
+      "sha256": "9106dfc8deb91662bdbac850f41612104a597b7f6a5cd15c8eb7ca17a20c8a0d"
+    }
+  ],
+  "placement_replicas_per_model_config_topology": 2,
+  "prediction_or_teacher_recomputation_permitted": false,
+  "research_scope": {
+    "decision_scope": "none; P/D counts, routing and topology are fixed inputs",
+    "decode_parallelism": {
+      "pp": 1,
+      "tp": 1
+    },
+    "fixed_configurations": [
+      "P1D2",
+      "P2D1"
+    ],
+    "not_in_scope": [
+      "TP or PP inside P/D",
+      "model inference",
+      "histogram retraining",
+      "online arrivals",
+      "dynamic routing",
+      "queueing",
+      "background congestion",
+      "compute overlap",
+      "memory feasibility",
+      "P2D2"
+    ],
+    "prefill_parallelism": {
+      "pp": 1,
+      "tp": 1
+    },
+    "routing": "two distinct logical KV chunks; P1D2 maps flow0/flow1 from one P endpoint to two D endpoints; P2D1 maps one flow from each P endpoint to a shared D endpoint",
+    "wave_admission": "all ranks and both logical transfers are ready before a synchronized release; no request is duplicated"
+  },
+  "result_dir": "experiment-results/phase60_pd_multi_endpoint_composability",
+  "schema_version": "phase60-pd-multi-endpoint-composability-contract-v1",
+  "selected_models": [
+    "qwen3-8b",
+    "deepseek-v2-lite"
+  ],
+  "stop_and_block_if": [
+    "HEAD is not the exact W60 supplied to the runner or pinned inputs differ",
+    "topology plan is not frozen before raw or topology labels use benchmark speed",
+    "any model x configuration x topology x replica shard is unavailable",
+    "production Mooncake batch_transfer_sync, RDMA or dma-buf is unavailable or concurrent calls return failure",
+    "execution falls back to TCP, MNNVL, intranode NVLink path, staging or custom memory pool",
+    "reserved future blind payload pairs are measured",
+    "model weights, inference, training, prediction labels, protected raw/cache/PID assets or network downloads are accessed",
+    "raw samples would enter Git or an existing result directory would be overwritten"
+  ],
+  "topology_classification_policy": "host/rack/fabric identity and A-to-B direction freeze before raw; labels must not be inferred from latency, bandwidth or benchmark output",
+  "topology_definitions": {
+    "L1": "four frozen endpoint slots on one host/rack; each three-rank shard uses three distinct GPUs and Mooncake remains RDMA",
+    "L2": "two endpoint slots on side A host and two on side B host; hosts are distinct but in one rack/network domain",
+    "L3": "two endpoint slots on side A host and two on side B host; hosts are in different racks but one RDMA network domain"
+  },
+  "training_performed": false,
+  "transport_contract": {
+    "concurrent_call_policy": "P1D2 uses two Python worker threads calling one shared production MooncakeTransferEngine on disjoint registered regions; P2D1 uses one production engine on each P rank; all calls remain synchronous production batch_transfer_sync",
+    "custom_memory_pool": false,
+    "forced_intranode_nvlink": false,
+    "forced_mnnvl": false,
+    "forced_tcp": false,
+    "mooncake_protocol": "rdma",
+    "native_behavior_policy": "the workflow records production behavior including serialization or contention; it must not replace the wrapper or backend to manufacture overlap",
+    "production_wrapper": "sglang.srt.distributed.device_communicators.mooncake_transfer_engine.MooncakeTransferEngine.batch_transfer_sync",
+    "rdma_gpu_memory_registration": "dma-buf via WITH_NVIDIA_PEERMEM=0",
+    "staging_buffer": false
+  },
+  "workflow_parent_result_commit": "6e46246cd970d1730e95ad55a77dc4de5f67070e"
+}
