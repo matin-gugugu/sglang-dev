@@ -31,6 +31,7 @@ OUTPUTS = {
     "phase51": repo_root() / "experiment-results/phase51_pd_l1_l3_physical_curve_library",
     "phase52": repo_root() / "experiment-results/phase52_pd_physical_cost_placement_validation",
     "phase53": repo_root() / "experiment-results/phase53_tp_pp_pd_conclusion_freeze",
+    "phase60": repo_root() / "experiment-results/phase60_pd_multi_endpoint_composability",
 }
 
 

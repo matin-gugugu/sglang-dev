@@ -21,7 +21,7 @@ workflow commit W
   -> 原环境验证R的父提交、路径和manifest
 ```
 
-当前十八个workflow：
+以下列出已冻结的跨环境主链workflow；Phase54–59为后续本地CPU精度探索，细节见各自目录：
 
 - `phase36_cross_environment_replay`：一张GPU即可，不训练、不读teacher，复播Phase34冻结的六模型TP/PP直方图并演练commit回传。
 - `phase37_pp_single_node_p2p_curve`：至少两张GPU，实测单机PP GPU P2P连续曲线；raw逐次样本保存在仓库外，只提交紧凑曲线与审计。
@@ -41,5 +41,6 @@ workflow commit W
 - `phase51_pd_l1_l3_physical_curve_library`：不加载模型，按六模型真实KV描述符布局，直接调用SGLang生产Mooncake/RDMA batch-transfer测量L1/L2/L3；36个冻结shard汇总成18条模型相关物理曲线、396个knots，供后续Phase52确定性卷积与communication-only placement验证。
 - `phase52_pd_physical_cost_placement_validation`：在R51合入后，用CPU将Phase49冻结的H0/H0+DNN、Phase50 Hfull与Phase51六模型L1/L2/L3物理曲线做确定性bin-mean卷积，报告物理cost误差、communication-only placement agreement/regret、双replica区间robust性和单调包络敏感性；不重训、不使用GPU。
 - `phase53_tp_pp_pd_conclusion_freeze`：在R52合入后，本地CPU核验Phase34D至Phase52共19个正式结果commit与manifest，生成新的TP/PP/PD统一总导引、证据索引和结论边界；保留Phase43负结果，冻结Phase39/52的communication-only口径，不产生新预测、标签、物理测量或scheduler结果。
+- `phase60_pd_multi_endpoint_composability`：冻结P1D1预测链和Phase51曲线，使用Qwen3-8B与DeepSeek-V2-Lite实测P1D2/P2D1两路同wave的L1/L2/L3 Mooncake/RDMA行为；以同批次solo锚点区分真实contention与环境漂移，只生成development可组合性证据，不拟合修正项或打开未来blind pair。
 
 完整交接见`PatternDemand跨环境GPU执行交接_Phase36_Phase37.md`。
