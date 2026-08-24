@@ -20,7 +20,18 @@ Phase63不再学习公式。它把R61的三个系数和全部门槛逐字节冻�
 
 优先复用Phase62的六套placement，以便只改变模型布局；若原endpoint无法重新分配，允许按调度器资产、rack和RDMA fabric元数据预先冻结同类替代endpoint。禁止先测速再挑快机器。两套replica的endpoint signature必须不同。
 
-将inventory模板复制到Git外并填写。`A0/A1/B0/B1`是四个GPU slot，不是四台node：P1D2使用A0+B0+B1，P2D1使用A0+A1+B0。
+**全局资源红线：任意时刻只允许运行一个measurement shard，整个Phase63的峰值始终是2台node、3个GPU进程。禁止申请或保留一个4-node并发allocation。**
+
+将inventory模板复制到Git外并填写。`A0/A1/B0/B1`是同一套placement中的四个GPU slot，不是四台node：
+
+~~~text
+L1：A0/A1/B0/B1都在同一台node；单次只启动其中3个slot。
+L2/L3：A0/A1在node A，B0/B1在node B；单次仍只启动3个slot。
+P1D2：A0 + B0 + B1
+P2D1：A0 + A1 + B0
+~~~
+
+replica0和replica1必须顺序运行，可以在同一node/node pair上换GPU tuple。L1、L2和L3也允许作为三个独立的scheduler allocation顺序执行。为了同时覆盖“L2同rack”和“L3跨rack”，完整inventory可能先后出现3–4个不同host名字，但这些host不需要同时分配：先完成并释放L2的两台，再申请L3的两台即可。完整资源解释见`RESOURCE_ALLOCATION_CN.md`。
 
 ~~~bash
 P63=workflows/patterndemand/phase63_pd_contention_four_model_external
@@ -54,7 +65,7 @@ python3 "$P63/preflight.py" \
   --audit-output "$EXT/preflight_audit.json"
 ~~~
 
-对48个measurement分别执行repeat 0–4。渲染器每次输出3条rank命令，三条必须同时启动，全部退出后才进入下一repeat：
+对48个measurement分别执行repeat 0–4。渲染器每次输出3条rank命令，这三条是同一个shard内部必须并发的rank；三条全部退出后才能启动任何下一repeat、replica、配置、模型或拓扑shard：
 
 ~~~bash
 python3 "$P63/render_launch_commands.py" \

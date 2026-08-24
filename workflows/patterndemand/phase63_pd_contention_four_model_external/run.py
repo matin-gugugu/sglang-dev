@@ -167,6 +167,10 @@ def run(expected: str, plan_path: Path, raw_dir: Path, preflight_path: Path, out
             "measurement_shards": 48,
             "world_size_per_shard": 3,
             "maximum_simultaneous_nodes_per_shard": 2,
+            "global_peak_simultaneous_nodes": 2,
+            "global_peak_simultaneous_gpu_processes": 3,
+            "maximum_concurrent_measurement_shards": 1,
+            "single_scheduler_allocation_for_all_topologies_required": False,
             "endpoint_slots": plan["placement_summary"]["endpoint_slots"],
             "exact_phase62_placements": plan["placement_summary"]["exact_phase62_placements"],
             "phase62_endpoint_slots_reused": plan["placement_summary"]["phase62_endpoint_slots_reused"],
@@ -211,7 +215,7 @@ def run(expected: str, plan_path: Path, raw_dir: Path, preflight_path: Path, out
     (output / "logs/runtime.log").write_text(
         f"completed={utc_now()} workflow_commit={head}\n"
         f"status={status} scientific_outcome={summary['scientific_outcome']}\n"
-        f"measurements=48 external_points=240 replica_points=480 raw_files={raw['counts']['files']} raw_records={raw['counts']['records']}\n"
+        f"measurements=48 external_points=240 replica_points=480 raw_files={raw['counts']['files']} raw_records={raw['counts']['records']} global_peak_nodes=2 max_concurrent_shards=1\n"
         f"four_model_phase51_wape={overall['phase51_wape']} four_model_corrected_wape={overall['corrected_wape']} combined_six_model_corrected_wape={combined['corrected_wape']}\n"
         "training=false recalibration=false phase63_labels_used_for_fitting=false raw_committed=false\n",
         encoding="utf-8",

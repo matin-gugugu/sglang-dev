@@ -36,7 +36,12 @@ def main() -> None:
         "resource_contract": {
             "world_size_per_shard": 3,
             "maximum_simultaneous_nodes_per_shard": 2,
+            "global_peak_simultaneous_nodes": 2,
+            "maximum_concurrent_measurement_shards": 1,
+            "single_all_topology_allocation_required": False,
+            "topology_allocations_may_be_sequential": True,
             "four_node_allocation_required": False,
+            "four_node_simultaneous_allocation_forbidden": True,
         },
         "warning": "freeze before raw; any endpoint edit invalidates the entire attempt",
     }, ensure_ascii=False, indent=2))

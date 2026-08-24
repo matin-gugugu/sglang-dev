@@ -61,10 +61,11 @@ class TestPhase63(unittest.TestCase):
     def test_inventory_and_48_shard_plan(self) -> None:
         inventory = valid_inventory()
         audit = validate_inventory(inventory)
-        self.assertEqual((audit["placements"], audit["endpoint_slots"], audit["maximum_simultaneous_nodes_per_shard"]), (6, 24, 2))
+        self.assertEqual((audit["placements"], audit["endpoint_slots"], audit["maximum_simultaneous_nodes_per_shard"], audit["global_peak_simultaneous_nodes"], audit["maximum_concurrent_measurement_shards"]), (6, 24, 2, 2, 1))
         plan = expand_plan(inventory, canonical_sha(inventory), datetime.now(timezone.utc).isoformat(), "a" * 40)
         plan_audit = validate_plan(plan)
         self.assertEqual((plan_audit["measurements"], plan_audit["official_points"], plan_audit["replica_points"]), (48, 240, 480))
+        self.assertEqual((plan_audit["global_peak_simultaneous_nodes"], plan_audit["maximum_concurrent_measurement_shards"]), (2, 1))
         p1d2 = next(row for row in plan["measurements"] if row["configuration"] == "P1D2")
         p2d1 = next(row for row in plan["measurements"] if row["configuration"] == "P2D1")
         self.assertEqual([row["role"] for row in p1d2["ranks"]], ["P0", "D0", "D1"])
@@ -77,6 +78,31 @@ class TestPhase63(unittest.TestCase):
     def test_target_influenced_selection_rejected(self) -> None:
         inventory = valid_inventory()
         inventory["selection_uses_phase63_latency_or_error"] = True
+        with self.assertRaises(RuntimeError):
+            validate_inventory(inventory)
+
+    def test_same_l2_node_pair_can_serve_replicas_sequentially(self) -> None:
+        inventory = valid_inventory()
+        r0 = next(row for row in inventory["placements"] if row["topology_level"] == "L2" and row["replica_id"] == 0)
+        r1 = next(row for row in inventory["placements"] if row["topology_level"] == "L2" and row["replica_id"] == 1)
+        for side in ("A", "B"):
+            for slot, endpoint in enumerate(r1["sides"][side]):
+                source = r0["sides"][side][slot]
+                endpoint.update({
+                    "host": source["host"],
+                    "host_aliases": [source["host"]],
+                    "transfer_hostname": source["transfer_hostname"],
+                    "rack_id": source["rack_id"],
+                    "network_domain": source["network_domain"],
+                    "physical_gpu": int(source["physical_gpu"]) + 4,
+                    "ib_device": f"mlx5_{int(source['physical_gpu']) + 4}",
+                })
+        audit = validate_inventory(inventory)
+        self.assertEqual((audit["global_peak_simultaneous_nodes"], audit["maximum_concurrent_measurement_shards"]), (2, 1))
+
+    def test_four_node_peak_contract_rejected(self) -> None:
+        inventory = valid_inventory()
+        inventory["phase63_peak_allocation_contract"]["global_peak_simultaneous_nodes"] = 4
         with self.assertRaises(RuntimeError):
             validate_inventory(inventory)
 

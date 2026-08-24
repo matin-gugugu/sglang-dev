@@ -51,12 +51,20 @@
   },
   "resource_allocation_contract": {
     "endpoint_slots": "A0/A1/B0/B1 are four GPU slots, not four nodes",
+    "global_peak_simultaneous_nodes": 2,
+    "global_peak_simultaneous_gpu_processes": 3,
+    "maximum_concurrent_measurement_shards": 1,
     "simultaneous_world_size_per_shard": 3,
     "simultaneous_gpu_processes_per_shard": 3,
     "simultaneous_nodes_per_shard": {"L1": 1, "L2": 2, "L3": 2},
     "slot_mapping": {"P1D2": ["A0", "B0", "B1"], "P2D1": ["A0", "A1", "B0"]},
     "fourth_slot": "unused in each individual shard",
-    "scheduling": "all model/topology/configuration/replica shards may run sequentially; four-node simultaneous allocation is never required"
+    "single_scheduler_allocation_for_all_topologies_required": false,
+    "topology_allocation_epochs": "L1, L2 and L3 may use separate sequential scheduler allocations; inventory may name more than two hosts across the whole experiment but no allocation may contain more than two active nodes",
+    "replica_execution": "replica0 and replica1 execute sequentially and may reuse the same node/node-pair with distinct GPU tuples",
+    "scheduling": "exactly one measurement shard at a time; models, topologies, configurations, replicas and repeats are all sequential outside the two concurrent flows inside that shard",
+    "four_node_simultaneous_allocation_required": false,
+    "four_node_simultaneous_allocation_forbidden": true
   },
   "placement_contract": {
     "placements_per_topology": 2,
@@ -64,6 +72,9 @@
     "phase62_endpoint_reuse_required": false,
     "replacement_policy": "if Phase62 endpoints cannot be allocated, choose same-class GPU/RDMA endpoints from scheduler asset and rack/fabric metadata before raw; never benchmark then select",
     "replicas_distinct": "the two endpoint signatures within each topology must differ",
+    "replicas_need_not_coexist": true,
+    "same_node_pair_across_replicas_permitted": true,
+    "distinct_hosts_across_full_inventory_are_not_simultaneous_node_requirements": true,
     "selection_before_raw": true,
     "selection_source": "scheduler/asset host, rack and fabric metadata only; never Phase63 latency or frozen-model error",
     "claim_boundary": "model-layout external validation across the measured placements; exact Phase62-placement isolation is reported separately when achieved"
@@ -142,7 +153,7 @@
     "HEAD is not exact W63 or any pinned input differs",
     "any prior validated model replaces one of the four held-out models or any R61 coefficient/threshold is changed",
     "payload pairs or topology inventory are edited after Phase63 raw begins, or placement is selected by observed speed/error",
-    "an executor requests more than two simultaneous nodes for one shard",
+    "an executor requests more than two simultaneous nodes in any allocation or runs two measurement shards concurrently",
     "production Mooncake RDMA/dma-buf is unavailable or falls back to TCP, MNNVL, NVLink bypass, staging or custom pool",
     "model weights, inference, training, downloads, protected raw/cache/PID assets are accessed",
     "raw would enter Git or an existing Phase63 result directory would be overwritten"

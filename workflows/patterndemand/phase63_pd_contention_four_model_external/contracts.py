@@ -159,6 +159,19 @@ def validate_inventory(inventory: dict[str, Any], spec: dict[str, Any] | None = 
         errors.append("placement_selection_may_use_target")
     if inventory.get("phase62_endpoint_reuse_preferred_but_not_required") is not True:
         errors.append("phase62_reuse_policy")
+    peak = inventory.get("phase63_peak_allocation_contract") if isinstance(inventory.get("phase63_peak_allocation_contract"), dict) else {}
+    expected_peak = {
+        "global_peak_simultaneous_nodes": 2,
+        "global_peak_simultaneous_gpu_processes": 3,
+        "maximum_concurrent_measurement_shards": 1,
+        "single_scheduler_allocation_for_all_topologies_required": False,
+        "topology_allocation_epochs_may_run_sequentially": True,
+        "replica0_and_replica1_must_run_sequentially": True,
+        "four_node_simultaneous_allocation_forbidden": True,
+        "inventory_host_count_is_not_simultaneous_node_count": True,
+    }
+    if peak != expected_peak:
+        errors.append({"phase63_peak_allocation_contract": peak, "expected": expected_peak})
     structural = copy.deepcopy(inventory)
     structural["schema_version"] = "phase60-topology-inventory-v1"
     try:
@@ -199,6 +212,8 @@ def validate_inventory(inventory: dict[str, Any], spec: dict[str, Any] | None = 
         "exact_phase62_placements": exact_reuse,
         "phase62_endpoint_slots_reused": reused_slots,
         "maximum_simultaneous_nodes_per_shard": 2,
+        "global_peak_simultaneous_nodes": 2,
+        "maximum_concurrent_measurement_shards": 1,
         "simultaneous_gpu_processes_per_shard": 3,
         "normalized_placements": sorted(normalized, key=lambda row: (row["topology_level"], row["replica_id"])),
     }
@@ -256,7 +271,7 @@ def expand_plan(
                 "classification_frozen_before_measurement", "classification_not_inferred_from_benchmark",
                 "inventory_frozen_before_phase63_raw", "selection_uses_phase63_latency_or_error",
                 "phase62_endpoint_reuse_preferred_but_not_required", "fabric_notes",
-                "resource_allocation_contract",
+                "resource_allocation_contract", "phase63_peak_allocation_contract",
             )
         },
         "source_phase62_result_commit": spec["source_two_model_validation_result_commit"],
@@ -286,10 +301,22 @@ def validate_plan(plan: dict[str, Any], spec: dict[str, Any] | None = None) -> d
         errors.append("plan_sha256")
     metadata = plan.get("inventory_metadata") if isinstance(plan.get("inventory_metadata"), dict) else {}
     resources = metadata.get("resource_allocation_contract") if isinstance(metadata.get("resource_allocation_contract"), dict) else {}
+    peak = metadata.get("phase63_peak_allocation_contract") if isinstance(metadata.get("phase63_peak_allocation_contract"), dict) else {}
     if metadata.get("inventory_frozen_before_phase63_raw") is not True or metadata.get("selection_uses_phase63_latency_or_error") is not False:
         errors.append("inventory_freeze")
     if resources.get("four_node_allocation_required") is not False or resources.get("simultaneous_nodes_per_shard") != {"L1": 1, "L2": 2, "L3": 2} or resources.get("simultaneous_gpu_processes_per_shard") != 3:
         errors.append("resource_allocation_contract")
+    if peak != {
+        "global_peak_simultaneous_nodes": 2,
+        "global_peak_simultaneous_gpu_processes": 3,
+        "maximum_concurrent_measurement_shards": 1,
+        "single_scheduler_allocation_for_all_topologies_required": False,
+        "topology_allocation_epochs_may_run_sequentially": True,
+        "replica0_and_replica1_must_run_sequentially": True,
+        "four_node_simultaneous_allocation_forbidden": True,
+        "inventory_host_count_is_not_simultaneous_node_count": True,
+    }:
+        errors.append("phase63_peak_allocation_contract")
     if plan.get("source_phase62_result_commit") != spec["source_two_model_validation_result_commit"] or plan.get("source_phase62_summary_file_sha256") != file_sha(PHASE62_RESULT / "summary.json"):
         errors.append("phase62_source")
     if plan.get("frozen_contention_model_file_sha256") != file_sha(PHASE62_RESULT / "contracts/frozen_contention_correction.json"):
@@ -338,6 +365,8 @@ def validate_plan(plan: dict[str, Any], spec: dict[str, Any] | None = None) -> d
         "measurements": len(measurements),
         "world_size_per_shard": 3,
         "maximum_simultaneous_nodes_per_shard": 2,
+        "global_peak_simultaneous_nodes": 2,
+        "maximum_concurrent_measurement_shards": 1,
         "official_points": int(spec["expected_official_points"]),
         "replica_points": int(spec["expected_replica_points"]),
         "endpoint_slots": 24,
