@@ -1,5 +1,5 @@
 {
-  "schema_version": "phase60-pd-multi-endpoint-composability-contract-v1",
+  "schema_version": "phase60-pd-multi-endpoint-composability-contract-v2",
   "phase": "Phase60-development-physical",
   "objective": "在冻结P1D1消息预测链和Phase51单链路物理曲线的前提下，使用生产Mooncake RDMA实测P1D2 fan-out与P2D1 fan-in两路同wave传输，判断P1D1曲线是否可直接组合，并为后续轻量contention修正保留不含未来blind标签的development物理数据。",
   "workflow_parent_result_commit": "6e46246cd970d1730e95ad55a77dc4de5f67070e",
@@ -19,9 +19,19 @@
     "not_in_scope": ["TP or PP inside P/D", "model inference", "histogram retraining", "online arrivals", "dynamic routing", "queueing", "background congestion", "compute overlap", "memory feasibility", "P2D2"]
   },
   "topology_definitions": {
-    "L1": "four frozen endpoint slots on one host/rack; each three-rank shard uses three distinct GPUs and Mooncake remains RDMA",
-    "L2": "two endpoint slots on side A host and two on side B host; hosts are distinct but in one rack/network domain",
-    "L3": "two endpoint slots on side A host and two on side B host; hosts are in different racks but one RDMA network domain"
+    "L1": "four GPU endpoint slots on one physical node/rack; each shard launches only three GPU processes on that one node and Mooncake remains RDMA",
+    "L2": "two GPU slots on side A node and two GPU slots on side B node; exactly two physical nodes in one rack/network domain, but each shard launches only three GPU processes",
+    "L3": "two GPU slots on side A node and two GPU slots on side B node; exactly two physical nodes in different racks but one RDMA network domain, and each shard launches only three GPU processes"
+  },
+  "resource_allocation_contract": {
+    "endpoint_slot_meaning": "A0/A1/B0/B1 are four GPU endpoint slots in the inventory, never four physical nodes",
+    "simultaneous_world_size_per_shard": 3,
+    "simultaneous_gpu_processes_per_shard": 3,
+    "simultaneous_nodes_per_shard": {"L1": 1, "L2": 2, "L3": 2},
+    "slot_mapping": {"P1D2": ["A0", "B0", "B1"], "P2D1": ["A0", "A1", "B0"]},
+    "unused_slot_policy": "the fourth inventory GPU slot is unused in each individual shard and only permits the other configuration to reuse the same node pair",
+    "replica_policy": "replica0 and replica1 may use the same physical node or node pair with distinct frozen GPU endpoint tuples; replicas run sequentially unless resources are disjoint",
+    "allocation_policy": "no four-node allocation and no simultaneous allocation of all six placements is required; topology/configuration/replica shards may run sequentially as separate jobs on their frozen endpoints"
   },
   "topology_classification_policy": "host/rack/fabric identity and A-to-B direction freeze before raw; labels must not be inferred from latency, bandwidth or benchmark output",
   "placement_replicas_per_model_config_topology": 2,
@@ -109,9 +119,10 @@
     "results exclude end-to-end serving, compute, memory feasibility, queueing, unrelated-job congestion, online arrivals and communication-compute overlap"
   ],
   "stop_and_block_if": [
-    "HEAD is not the exact W60 supplied to the runner or pinned inputs differ",
+    "HEAD is not the exact W60-fix supplied to the runner or pinned inputs differ",
     "topology plan is not frozen before raw or topology labels use benchmark speed",
     "any model x configuration x topology x replica shard is unavailable",
+    "an executor interprets four inventory GPU slots as four nodes or requests more than two simultaneous nodes for one shard",
     "production Mooncake batch_transfer_sync, RDMA or dma-buf is unavailable or concurrent calls return failure",
     "execution falls back to TCP, MNNVL, intranode NVLink path, staging or custom memory pool",
     "reserved future blind payload pairs are measured",

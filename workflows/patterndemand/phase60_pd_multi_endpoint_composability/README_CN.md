@@ -4,6 +4,18 @@ Phase60冻结既有P1D1消息预测链和Phase51物理曲线，不训练、不�
 
 正式矩阵为2个代表模型（Qwen3-8B与DeepSeek-V2-Lite）×2个配置（P1D2 fan-out、P2D1 fan-in）×L1/L2/L3×2套预先冻结placement，共24个三rank measurement shard。每个shard只测合同中的10个development payload pair，并同时测`solo_flow0`、`solo_flow1`和`concurrent_wave`。未来blind pair明确保留，Phase60禁止测量。
 
+## 资源要求：不是四个node
+
+`topology_inventory.json`中的`A0/A1/B0/B1`是4个**GPU endpoint slot**，不是4个物理node。它们用于让同一对node先后承载两种配置：
+
+```text
+P1D2使用 A0 + B0 + B1：3个GPU进程
+P2D1使用 A0 + A1 + B0：3个GPU进程
+每个shard的第4个slot不启动
+```
+
+单个shard的硬上限是3个GPU进程：L1只用1个node，L2/L3只用2个node。两个replica可以在同一node或同一node pair上换不同GPU tuple并顺序执行；24个shard、L1/L2/L3和两个replica都不要求同时分配。执行端不得因为inventory有4个slot而申请4个node。
+
 P1D2中一个P rank通过两个worker thread在同一生产`MooncakeTransferEngine`、两个互不重叠注册区上向两个D peer调用`batch_transfer_sync`；P2D1中两个P rank分别向一个D rank调用同一生产原语。整wave先做跨rank屏障，再放行两路调用。若生产引擎实际串行，这也是应保留的真实结果；禁止替换wrapper/backend来制造重叠。
 
 ## 为什么同时测solo锚点
@@ -17,7 +29,7 @@ Phase60同时计算两种baseline：
 
 ## 执行顺序
 
-在exact W60上创建唯一run分支。将`topology_inventory.example.json`复制到Git外，填写6套placement。每套placement冻结A侧2个GPU endpoint和B侧2个GPU endpoint；每个实际shard使用其中3个endpoint。L1四个slot同机，L2两侧主机同rack，L3两侧主机跨rack。
+在exact W60-fix上创建唯一run分支。将`topology_inventory.example.json`复制到Git外，填写6套placement。每套placement冻结A侧2个GPU slot和B侧2个GPU slot；每个实际shard只使用其中3个slot。L1四个slot同一个node，L2的A/B分别位于同rack的两个node，L3的A/B分别位于跨rack的两个node。不同拓扑placement可以作为独立作业顺序运行。
 
 ```bash
 P60=workflows/patterndemand/phase60_pd_multi_endpoint_composability
@@ -39,7 +51,7 @@ export MOONCAKE_PROTOCOL=rdma WITH_NVIDIA_PEERMEM=0 SGLANG_DISAGG_STAGING_BUFFER
 unset MC_FORCE_TCP MC_FORCE_MNNVL MC_INTRANODE_NVLINK SGLANG_MOONCAKE_CUSTOM_MEM_POOL
 
 python3 "$P60/preflight.py" \
-  --expected-workflow-commit W60 \
+  --expected-workflow-commit W60_FIX \
   --container-image lmsysorg/sglang:v0.5.15 \
   --topology-plan "$EXT/topology_plan.json" \
   --raw-dir "$EXT/raw" \
@@ -66,7 +78,7 @@ python3 "$P60/raw_status.py" --topology-plan "$EXT/topology_plan.json" --raw-dir
 
 ```bash
 python3 "$P60/run.py" \
-  --expected-workflow-commit W60 \
+  --expected-workflow-commit W60_FIX \
   --topology-plan "$EXT/topology_plan.json" --raw-dir "$EXT/raw" \
   --preflight-audit "$EXT/preflight.json"
 python3 "$P60/verify.py"

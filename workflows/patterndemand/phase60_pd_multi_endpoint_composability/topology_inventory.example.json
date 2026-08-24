@@ -6,6 +6,18 @@
   "classification_frozen_before_measurement": true,
   "classification_not_inferred_from_benchmark": true,
   "fabric_notes": "REPLACE_WITH_RDMA_FABRIC_AND_SWITCH_EVIDENCE",
+  "resource_allocation_contract": {
+    "endpoint_slots_are_gpu_slots_not_nodes": true,
+    "simultaneous_world_size_per_shard": 3,
+    "simultaneous_gpu_processes_per_shard": 3,
+    "simultaneous_nodes_per_shard": {"L1": 1, "L2": 2, "L3": 2},
+    "p1d2_uses_slots": ["A0", "B0", "B1"],
+    "p2d1_uses_slots": ["A0", "A1", "B0"],
+    "fourth_slot_is_not_launched_in_same_shard": true,
+    "all_placements_and_replicas_may_run_sequentially": true,
+    "replicas_may_reuse_same_node_pair_with_distinct_gpu_tuples": true,
+    "four_node_allocation_required": false
+  },
   "placements": [
     {
       "topology_level": "L1", "replica_id": 0, "placement_id": "REPLACE_L1_R0_ID", "evidence": "REPLACE_SINGLE_HOST_METADATA",

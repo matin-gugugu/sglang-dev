@@ -103,6 +103,9 @@ def validate_inventory(inventory: dict, spec: dict | None = None) -> dict:
     if inventory.get("classification_frozen_before_measurement") is not True: errors.append("classification_not_frozen")
     if inventory.get("classification_not_inferred_from_benchmark") is not True: errors.append("classification_may_be_posthoc")
     if any(word in str(inventory.get("classification_source","")).lower() for word in ("benchmark","latency","bandwidth","speed test")): errors.append("classification_source_uses_speed")
+    resources=inventory.get("resource_allocation_contract") if isinstance(inventory.get("resource_allocation_contract"),dict) else {}
+    expected_resources={"endpoint_slots_are_gpu_slots_not_nodes":True,"simultaneous_world_size_per_shard":3,"simultaneous_gpu_processes_per_shard":3,"simultaneous_nodes_per_shard":{"L1":1,"L2":2,"L3":2},"p1d2_uses_slots":["A0","B0","B1"],"p2d1_uses_slots":["A0","A1","B0"],"fourth_slot_is_not_launched_in_same_shard":True,"all_placements_and_replicas_may_run_sequentially":True,"replicas_may_reuse_same_node_pair_with_distinct_gpu_tuples":True,"four_node_allocation_required":False}
+    if resources!=expected_resources:errors.append({"resource_allocation_contract":resources,"expected":expected_resources})
     placements=inventory.get("placements") if isinstance(inventory.get("placements"),list) else []
     expected={(level,replica) for level in ("L1","L2","L3") for replica in (0,1)}
     actual=Counter((row.get("topology_level"),row.get("replica_id")) for row in placements)
@@ -142,7 +145,7 @@ def validate_inventory(inventory: dict, spec: dict | None = None) -> dict:
         signatures[level].append(tuple(keys));normalized.append({"topology_level":level,"replica_id":replica,"placement_id":placement.get("placement_id"),"classification_evidence":placement.get("evidence"),"sides":normalized_sides})
     if any(len(set(values))!=len(values) for values in signatures.values()): errors.append("replica_endpoint_signatures_not_distinct")
     if errors: raise RuntimeError({"invalid_phase60_inventory":errors})
-    return {"ok":True,"placements":len(normalized),"normalized_placements":sorted(normalized,key=lambda row:(row["topology_level"],row["replica_id"]))}
+    return {"ok":True,"placements":len(normalized),"max_simultaneous_nodes_per_shard":2,"simultaneous_gpu_processes_per_shard":3,"normalized_placements":sorted(normalized,key=lambda row:(row["topology_level"],row["replica_id"]))}
 
 
 def _measurement_ranks(placement: dict, configuration: str) -> list[dict]:
@@ -161,7 +164,7 @@ def expand_plan(inventory: dict, inventory_sha256: str, generated_at_utc: str, w
                 ranks=_measurement_ranks(placement,configuration)
                 base={"measurement_id":f"{model_id}__{configuration.lower()}__{placement['topology_level'].lower()}__r{placement['replica_id']}","model_id":model_id,"configuration":configuration,"topology_level":placement["topology_level"],"replica_id":placement["replica_id"],"placement_id":placement["placement_id"],"classification_evidence":placement["classification_evidence"],"world_size":3,"op":"sglang_mooncake_two_flow_batch_transfer_sync","ranks":ranks,"model_layout_sha256":canonical_sha(layout),"development_pairs_sha256":canonical_sha(payload_pairs(model_id))}
                 measurements.append({**base,"measurement_sha256":canonical_sha(base)})
-    base={"schema_version":"phase60-topology-plan-v1","workflow_commit":workflow_commit,"generated_at_utc":generated_at_utc,"inventory_sha256":inventory_sha256,"inventory_schema_version":inventory["schema_version"],"inventory_metadata":{key:inventory[key] for key in ("created_at_utc","created_by","classification_source","classification_frozen_before_measurement","classification_not_inferred_from_benchmark","fabric_notes")},"selected_layouts_sha256":canonical_sha(selected_layouts(spec)),"development_pairs_sha256":pairs["development_sha256"],"reserved_future_blind_pairs_sha256":pairs["reserved_sha256"],"measurements":measurements}
+    base={"schema_version":"phase60-topology-plan-v1","workflow_commit":workflow_commit,"generated_at_utc":generated_at_utc,"inventory_sha256":inventory_sha256,"inventory_schema_version":inventory["schema_version"],"inventory_metadata":{key:inventory[key] for key in ("created_at_utc","created_by","classification_source","classification_frozen_before_measurement","classification_not_inferred_from_benchmark","fabric_notes","resource_allocation_contract")},"selected_layouts_sha256":canonical_sha(selected_layouts(spec)),"development_pairs_sha256":pairs["development_sha256"],"reserved_future_blind_pairs_sha256":pairs["reserved_sha256"],"measurements":measurements}
     return {**base,"plan_sha256":canonical_sha(base)}
 
 
@@ -172,6 +175,8 @@ def validate_plan(plan: dict, spec: dict | None = None) -> dict:
     if plan.get("plan_sha256")!=canonical_sha(base):errors.append("plan_sha256")
     metadata=plan.get("inventory_metadata") if isinstance(plan.get("inventory_metadata"),dict) else {}
     if metadata.get("classification_frozen_before_measurement") is not True or metadata.get("classification_not_inferred_from_benchmark") is not True:errors.append("inventory_freeze")
+    resources=metadata.get("resource_allocation_contract") if isinstance(metadata.get("resource_allocation_contract"),dict) else {}
+    if resources.get("four_node_allocation_required") is not False or resources.get("simultaneous_nodes_per_shard")!={"L1":1,"L2":2,"L3":2} or resources.get("simultaneous_gpu_processes_per_shard")!=3:errors.append("resource_allocation_contract")
     if plan.get("selected_layouts_sha256")!=canonical_sha(selected_layouts(spec)) or plan.get("development_pairs_sha256")!=pairs["development_sha256"] or plan.get("reserved_future_blind_pairs_sha256")!=pairs["reserved_sha256"]:errors.append("layout_or_pair_sha")
     measurements=plan.get("measurements") if isinstance(plan.get("measurements"),list) else []
     expected={(model,config,level,replica) for model in spec["selected_models"] for config in spec["research_scope"]["fixed_configurations"] for level in ("L1","L2","L3") for replica in (0,1)}
@@ -189,8 +194,10 @@ def validate_plan(plan: dict, spec: dict | None = None) -> dict:
         a=[r for r in ranks if r.get("side")=="A"];b=[r for r in ranks if r.get("side")=="B"]
         if row.get("configuration")=="P1D2" and (len(a)!=1 or len(b)!=2):errors.append(f"p1d2_sides:{row.get('measurement_id')}")
         if row.get("configuration")=="P2D1" and (len(a)!=2 or len(b)!=1):errors.append(f"p2d1_sides:{row.get('measurement_id')}")
+        expected_nodes=1 if row.get("topology_level")=="L1" else 2
+        if len({r.get("host") for r in ranks})!=expected_nodes:errors.append(f"simultaneous_node_count:{row.get('measurement_id')}")
     if errors:raise RuntimeError({"invalid_phase60_plan":errors})
-    return {"ok":True,"plan_sha256":plan["plan_sha256"],"measurements":len(measurements),"development_points":int(spec["expected_development_points"]),"replica_points":int(spec["expected_replica_points"])}
+    return {"ok":True,"plan_sha256":plan["plan_sha256"],"measurements":len(measurements),"world_size_per_shard":3,"max_simultaneous_nodes_per_shard":2,"development_points":int(spec["expected_development_points"]),"replica_points":int(spec["expected_replica_points"])}
 
 
 def measurement_by_id(plan: dict, measurement_id: str) -> dict:
