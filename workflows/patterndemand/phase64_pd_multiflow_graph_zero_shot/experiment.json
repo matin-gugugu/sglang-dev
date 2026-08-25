@@ -1,0 +1,144 @@
+{
+  "schema_version": "phase64-pd-multiflow-graph-zero-shot-contract-v1",
+  "phase": "Phase64-PD-multiflow-graph-zero-shot",
+  "objective": "冻结Phase51单链路物理曲线和R61两流修正系数，零训练验证其按通信图扩展到P1D4、P4D1、P2D2 matching与P2D2 all-to-all的能力。",
+  "workflow_parent_result_commit": "4f4791ca74c2ad65ac8684841a8a0527c8eff6f1",
+  "source_correction_result_commit": "241043e480457145bcaadc26b6cd750c05693f5e",
+  "source_six_model_validation_result_commit": "4f4791ca74c2ad65ac8684841a8a0527c8eff6f1",
+  "result_dir": "experiment-results/phase64_pd_multiflow_graph_zero_shot",
+  "execution_model": "48 sequential GPU measurement shards plus deterministic CPU aggregation; no fitting, inference or model weights",
+  "training_permitted": false,
+  "recalibration_permitted": false,
+  "selected_models": ["qwen3-8b", "deepseek-v2-lite"],
+  "research_scope": {
+    "fixed_configurations": ["P1D4", "P4D1", "P2D2_MATCHING", "P2D2_ALL_TO_ALL"],
+    "maximum_simultaneous_flows": 4,
+    "prefill_parallelism": {"tp": 1, "pp": 1},
+    "decode_parallelism": {"tp": 1, "pp": 1},
+    "routing": "frozen by graph_payload_grid.json",
+    "not_in_scope": ["P1D8", "P8D1", "P3D3_ALL_TO_ALL", "P4D4_ALL_TO_ALL", "more than four concurrent flows", "TP or PP inside P/D", "end-to-end inference", "queueing", "compute overlap", "memory feasibility", "background-job congestion", "online arrivals", "scheduler placement selection"]
+  },
+  "graph_formula_contract": {
+    "source": "experiment-results/phase61_pd_contention_correction/model/contention_correction.json",
+    "sha256": "609b3f0cb86d6817f03a5c1712f16340d9a17fe297545bc65bd07fdb874e0f9f",
+    "candidate_id": "global_affine_max_min",
+    "coefficients": {"intercept_us": -109.83183764072692, "beta_max": 0.9764784060893607, "beta_min": 0.8501015546505344},
+    "derived_beta_edge": 0.1263768514388263,
+    "edge_cost": "C_e is the frozen Phase51 official P1D1 curve interpolation for edge payload e",
+    "M": "max_e C_e",
+    "B": "max(max_P sum_outgoing(P), max_D sum_incoming(D))",
+    "formula": "max(1.0, intercept_us + (beta_max-beta_min)*M + beta_min*B)",
+    "two_flow_equivalence": "For P1D2/P2D1, B=C0+C1 and the formula is algebraically identical to R61 intercept+beta_max*max+beta_min*min.",
+    "forbidden": ["coefficient fitting", "recalibration", "threshold tuning", "configuration/model/topology overrides", "using Phase64 actual or matched-solo latency as prediction input"]
+  },
+  "payload_contract": {
+    "source": "workflows/patterndemand/phase64_pd_multiflow_graph_zero_shot/graph_payload_grid.json",
+    "sha256": "23d1b7fe588bdc9f17e1c0760892e0da0a32e3095f19ff81cef126c963b853aa",
+    "vectors_per_model_configuration": 10,
+    "vectors": 80,
+    "official_points": 240,
+    "replica_points": 480,
+    "selection": "balanced and asymmetric page vectors selected only from existing Phase51 knots before Phase64 raw"
+  },
+  "topology_definitions": {
+    "L1": "one physical 8-GPU node; A0-A3/B0-B3 are GPU slots on that node",
+    "L2": "two physical nodes in the same rack/network domain; A side on one node and B side on the other",
+    "L3": "two physical nodes in different racks in one RDMA domain; A side on one node and B side on the other"
+  },
+  "resource_allocation_contract": {
+    "inventory_slots_per_placement": 8,
+    "inventory_slots_are_not_nodes": true,
+    "global_peak_simultaneous_nodes": 2,
+    "global_peak_simultaneous_gpu_processes": 5,
+    "maximum_concurrent_measurement_shards": 1,
+    "world_size_by_configuration": {"P1D4": 5, "P4D1": 5, "P2D2_MATCHING": 4, "P2D2_ALL_TO_ALL": 4},
+    "slot_mapping": {"P1D4": ["A0", "B0", "B1", "B2", "B3"], "P4D1": ["A0", "A1", "A2", "A3", "B0"], "P2D2_MATCHING": ["A0", "A1", "B0", "B1"], "P2D2_ALL_TO_ALL": ["A0", "A1", "B0", "B1"]},
+    "topology_and_replica_allocations_may_run_sequentially": true,
+    "four_node_simultaneous_allocation_required": false,
+    "four_node_simultaneous_allocation_forbidden": true
+  },
+  "placement_contract": {
+    "placements_per_topology": 2,
+    "selection_before_raw": true,
+    "selection_source": "scheduler asset plus host/rack/fabric metadata only",
+    "replica_endpoint_signatures_must_differ": true,
+    "same_hosts_with_different_GPU_tuples_permitted": true,
+    "benchmark_then_select_forbidden": true
+  },
+  "transport_contract": {
+    "production_wrapper": "sglang.srt.distributed.device_communicators.mooncake_transfer_engine.MooncakeTransferEngine.batch_transfer_sync",
+    "protocol": "rdma",
+    "registration": "dma-buf via WITH_NVIDIA_PEERMEM=0",
+    "same_sender_parallelism": "one shared production engine with one worker thread per outbound edge",
+    "forced_tcp": false,
+    "forced_mnnvl": false,
+    "forced_intranode_nvlink": false,
+    "staging_buffer": false,
+    "custom_memory_pool": false
+  },
+  "measurement_contract": {
+    "warmup_iterations_min": 2,
+    "warmup_iterations_max": 3,
+    "timed_iterations_min": 5,
+    "timed_iterations_max": 30,
+    "target_bytes_per_mode_block": 536870912,
+    "modes": "one solo mode per graph edge followed by one concurrent-wave mode",
+    "wave_latency_semantic": "maximum sender-side synchronous call latency among all concurrently admitted graph edges",
+    "data_validation": "verify every destination byte outside timed intervals",
+    "minimum_independent_repeats": 5,
+    "extra_repeats_per_round": 2,
+    "maximum_independent_repeats": 9,
+    "repeat_median_cv_threshold": 0.15,
+    "cross_replica_relative_spread_diagnostic_threshold": 0.25,
+    "official_point_policy": "median repeats in each replica, then maximum actual concurrent latency across two pre-frozen replicas",
+    "raw_storage": "JSONL and per-iteration samples remain outside Git"
+  },
+  "zero_shot_gate": {
+    "overall_wape_max": 0.10,
+    "each_model_wape_max": 0.10,
+    "each_configuration_wape_max": 0.10,
+    "each_configuration_topology_wape_max": 0.15,
+    "overall_absolute_signed_bias_max": 0.10,
+    "each_model_absolute_signed_bias_max": 0.10,
+    "each_configuration_absolute_signed_bias_max": 0.10,
+    "each_configuration_topology_absolute_signed_bias_max": 0.15,
+    "strictly_improves_max_edge_baseline_overall": true,
+    "strictly_improves_max_edge_baseline_each_configuration": true,
+    "failure_policy": "retain honest development evidence; do not refit inside Phase64"
+  },
+  "expected_measurements": 48,
+  "expected_official_points": 240,
+  "expected_replica_points": 480,
+  "container_contract": {
+    "image": "lmsysorg/sglang:v0.5.15",
+    "repo_python_first": true,
+    "formal_network_download_permitted": false,
+    "required_gpu_class": "CUDA GPU with GPUDirect RDMA; NVIDIA A51 B200 is acceptable",
+    "required_runtime_modules": ["torch", "mooncake.engine", "sglang.srt.distributed.device_communicators.mooncake_transfer_engine"]
+  },
+  "accepted_result_statuses": ["PASS", "PASS_WITH_RUNTIME_VARIANCE", "PASS_WITH_PLACEMENT_VARIANCE", "PASS_WITH_RUNTIME_AND_PLACEMENT_VARIANCE"],
+  "pinned_inputs": [
+    {"name":"phase63_manifest","path":"experiment-results/phase63_pd_contention_four_model_external/manifest.sha256","sha256":"6db5ae66be619ab788324a8b243000bde9e6bd1c39ca36432bfc3541f39de84e","verify_manifest_directory":"experiment-results/phase63_pd_contention_four_model_external"},
+    {"name":"phase63_summary","path":"experiment-results/phase63_pd_contention_four_model_external/summary.json","sha256":"95ba1913994d35b4f214c867899aa82f803a576a5139472819232f254e1bf48e"},
+    {"name":"phase61_model","path":"experiment-results/phase61_pd_contention_correction/model/contention_correction.json","sha256":"609b3f0cb86d6817f03a5c1712f16340d9a17fe297545bc65bd07fdb874e0f9f"},
+    {"name":"phase51_manifest","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/manifest.sha256","sha256":"ebb909c06524f314ffdaf11ea58cc2553a96439f52fa29c77b7c4f05236a0b11","verify_manifest_directory":"experiment-results/phase51_pd_l1_l3_physical_curve_library"},
+    {"name":"phase51_curves","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/curves/pd_mooncake_physical_curves.json","sha256":"e2278ced7d7ef9743b86df41c9f6d70661b4d2d95514ce28bf7031c6b26e841d"},
+    {"name":"phase51_layouts","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/contracts/model_transfer_layouts.json","sha256":"8dfbd24815e2baacccc7b786bd5fb5b2c2f33d3ad9b302d32f4172ca4f2db4d0"},
+    {"name":"phase64_graph_grid","path":"workflows/patterndemand/phase64_pd_multiflow_graph_zero_shot/graph_payload_grid.json","sha256":"23d1b7fe588bdc9f17e1c0760892e0da0a32e3095f19ff81cef126c963b853aa"},
+    {"name":"sglang_mooncake_transfer_engine","path":"python/sglang/srt/distributed/device_communicators/mooncake_transfer_engine.py","sha256":"6b3b67ca5e65fdd78f592b43b24717014ddd4bcf464add4fb414cc89975f7030"},
+    {"name":"sglang_mooncake_conn","path":"python/sglang/srt/disaggregation/mooncake/conn.py","sha256":"9106dfc8deb91662bdbac850f41612104a597b7f6a5cd15c8eb7ca17a20c8a0d"}
+  ],
+  "claim_boundary": [
+    "A PASS supports zero-shot physical composition of at most four simultaneous PD KV-transfer edges for the four measured graph families, two representative layouts and measured L1/L2/L3 placements.",
+    "It does not make P1D8/P8D1 or dense P3D3/P4D4 automatic, and it does not validate an end-to-end routing-aware histogram predictor or scheduler."
+  ],
+  "stop_and_block_if": [
+    "HEAD is not exact W64 or any pinned input differs",
+    "graph/payload/topology selection is edited after raw begins or selected using observed latency/error",
+    "R61 coefficients are fitted, recalibrated or overridden",
+    "more than two simultaneous nodes, five GPU processes or one measurement shard is requested",
+    "production Mooncake RDMA/dma-buf falls back to TCP, MNNVL, NVLink bypass, staging or custom pool",
+    "model weights, inference, downloads, protected raw/cache/PID assets are accessed",
+    "raw enters Git or an existing Phase64 result directory is overwritten"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "schema_version": "phase64-topology-inventory-v1",
+  "inventory_frozen_before_phase64_raw": true,
+  "selection_uses_phase64_latency_or_error": false,
+  "phase64_peak_allocation_contract": {
+    "global_peak_simultaneous_nodes": 2,
+    "global_peak_simultaneous_gpu_processes": 5,
+    "maximum_concurrent_measurement_shards": 1,
+    "topology_and_replica_allocations_may_run_sequentially": true,
+    "four_node_simultaneous_allocation_forbidden": true,
+    "inventory_slots_are_not_nodes": true
+  },
+  "placements": [
+    {"placement_id":"l1-r0","topology_level":"L1","replica_id":0,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":true,"fabric_domain":"FILL"},"sides":{"A":[{"host":"FILL_L1_HOST","host_aliases":["FILL_L1_HOST"],"physical_gpu":0,"ib_device":"FILL_IB","transfer_hostname":"FILL_L1_HOST"},{"host":"FILL_L1_HOST","host_aliases":["FILL_L1_HOST"],"physical_gpu":1,"ib_device":"FILL_IB","transfer_hostname":"FILL_L1_HOST"},{"host":"FILL_L1_HOST","host_aliases":["FILL_L1_HOST"],"physical_gpu":2,"ib_device":"FILL_IB","transfer_hostname":"FILL_L1_HOST"},{"host":"FILL_L1_HOST","host_aliases":["FILL_L1_HOST"],"physical_gpu":3,"ib_device":"FILL_IB","transfer_hostname":"FILL_L1_HOST"}],"B":[{"host":"FILL_L1_HOST","host_aliases":["FILL_L1_HOST"],"physical_gpu":4,"ib_device":"FILL_IB","transfer_hostname":"FILL_L1_HOST"},{"host":"FILL_L1_HOST","host_aliases":["FILL_L1_HOST"],"physical_gpu":5,"ib_device":"FILL_IB","transfer_hostname":"FILL_L1_HOST"},{"host":"FILL_L1_HOST","host_aliases":["FILL_L1_HOST"],"physical_gpu":6,"ib_device":"FILL_IB","transfer_hostname":"FILL_L1_HOST"},{"host":"FILL_L1_HOST","host_aliases":["FILL_L1_HOST"],"physical_gpu":7,"ib_device":"FILL_IB","transfer_hostname":"FILL_L1_HOST"}]}},
+    {"placement_id":"l1-r1","topology_level":"L1","replica_id":1,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":true,"fabric_domain":"FILL"},"sides":{"A":[],"B":[]}},
+    {"placement_id":"l2-r0","topology_level":"L2","replica_id":0,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":true,"fabric_domain":"FILL"},"sides":{"A":[],"B":[]}},
+    {"placement_id":"l2-r1","topology_level":"L2","replica_id":1,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":true,"fabric_domain":"FILL"},"sides":{"A":[],"B":[]}},
+    {"placement_id":"l3-r0","topology_level":"L3","replica_id":0,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":false,"fabric_domain":"FILL"},"sides":{"A":[],"B":[]}},
+    {"placement_id":"l3-r1","topology_level":"L3","replica_id":1,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":false,"fabric_domain":"FILL"},"sides":{"A":[],"B":[]}}
+  ],
+  "operator_note": "Copy and fill every A/B side with four real GPU endpoints. The abbreviated empty sides are intentionally invalid placeholders. Never select endpoints after observing Phase64 latency."
+}
