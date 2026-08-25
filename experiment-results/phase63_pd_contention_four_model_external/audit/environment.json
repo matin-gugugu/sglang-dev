@@ -1,0 +1,2955 @@
+{
+  "aggregation": {
+    "branch": "run/phase63-nvidia-a51-20260824-w63fix",
+    "captured_at_utc": "2026-08-25T02:25:23.547217+00:00",
+    "cuda_visible_devices": null,
+    "executable": "/usr/bin/python3",
+    "hostname": "prenyx0283.a51.clusters.nvidia.com",
+    "platform": "Linux-6.17.0-40-generic-x86_64-with-glibc2.39",
+    "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+    "repository_head": "ff8b5c86c37652b60fde61b442d029935ffd8b32"
+  },
+  "gpu_measurement_preflight": {
+    "captured_at_utc": "2026-08-24T11:12:40.611005+00:00",
+    "environment": {
+      "container_image_env": {
+        "SGLANG_IMAGE_TAG": "lmsysorg/sglang:v0.5.15"
+      },
+      "cuda": "13.0",
+      "cuda_device_count": 8,
+      "declared_container_image": "lmsysorg/sglang:v0.5.15",
+      "gpu_names": [
+        "NVIDIA B200",
+        "NVIDIA B200",
+        "NVIDIA B200",
+        "NVIDIA B200",
+        "NVIDIA B200",
+        "NVIDIA B200",
+        "NVIDIA B200",
+        "NVIDIA B200"
+      ],
+      "mooncake_version": null,
+      "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+      "torch": "2.11.0+cu130",
+      "wrapper_origin": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/sglang-dev/python/sglang/srt/distributed/device_communicators/mooncake_transfer_engine.py"
+    },
+    "environment_checks": {
+      "dmabuf": true,
+      "no_forced_fallback": true,
+      "no_staging": true,
+      "offline_hf": true,
+      "offline_transformers": true,
+      "rdma": true,
+      "repo_python_first": true
+    },
+    "frozen_model": {
+      "candidate_id": "global_affine_max_min",
+      "coefficients": {
+        "beta_max": 0.9764784060893607,
+        "beta_min": 0.8501015546505344,
+        "intercept_us": -109.83183764072692
+      },
+      "file_sha256": "609b3f0cb86d6817f03a5c1712f16340d9a17fe297545bc65bd07fdb874e0f9f",
+      "training_or_recalibration_performed": false
+    },
+    "module_checks": {
+      "mooncake.engine": true,
+      "sglang.srt.distributed.device_communicators.mooncake_transfer_engine": true,
+      "torch": true
+    },
+    "pinned_inputs": {
+      "phase51_curves": {
+        "actual_sha256": "e2278ced7d7ef9743b86df41c9f6d70661b4d2d95514ce28bf7031c6b26e841d",
+        "expected_sha256": "e2278ced7d7ef9743b86df41c9f6d70661b4d2d95514ce28bf7031c6b26e841d",
+        "ok": true,
+        "path": "experiment-results/phase51_pd_l1_l3_physical_curve_library/curves/pd_mooncake_physical_curves.json"
+      },
+      "phase51_layouts": {
+        "actual_sha256": "8dfbd24815e2baacccc7b786bd5fb5b2c2f33d3ad9b302d32f4172ca4f2db4d0",
+        "expected_sha256": "8dfbd24815e2baacccc7b786bd5fb5b2c2f33d3ad9b302d32f4172ca4f2db4d0",
+        "ok": true,
+        "path": "experiment-results/phase51_pd_l1_l3_physical_curve_library/contracts/model_transfer_layouts.json"
+      },
+      "phase51_manifest": {
+        "actual_sha256": "ebb909c06524f314ffdaf11ea58cc2553a96439f52fa29c77b7c4f05236a0b11",
+        "expected_sha256": "ebb909c06524f314ffdaf11ea58cc2553a96439f52fa29c77b7c4f05236a0b11",
+        "manifest_audit": {
+          "checked_files": 14,
+          "directory": "experiment-results/phase51_pd_l1_l3_physical_curve_library",
+          "errors": [],
+          "manifest_sha256": "ebb909c06524f314ffdaf11ea58cc2553a96439f52fa29c77b7c4f05236a0b11",
+          "ok": true
+        },
+        "ok": true,
+        "path": "experiment-results/phase51_pd_l1_l3_physical_curve_library/manifest.sha256"
+      },
+      "phase60_benchmark": {
+        "actual_sha256": "c3b8e336c6f553240af15ccbed78e3ccca24e4f5309a9d745128cc595d67d818",
+        "expected_sha256": "c3b8e336c6f553240af15ccbed78e3ccca24e4f5309a9d745128cc595d67d818",
+        "ok": true,
+        "path": "workflows/patterndemand/phase60_pd_multi_endpoint_composability/benchmark_mooncake_multi.py"
+      },
+      "phase60_raw_validator": {
+        "actual_sha256": "2db0c450cdf494ea2477a840973a71682b0c7f92caa5ea8fc2839da2caae52dc",
+        "expected_sha256": "2db0c450cdf494ea2477a840973a71682b0c7f92caa5ea8fc2839da2caae52dc",
+        "ok": true,
+        "path": "workflows/patterndemand/phase60_pd_multi_endpoint_composability/measurement.py"
+      },
+      "phase62_frozen_model": {
+        "actual_sha256": "609b3f0cb86d6817f03a5c1712f16340d9a17fe297545bc65bd07fdb874e0f9f",
+        "expected_sha256": "609b3f0cb86d6817f03a5c1712f16340d9a17fe297545bc65bd07fdb874e0f9f",
+        "ok": true,
+        "path": "experiment-results/phase62_pd_contention_fresh_blind/contracts/frozen_contention_correction.json"
+      },
+      "phase62_manifest": {
+        "actual_sha256": "5cd66564b8b475a374eae9d6a7aaed8a207caed745c9595517e925813051650a",
+        "expected_sha256": "5cd66564b8b475a374eae9d6a7aaed8a207caed745c9595517e925813051650a",
+        "manifest_audit": {
+          "checked_files": 18,
+          "directory": "experiment-results/phase62_pd_contention_fresh_blind",
+          "errors": [],
+          "manifest_sha256": "5cd66564b8b475a374eae9d6a7aaed8a207caed745c9595517e925813051650a",
+          "ok": true
+        },
+        "ok": true,
+        "path": "experiment-results/phase62_pd_contention_fresh_blind/manifest.sha256"
+      },
+      "phase62_summary": {
+        "actual_sha256": "c5678b5765e0c6950691fab7bae87c891146eb5bbaef56b6bf1d4c7801728356",
+        "expected_sha256": "c5678b5765e0c6950691fab7bae87c891146eb5bbaef56b6bf1d4c7801728356",
+        "ok": true,
+        "path": "experiment-results/phase62_pd_contention_fresh_blind/summary.json"
+      },
+      "sglang_mooncake_conn": {
+        "actual_sha256": "9106dfc8deb91662bdbac850f41612104a597b7f6a5cd15c8eb7ca17a20c8a0d",
+        "expected_sha256": "9106dfc8deb91662bdbac850f41612104a597b7f6a5cd15c8eb7ca17a20c8a0d",
+        "ok": true,
+        "path": "python/sglang/srt/disaggregation/mooncake/conn.py"
+      },
+      "sglang_mooncake_transfer_engine": {
+        "actual_sha256": "6b3b67ca5e65fdd78f592b43b24717014ddd4bcf464add4fb414cc89975f7030",
+        "expected_sha256": "6b3b67ca5e65fdd78f592b43b24717014ddd4bcf464add4fb414cc89975f7030",
+        "ok": true,
+        "path": "python/sglang/srt/distributed/device_communicators/mooncake_transfer_engine.py"
+      }
+    },
+    "placement_summary": {
+      "endpoint_slots": 24,
+      "exact_phase62_placements": 6,
+      "phase62_endpoint_slots_reused": 24
+    },
+    "plan_audit": {
+      "endpoint_slots": 24,
+      "exact_phase62_placements": 6,
+      "global_peak_simultaneous_nodes": 2,
+      "maximum_concurrent_measurement_shards": 1,
+      "maximum_simultaneous_nodes_per_shard": 2,
+      "measurements": 48,
+      "official_points": 240,
+      "ok": true,
+      "plan_sha256": "3b7e0e066747de8cf01026ae2b5919341661ccd413c7af5abbdef94b0e5dc768",
+      "replica_points": 480,
+      "world_size_per_shard": 3
+    },
+    "plan_file_sha256": "a0273d8aec0f573ade3b17a9a9fe65fd5d6459102f1cb01b2d49e07481478046",
+    "plan_path": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/phase63_ext/run1/topology_plan.json",
+    "raw_dir": "/lustre/fsw/coreai_comparch_infbench/huanhuanc/phase63_ext/run1/raw",
+    "runtime_checks": {
+      "at_least_one_visible_gpu_on_coordinator": true,
+      "batch_register": true,
+      "batch_transfer_sync": true,
+      "cuda_available": true,
+      "production_conn_has_thread_pool": true,
+      "production_wrapper_from_repo": true
+    },
+    "schema_version": "phase63-preflight-v1",
+    "status": "PASS",
+    "workflow_commit": "ff8b5c86c37652b60fde61b442d029935ffd8b32"
+  },
+  "gpu_measurement_runtime_endpoints": [
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "387c8955-c4a2-4b71-1410-dc49a057e099",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "c050df73-8e4c-ec95-c3e7-c96375d7332c",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_9",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 3,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen3-30b-a3b__p1d2__l1__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "9963817a-4cc8-ca7a-3ba2-3db71e487b3b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "2b998b71-9a55-cae1-5e69-7e86fd533da6",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_9",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 3,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen3-30b-a3b__p1d2__l1__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "4401cb1c-eb57-ade0-2ae3-b7f43cbe4e23",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen3-30b-a3b__p1d2__l2__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "14d91c20-7f05-d2f3-4160-dadda329399f",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen3-30b-a3b__p1d2__l2__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ac281df6-a6ef-b5fe-75d7-16d42b2a720b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen3-30b-a3b__p1d2__l3__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "14d91c20-7f05-d2f3-4160-dadda329399f",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen3-30b-a3b__p1d2__l3__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "22b729a9-1063-b7e3-2b6b-e0ce2495067d",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "387c8955-c4a2-4b71-1410-dc49a057e099",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen3-30b-a3b__p2d1__l1__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ac281df6-a6ef-b5fe-75d7-16d42b2a720b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "9963817a-4cc8-ca7a-3ba2-3db71e487b3b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen3-30b-a3b__p2d1__l1__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "22b729a9-1063-b7e3-2b6b-e0ce2495067d",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen3-30b-a3b__p2d1__l2__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ac281df6-a6ef-b5fe-75d7-16d42b2a720b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen3-30b-a3b__p2d1__l2__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "22b729a9-1063-b7e3-2b6b-e0ce2495067d",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen3-30b-a3b__p2d1__l3__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "4401cb1c-eb57-ade0-2ae3-b7f43cbe4e23",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen3-30b-a3b__p2d1__l3__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "387c8955-c4a2-4b71-1410-dc49a057e099",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "c050df73-8e4c-ec95-c3e7-c96375d7332c",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_9",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 3,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "llama-3.2-3b-instruct__p1d2__l1__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "9963817a-4cc8-ca7a-3ba2-3db71e487b3b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "2b998b71-9a55-cae1-5e69-7e86fd533da6",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_9",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 3,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "llama-3.2-3b-instruct__p1d2__l1__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "4401cb1c-eb57-ade0-2ae3-b7f43cbe4e23",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "llama-3.2-3b-instruct__p1d2__l2__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "14d91c20-7f05-d2f3-4160-dadda329399f",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "llama-3.2-3b-instruct__p1d2__l2__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ac281df6-a6ef-b5fe-75d7-16d42b2a720b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "llama-3.2-3b-instruct__p1d2__l3__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "14d91c20-7f05-d2f3-4160-dadda329399f",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "llama-3.2-3b-instruct__p1d2__l3__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "22b729a9-1063-b7e3-2b6b-e0ce2495067d",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "387c8955-c4a2-4b71-1410-dc49a057e099",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "llama-3.2-3b-instruct__p2d1__l1__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ac281df6-a6ef-b5fe-75d7-16d42b2a720b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "9963817a-4cc8-ca7a-3ba2-3db71e487b3b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "llama-3.2-3b-instruct__p2d1__l1__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "22b729a9-1063-b7e3-2b6b-e0ce2495067d",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "llama-3.2-3b-instruct__p2d1__l2__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ac281df6-a6ef-b5fe-75d7-16d42b2a720b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "llama-3.2-3b-instruct__p2d1__l2__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "22b729a9-1063-b7e3-2b6b-e0ce2495067d",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "llama-3.2-3b-instruct__p2d1__l3__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "4401cb1c-eb57-ade0-2ae3-b7f43cbe4e23",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "llama-3.2-3b-instruct__p2d1__l3__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "387c8955-c4a2-4b71-1410-dc49a057e099",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "c050df73-8e4c-ec95-c3e7-c96375d7332c",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_9",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 3,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen2.5-14b-instruct__p1d2__l1__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "9963817a-4cc8-ca7a-3ba2-3db71e487b3b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "2b998b71-9a55-cae1-5e69-7e86fd533da6",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_9",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 3,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen2.5-14b-instruct__p1d2__l1__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "4401cb1c-eb57-ade0-2ae3-b7f43cbe4e23",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen2.5-14b-instruct__p1d2__l2__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "14d91c20-7f05-d2f3-4160-dadda329399f",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen2.5-14b-instruct__p1d2__l2__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ac281df6-a6ef-b5fe-75d7-16d42b2a720b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen2.5-14b-instruct__p1d2__l3__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "14d91c20-7f05-d2f3-4160-dadda329399f",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen2.5-14b-instruct__p1d2__l3__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "22b729a9-1063-b7e3-2b6b-e0ce2495067d",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "387c8955-c4a2-4b71-1410-dc49a057e099",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen2.5-14b-instruct__p2d1__l1__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ac281df6-a6ef-b5fe-75d7-16d42b2a720b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "9963817a-4cc8-ca7a-3ba2-3db71e487b3b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen2.5-14b-instruct__p2d1__l1__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "22b729a9-1063-b7e3-2b6b-e0ce2495067d",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen2.5-14b-instruct__p2d1__l2__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ac281df6-a6ef-b5fe-75d7-16d42b2a720b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen2.5-14b-instruct__p2d1__l2__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "22b729a9-1063-b7e3-2b6b-e0ce2495067d",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen2.5-14b-instruct__p2d1__l3__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "4401cb1c-eb57-ade0-2ae3-b7f43cbe4e23",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "qwen2.5-14b-instruct__p2d1__l3__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "387c8955-c4a2-4b71-1410-dc49a057e099",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "c050df73-8e4c-ec95-c3e7-c96375d7332c",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_9",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 3,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "mixtral-8x7b-instruct-v0.1__p1d2__l1__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "9963817a-4cc8-ca7a-3ba2-3db71e487b3b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "2b998b71-9a55-cae1-5e69-7e86fd533da6",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_9",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 3,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "mixtral-8x7b-instruct-v0.1__p1d2__l1__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "4401cb1c-eb57-ade0-2ae3-b7f43cbe4e23",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "mixtral-8x7b-instruct-v0.1__p1d2__l2__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "14d91c20-7f05-d2f3-4160-dadda329399f",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "mixtral-8x7b-instruct-v0.1__p1d2__l2__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ac281df6-a6ef-b5fe-75d7-16d42b2a720b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "mixtral-8x7b-instruct-v0.1__p1d2__l3__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "14d91c20-7f05-d2f3-4160-dadda329399f",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "mixtral-8x7b-instruct-v0.1__p1d2__l3__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "22b729a9-1063-b7e3-2b6b-e0ce2495067d",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "387c8955-c4a2-4b71-1410-dc49a057e099",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "mixtral-8x7b-instruct-v0.1__p2d1__l1__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ac281df6-a6ef-b5fe-75d7-16d42b2a720b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "9963817a-4cc8-ca7a-3ba2-3db71e487b3b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_8",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 2,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "mixtral-8x7b-instruct-v0.1__p2d1__l1__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "22b729a9-1063-b7e3-2b6b-e0ce2495067d",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "mixtral-8x7b-instruct-v0.1__p2d1__l2__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ac281df6-a6ef-b5fe-75d7-16d42b2a720b",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "mixtral-8x7b-instruct-v0.1__p2d1__l2__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "05b6cc57-0f15-c510-a9c8-0e0f000f380f",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0214.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "22b729a9-1063-b7e3-2b6b-e0ce2495067d",
+          "hostname": "prenyx0214.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0265.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "6395bd08-103f-7a46-99fe-239993a35a88",
+          "hostname": "prenyx0265.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "mixtral-8x7b-instruct-v0.1__p2d1__l3__r0",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    },
+    {
+      "endpoints": [
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "dac3596b-cec5-10be-bb0d-402344cc3e4e",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 0,
+          "role": "P0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0215.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "4401cb1c-eb57-ade0-2ae3-b7f43cbe4e23",
+          "hostname": "prenyx0215.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_7",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 1,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 1,
+          "role": "P1",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        },
+        {
+          "cuda": "13.0",
+          "expected_host": "prenyx0266.a51.clusters.nvidia.com",
+          "gpu_name": "NVIDIA B200",
+          "gpu_uuid": "ccfc9068-86a5-897a-61f7-26477542f006",
+          "hostname": "prenyx0266.a51.clusters.nvidia.com",
+          "ib_device": "mlx5_4",
+          "mooncake_protocol": "rdma",
+          "physical_gpu": 0,
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "rank": 2,
+          "role": "D0",
+          "torch": "2.11.0+cu130",
+          "visible_gpu": 0,
+          "with_nvidia_peermem": "0"
+        }
+      ],
+      "measurement_id": "mixtral-8x7b-instruct-v0.1__p2d1__l3__r1",
+      "phase62_comparability": {
+        "exact_same_topology_replica_endpoint_set": true,
+        "phase62_endpoint_slots_reused": 4,
+        "placement_source": "exact_phase62_reuse"
+      }
+    }
+  ]
+}
