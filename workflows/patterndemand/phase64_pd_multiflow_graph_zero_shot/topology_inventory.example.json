@@ -2,12 +2,15 @@
   "schema_version": "phase64-topology-inventory-v1",
   "inventory_frozen_before_phase64_raw": true,
   "selection_uses_phase64_latency_or_error": false,
+  "scheduler_reservation_mode": "FOUR_NODE_SINGLE_ALLOCATION",
   "phase64_peak_allocation_contract": {
-    "global_peak_simultaneous_nodes": 2,
+    "preferred_scheduler_reserved_nodes": 4,
+    "maximum_scheduler_reserved_nodes": 4,
+    "maximum_active_measurement_nodes_per_shard": 2,
     "global_peak_simultaneous_gpu_processes": 5,
     "maximum_concurrent_measurement_shards": 1,
-    "topology_and_replica_allocations_may_run_sequentially": true,
-    "four_node_simultaneous_allocation_forbidden": true,
+    "four_node_scheduler_reservation_permitted": true,
+    "two_measurement_shards_concurrent_forbidden": true,
     "inventory_slots_are_not_nodes": true
   },
   "placements": [
@@ -18,5 +21,5 @@
     {"placement_id":"l3-r0","topology_level":"L3","replica_id":0,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":false,"fabric_domain":"FILL"},"sides":{"A":[],"B":[]}},
     {"placement_id":"l3-r1","topology_level":"L3","replica_id":1,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":false,"fabric_domain":"FILL"},"sides":{"A":[],"B":[]}}
   ],
-  "operator_note": "Copy and fill every A/B side with four real GPU endpoints. The abbreviated empty sides are intentionally invalid placeholders. Never select endpoints after observing Phase64 latency."
+  "operator_note": "Copy and fill every A/B side with four real GPU endpoints. Prefer mapping all placements onto one scheduler-reserved four-node pool; only active ranks in one shard may run. The abbreviated empty sides are intentionally invalid placeholders. Never select endpoints after observing Phase64 latency."
 }

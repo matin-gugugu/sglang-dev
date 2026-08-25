@@ -48,14 +48,20 @@
   "resource_allocation_contract": {
     "inventory_slots_per_placement": 8,
     "inventory_slots_are_not_nodes": true,
-    "global_peak_simultaneous_nodes": 2,
+    "preferred_scheduler_reserved_nodes": 4,
+    "maximum_scheduler_reserved_nodes": 4,
+    "maximum_active_measurement_nodes_per_shard": 2,
+    "scheduler_reservation_modes": ["FOUR_NODE_SINGLE_ALLOCATION", "SEQUENTIAL_TOPOLOGY_EPOCHS"],
+    "four_node_scheduler_reservation_permitted": true,
+    "four_node_scheduler_reservation_preferred_when_easier_to_queue": true,
+    "four_node_active_measurement_required": false,
+    "unused_reserved_nodes_must_remain_idle_during_each_shard": true,
     "global_peak_simultaneous_gpu_processes": 5,
     "maximum_concurrent_measurement_shards": 1,
     "world_size_by_configuration": {"P1D4": 5, "P4D1": 5, "P2D2_MATCHING": 4, "P2D2_ALL_TO_ALL": 4},
     "slot_mapping": {"P1D4": ["A0", "B0", "B1", "B2", "B3"], "P4D1": ["A0", "A1", "A2", "A3", "B0"], "P2D2_MATCHING": ["A0", "A1", "B0", "B1"], "P2D2_ALL_TO_ALL": ["A0", "A1", "B0", "B1"]},
-    "topology_and_replica_allocations_may_run_sequentially": true,
-    "four_node_simultaneous_allocation_required": false,
-    "four_node_simultaneous_allocation_forbidden": true
+    "topology_and_replica_measurements_run_sequentially": true,
+    "reason_not_to_run_two_shards_at_once": "concurrent shards could contend for the same fabric and contaminate the physical latency target"
   },
   "placement_contract": {
     "placements_per_topology": 2,
@@ -136,7 +142,7 @@
     "HEAD is not exact W64 or any pinned input differs",
     "graph/payload/topology selection is edited after raw begins or selected using observed latency/error",
     "R61 coefficients are fitted, recalibrated or overridden",
-    "more than two simultaneous nodes, five GPU processes or one measurement shard is requested",
+    "more than four nodes are reserved, or one shard activates more than two nodes/five GPU processes, or two measurement shards run concurrently",
     "production Mooncake RDMA/dma-buf falls back to TCP, MNNVL, NVLink bypass, staging or custom pool",
     "model weights, inference, downloads, protected raw/cache/PID assets are accessed",
     "raw enters Git or an existing Phase64 result directory is overwritten"

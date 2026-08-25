@@ -62,8 +62,10 @@ def _normalize_endpoint(e:dict[str,Any])->dict[str,Any]:
 def validate_inventory(inventory:dict[str,Any],spec:dict[str,Any]|None=None)->dict[str,Any]:
  spec=spec or contract();errors=[]
  if inventory.get("schema_version")!="phase64-topology-inventory-v1" or inventory.get("inventory_frozen_before_phase64_raw") is not True or inventory.get("selection_uses_phase64_latency_or_error") is not False:errors.append("inventory_header")
- peak=inventory.get("phase64_peak_allocation_contract",{});expected={"global_peak_simultaneous_nodes":2,"global_peak_simultaneous_gpu_processes":5,"maximum_concurrent_measurement_shards":1,"topology_and_replica_allocations_may_run_sequentially":True,"four_node_simultaneous_allocation_forbidden":True,"inventory_slots_are_not_nodes":True}
+ peak=inventory.get("phase64_peak_allocation_contract",{});expected={"preferred_scheduler_reserved_nodes":4,"maximum_scheduler_reserved_nodes":4,"maximum_active_measurement_nodes_per_shard":2,"global_peak_simultaneous_gpu_processes":5,"maximum_concurrent_measurement_shards":1,"four_node_scheduler_reservation_permitted":True,"two_measurement_shards_concurrent_forbidden":True,"inventory_slots_are_not_nodes":True}
  if peak!=expected:errors.append("peak_contract")
+ reservation_mode=inventory.get("scheduler_reservation_mode")
+ if reservation_mode not in ("FOUR_NODE_SINGLE_ALLOCATION","SEQUENTIAL_TOPOLOGY_EPOCHS"):errors.append("scheduler_reservation_mode")
  rows=inventory.get("placements",[]);expected_keys={(l,r) for l in ("L1","L2","L3") for r in (0,1)};normalized=[];seen=set();signatures={}
  for row in rows:
   try:
@@ -83,8 +85,10 @@ def validate_inventory(inventory:dict[str,Any],spec:dict[str,Any]|None=None)->di
  if seen!=expected_keys:errors.append({"placement_keys":sorted(seen),"expected":sorted(expected_keys)})
  for level in ("L1","L2","L3"):
   if (level,0) in signatures and signatures[(level,0)]==signatures.get((level,1)):errors.append(f"replica_signature:{level}")
+ unique_hosts={e["host"] for placement in normalized for side in ("A","B") for e in placement["sides"][side]}
+ if reservation_mode=="FOUR_NODE_SINGLE_ALLOCATION" and len(unique_hosts)>4:errors.append({"four_node_pool_host_count":len(unique_hosts),"maximum":4})
  if errors:raise RuntimeError({"invalid_phase64_inventory":errors})
- return {"ok":True,"placements":6,"endpoint_slots":48,"maximum_simultaneous_nodes":2,"maximum_simultaneous_gpu_processes":5,"normalized_placements":sorted(normalized,key=lambda r:(r["topology_level"],r["replica_id"]))}
+ return {"ok":True,"placements":6,"endpoint_slots":48,"scheduler_reservation_mode":reservation_mode,"inventory_unique_hosts":len(unique_hosts),"maximum_scheduler_reserved_nodes":4,"maximum_active_measurement_nodes":2,"maximum_simultaneous_gpu_processes":5,"normalized_placements":sorted(normalized,key=lambda r:(r["topology_level"],r["replica_id"]))}
 def _measurement_ranks(placement:dict[str,Any],configuration:str)->list[dict[str,Any]]:
  s=placement["sides"];mapping={"P1D4":[s["A"][0],*s["B"]],"P4D1":[*s["A"],s["B"][0]],"P2D2_MATCHING":[s["A"][0],s["A"][1],s["B"][0],s["B"][1]],"P2D2_ALL_TO_ALL":[s["A"][0],s["A"][1],s["B"][0],s["B"][1]]};roles=graph(configuration)["roles"]
  return [{**copy.deepcopy(e),"rank":rank,"role":roles[rank]} for rank,e in enumerate(mapping[configuration])]

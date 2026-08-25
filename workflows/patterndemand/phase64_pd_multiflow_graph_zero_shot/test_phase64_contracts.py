@@ -13,13 +13,24 @@ def inventory()->dict:
    if level=="L1":a=b=f"l1host{replica}"
    else:a=f"{level.lower()}a{replica}";b=f"{level.lower()}b{replica}"
    rows.append({"placement_id":f"{level.lower()}-r{replica}","topology_level":level,"replica_id":replica,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":level!="L3","fabric_domain":"f0"},"sides":{"A":[endpoint(a,i) for i in range(4)],"B":[endpoint(b,i+4) for i in range(4)]}})
- return {"schema_version":"phase64-topology-inventory-v1","inventory_frozen_before_phase64_raw":True,"selection_uses_phase64_latency_or_error":False,"phase64_peak_allocation_contract":{"global_peak_simultaneous_nodes":2,"global_peak_simultaneous_gpu_processes":5,"maximum_concurrent_measurement_shards":1,"topology_and_replica_allocations_may_run_sequentially":True,"four_node_simultaneous_allocation_forbidden":True,"inventory_slots_are_not_nodes":True},"placements":rows}
+ return {"schema_version":"phase64-topology-inventory-v1","inventory_frozen_before_phase64_raw":True,"selection_uses_phase64_latency_or_error":False,"scheduler_reservation_mode":"SEQUENTIAL_TOPOLOGY_EPOCHS","phase64_peak_allocation_contract":{"preferred_scheduler_reserved_nodes":4,"maximum_scheduler_reserved_nodes":4,"maximum_active_measurement_nodes_per_shard":2,"global_peak_simultaneous_gpu_processes":5,"maximum_concurrent_measurement_shards":1,"four_node_scheduler_reservation_permitted":True,"two_measurement_shards_concurrent_forbidden":True,"inventory_slots_are_not_nodes":True},"placements":rows}
+def four_node_inventory()->dict:
+ value=inventory();value["scheduler_reservation_mode"]="FOUR_NODE_SINGLE_ALLOCATION";mapping={("L1",0):("n0","n0"),("L1",1):("n1","n1"),("L2",0):("n0","n1"),("L2",1):("n2","n3"),("L3",0):("n0","n2"),("L3",1):("n1","n3")}
+ for placement in value["placements"]:
+  hosts=mapping[(placement["topology_level"],placement["replica_id"])]
+  for side,host in zip(("A","B"),hosts):
+   for endpoint_value in placement["sides"][side]:endpoint_value.update({"host":host,"host_aliases":[host],"transfer_hostname":host})
+ return value
 class Phase64ContractsTest(unittest.TestCase):
  def test_graph_and_payload_freeze(self)->None:
   audit=validate_graph_contract();self.assertEqual(audit["vectors"],80);self.assertEqual(len(payload_vectors("qwen3-8b","P1D4")),10);self.assertEqual(len(payload_vectors("deepseek-v2-lite","P2D2_MATCHING")[0]["flows"]),2)
  def test_inventory_and_plan(self)->None:
   audit=validate_inventory(inventory());self.assertEqual(audit["endpoint_slots"],48);plan=expand_plan(inventory(),"a"*64,"2026-08-25T00:00:00+00:00","b"*40);pa=validate_plan(plan);self.assertEqual(pa["measurements"],48);self.assertEqual(max(r["world_size"] for r in plan["measurements"]),5);self.assertTrue(all(len({e["host"] for e in r["ranks"]})<=2 for r in plan["measurements"]))
- def test_four_node_inventory_rejected(self)->None:
+ def test_four_node_single_allocation_pool(self)->None:
+  audit=validate_inventory(four_node_inventory());self.assertEqual(audit["scheduler_reservation_mode"],"FOUR_NODE_SINGLE_ALLOCATION");self.assertEqual(audit["inventory_unique_hosts"],4)
+  value=inventory();value["scheduler_reservation_mode"]="FOUR_NODE_SINGLE_ALLOCATION"
+  with self.assertRaises(RuntimeError):validate_inventory(value)
+ def test_more_than_two_active_nodes_in_one_placement_rejected(self)->None:
   value=inventory();value["placements"][2]["sides"]["A"][1]["host"]="third";value["placements"][2]["sides"]["A"][1]["host_aliases"]=["third"]
   with self.assertRaises(RuntimeError):validate_inventory(value)
  def test_graph_formula_reduces_to_r61_two_flow(self)->None:
