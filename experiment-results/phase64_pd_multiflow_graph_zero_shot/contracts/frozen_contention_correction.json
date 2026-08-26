@@ -1,0 +1,49 @@
+{
+  "blind_status": {
+    "fresh_blind_validated": false,
+    "reserved_features_used": false,
+    "reserved_measurements_or_targets_used": false
+  },
+  "candidate_id": "global_affine_max_min",
+  "complexity_rank": 2,
+  "family": "affine_max_min",
+  "groups": {
+    "__global__": {
+      "beta_max": 0.9764784060893607,
+      "beta_min": 0.8501015546505344,
+      "intercept_us": -109.83183764072692,
+      "training_rows": 120
+    }
+  },
+  "inference_formula": "max(1.0, intercept_us + beta_max * max(C0,C1) + beta_min * min(C0,C1))",
+  "prediction_floor_us": 1.0,
+  "required_runtime_inputs": [
+    "phase51_flow0_us",
+    "phase51_flow1_us"
+  ],
+  "schema_version": "phase61-contention-model-v1",
+  "scope": [],
+  "selection_evidence": {
+    "folds": 20,
+    "method": "leave-one-payload-pair-out",
+    "more_complex_candidates_not_used_for_selection": true,
+    "oof_gate": {
+      "checks": {
+        "configuration_topology_signed_bias": true,
+        "configuration_topology_wape": true,
+        "improves_baseline": true,
+        "overall_signed_bias": true,
+        "overall_wape": true,
+        "positive_predictions": true
+      },
+      "max_configuration_topology_absolute_signed_bias": 0.0101676352552026,
+      "max_configuration_topology_wape": 0.03073030554076912,
+      "overall_signed_bias": -0.001768163275621968,
+      "overall_wape": 0.027257051340021623,
+      "target_guard": true
+    },
+    "simplest_passing_candidate": true
+  },
+  "source_result_commit": "31a718aaf9ded590f8940342038f58210ce5962e",
+  "workflow_commit": "9375c6fa81fb3fb263a0f4da40c88b1bb4c1166f"
+}
