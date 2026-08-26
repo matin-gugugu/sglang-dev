@@ -51,5 +51,6 @@ workflow commit W
 - `phase67_pd_graph_page_shape_refinement`：把R64/R66共480个已公开物理点降级为development，以四种固定留出协议选择最简单的`M/B/S + page-shape`低容量修正；拟合前冻结Phase68全新page `{36,40,48,56,64}`，本阶段只用本地CPU，不读取Phase68 target。
 - `phase68_pd_graph_page_shape_fresh_blind`：冻结R67的`M/B/S + page-shape`公式，在预注册page `{36,40,48,56,64}` 和同时避开Phase64/66的全新endpoint tuple上做第二次物理fresh-blind；48个顺序Mooncake/RDMA shard，机械比较max-edge、R61、R65和R67，禁止训练或blind后重校准。
 - `phase69_pd_high_page_residual_refinement`：把R64/R66/R68共720个公开物理点作为development，冻结R67为底座，仅对page>32学习低容量残差并新增逐模型×配置精度门；拟合前冻结Phase70 page `{34,38,44,52,60}`，本阶段只用本地CPU。
+- `phase70_pd_high_page_residual_fresh_blind`：冻结R69高page残差与其R67底座，在预注册page `{34,38,44,52,60}` 和同时避开Phase64/66/68的全新endpoint tuple上做第三次物理fresh-blind；48个顺序Mooncake/RDMA shard，新增逐模型×配置10%门并机械比较max-edge、R61、R65、R67和R69。
 
 完整交接见`PatternDemand跨环境GPU执行交接_Phase36_Phase37.md`。
