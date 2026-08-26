@@ -38,6 +38,7 @@ PHASE_PREFIX = {
     "phase63": "experiment-results/phase63_pd_contention_four_model_external/",
     "phase64": "experiment-results/phase64_pd_multiflow_graph_zero_shot/",
     "phase65": "experiment-results/phase65_pd_graph_correction_development/",
+    "phase66": "experiment-results/phase66_pd_graph_correction_fresh_blind/",
 }
 
 ALLOWED_COMPACT_DATA_PATHS = {

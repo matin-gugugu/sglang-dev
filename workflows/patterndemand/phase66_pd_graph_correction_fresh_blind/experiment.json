@@ -1,0 +1,162 @@
+{
+  "schema_version": "phase66-pd-graph-correction-fresh-blind-contract-v1",
+  "phase": "Phase66-fresh-blind-physical",
+  "objective": "冻结R65的model×configuration多流图修正公式，在未见page与全新endpoint tuple上进行生产Mooncake RDMA物理fresh-blind验证；禁止训练、重校准和使用blind target调参。",
+  "workflow_parent_result_commit": "5fff4d339f84644c476c253ea534b4ce7757d708",
+  "source_development_result_commit": "5fff4d339f84644c476c253ea534b4ce7757d708",
+  "source_physical_result_commit": "891cfcc12794c2b19c95b306213154733ae9ec3f",
+  "result_dir": "experiment-results/phase66_pd_graph_correction_fresh_blind",
+  "execution_model": "external fresh topology inventory; 48 sequential GPU shards; frozen-model CPU aggregation with no fitting",
+  "training_permitted": false,
+  "model_recalibration_permitted": false,
+  "threshold_tuning_permitted": false,
+  "model_weights_required": false,
+  "selected_models": ["qwen3-8b", "deepseek-v2-lite"],
+  "research_scope": {
+    "fixed_configurations": ["P1D4", "P4D1", "P2D2_MATCHING", "P2D2_ALL_TO_ALL"],
+    "topology_levels": ["L1", "L2", "L3"],
+    "placement_replicas": 2,
+    "prefill_parallelism": {"tp": 1, "pp": 1},
+    "decode_parallelism": {"tp": 1, "pp": 1},
+    "wave_admission": "all ranks and all graph edges ready before synchronized release",
+    "decision_scope": "none; P/D counts, routing, payload, model and placement are frozen inputs",
+    "not_in_scope": ["more than four flows", "P2D4/P4D2/P4D4", "TP or PP inside P/D", "model inference", "histogram retraining", "online arrivals", "dynamic routing", "queueing", "background congestion", "compute overlap", "memory feasibility"]
+  },
+  "frozen_correction_contract": {
+    "source": "experiment-results/phase65_pd_graph_correction_development/model/multiflow_graph_correction.json",
+    "sha256": "bbcab49ced4df9221210a1eab0573d4b9cf3785b1988307c9e2c4c8b298280a9",
+    "candidate_id": "model_configuration_affine_graph",
+    "formula": "max(1.0, intercept + beta_M*M + beta_busy*(B-M) + beta_nonbusy*(S-B))",
+    "runtime_inputs": ["model_id", "configuration", "M=max edge curve cost", "B=busiest endpoint edge-cost sum", "S=sum of all edge curve costs"],
+    "expected_groups": 8,
+    "forbidden": ["refit", "recalibration", "coefficient override", "threshold tuning", "using matched-solo or blind actual latency as an inference input"]
+  },
+  "baseline_contract": {
+    "max_edge": "M",
+    "r61_graph_extension_source": "experiment-results/phase64_pd_multiflow_graph_zero_shot/contracts/frozen_contention_correction.json",
+    "r61_graph_extension_sha256": "609b3f0cb86d6817f03a5c1712f16340d9a17fe297545bc65bd07fdb874e0f9f",
+    "comparison_policy": "R65 must improve both max-edge and frozen R61 graph extension overall, and improve the better baseline in every configuration"
+  },
+  "blind_payload_contract": {
+    "source": "experiment-results/phase65_pd_graph_correction_development/contracts/phase66_reserved_blind_grid.json",
+    "source_file_sha256": "2077a9aae1f69fe3ed1fe62dd532f159e0c5036ccf0444afc6913a872b5140fc",
+    "canonical_grid_sha256": "0e2086d7eece867a194670ef4740d382d834bee62d8de1a8e6a3c2f1d5c6cc78",
+    "reserved_pages": [3, 6, 12, 24, 32],
+    "phase64_development_pages": [1, 2, 4, 8, 16],
+    "vectors_per_model_configuration": 10,
+    "expected_unique_vectors": 80,
+    "expected_official_points": 240,
+    "expected_replica_points": 480,
+    "opening_policy": "payload definitions were frozen before Phase66 raw; GPU targets are first opened only after R65 froze the formula"
+  },
+  "topology_definitions": {
+    "L1": "one physical node, four or five launched GPU ranks per shard",
+    "L2": "two physical nodes in one rack/network domain, four or five launched GPU ranks per shard",
+    "L3": "two physical nodes in different racks but one RDMA domain, four or five launched GPU ranks per shard"
+  },
+  "resource_allocation_contract": {
+    "endpoint_slots": "A0-A3/B0-B3 are eight GPU slots, not eight nodes",
+    "world_size_by_configuration": {"P1D4": 5, "P4D1": 5, "P2D2_MATCHING": 4, "P2D2_ALL_TO_ALL": 4},
+    "preferred_scheduler_reserved_nodes": 4,
+    "maximum_scheduler_reserved_nodes": 4,
+    "maximum_active_measurement_nodes_per_shard": 2,
+    "global_peak_simultaneous_gpu_processes": 5,
+    "maximum_concurrent_measurement_shards": 1,
+    "four_node_scheduler_reservation_permitted": true,
+    "two_measurement_shards_concurrent_forbidden": true,
+    "four_node_collective_required": false,
+    "scheduling": "all 48 shards are independent and must run sequentially; four reserved nodes are only a placement pool"
+  },
+  "fresh_placement_contract": {
+    "phase64_plan": "experiment-results/phase64_pd_multiflow_graph_zero_shot/contracts/topology_plan.json",
+    "every_phase66_endpoint_tuple_fresh": "every (host, physical_gpu, ib_device) tuple in the Phase66 inventory must be absent from all Phase64 measurement ranks",
+    "replicas_distinct": "the two Phase66 endpoint signatures within each topology must differ",
+    "minimum_new_host_signatures_per_topology": 1,
+    "host_signature_definition": "sorted physical host set used by one placement; one host for L1 and two hosts for L2/L3",
+    "selection_before_raw": true,
+    "selection_source": "scheduler/asset host, rack and fabric metadata only; never benchmark speed, R65 prediction or observed latency",
+    "claim_boundary": "all endpoint tuples are fresh; at least one of two placements per topology also has a host signature unseen in Phase64"
+  },
+  "transport_contract": {
+    "production_wrapper": "sglang.srt.distributed.device_communicators.mooncake_transfer_engine.MooncakeTransferEngine.batch_transfer_sync",
+    "mooncake_protocol": "rdma",
+    "rdma_gpu_memory_registration": "dma-buf via WITH_NVIDIA_PEERMEM=0",
+    "wave_concurrency": "one thread per simultaneous outbound edge on a sender, with per-sender barrier and global gloo release",
+    "forced_tcp": false,
+    "forced_mnnvl": false,
+    "forced_intranode_nvlink": false,
+    "staging_buffer": false,
+    "custom_memory_pool": false
+  },
+  "measurement_contract": {
+    "warmup_iterations_min": 2,
+    "warmup_iterations_max": 3,
+    "timed_iterations_min": 5,
+    "timed_iterations_max": 30,
+    "target_bytes_per_mode_block": 536870912,
+    "modes": ["each edge solo", "all graph edges concurrent"],
+    "wave_latency_semantic": "maximum sender-side synchronous call latency across all concurrently admitted graph edges",
+    "data_validation": "outside timed intervals verify every destination byte after each mode",
+    "minimum_independent_repeats": 5,
+    "extra_repeats_per_round": 2,
+    "maximum_independent_repeats": 9,
+    "repeat_median_cv_threshold": 0.15,
+    "cross_replica_relative_spread_diagnostic_threshold": 0.25,
+    "official_point_policy": "median across repeats inside each replica, then maximum actual concurrent latency across two pre-frozen fresh replicas",
+    "raw_storage": "all JSONL and per-iteration samples remain outside Git"
+  },
+  "fresh_blind_acceptance_gate": {
+    "overall_wape_max": 0.10,
+    "each_model_wape_max": 0.10,
+    "each_configuration_wape_max": 0.10,
+    "each_configuration_topology_wape_max": 0.15,
+    "overall_absolute_signed_bias_max": 0.10,
+    "each_model_absolute_signed_bias_max": 0.10,
+    "each_configuration_absolute_signed_bias_max": 0.10,
+    "each_configuration_topology_absolute_signed_bias_max": 0.15,
+    "all_predictions_positive": true,
+    "strictly_improves_both_baselines_overall": true,
+    "strictly_improves_best_baseline_each_configuration": true,
+    "selection": "mechanical evaluation only; failure is retained honestly and never triggers refit on blind labels"
+  },
+  "expected_measurements": 48,
+  "expected_official_points": 240,
+  "expected_replica_points": 480,
+  "container_contract": {
+    "image": "lmsysorg/sglang:v0.5.15",
+    "repo_python_first": true,
+    "formal_network_download_permitted": false,
+    "required_gpu_class": "CUDA GPU with GPUDirect RDMA; NVIDIA A51 B200 is acceptable",
+    "required_runtime_modules": ["torch", "mooncake.engine", "sglang.srt.distributed.device_communicators.mooncake_transfer_engine"]
+  },
+  "accepted_result_statuses": ["PASS", "PASS_WITH_RUNTIME_VARIANCE", "PASS_WITH_PLACEMENT_VARIANCE", "PASS_WITH_RUNTIME_AND_PLACEMENT_VARIANCE"],
+  "pinned_inputs": [
+    {"name":"phase65_manifest","path":"experiment-results/phase65_pd_graph_correction_development/manifest.sha256","sha256":"7789879529e84092e3770dae37042306c0f1020843622b284d7d8d37d04127f5","verify_manifest_directory":"experiment-results/phase65_pd_graph_correction_development"},
+    {"name":"phase65_summary","path":"experiment-results/phase65_pd_graph_correction_development/summary.json","sha256":"c6cf1cadf6768573653b7b75e874cde5fec3d28365ab334e33ea4a0172e7aef5"},
+    {"name":"phase65_model","path":"experiment-results/phase65_pd_graph_correction_development/model/multiflow_graph_correction.json","sha256":"bbcab49ced4df9221210a1eab0573d4b9cf3785b1988307c9e2c4c8b298280a9"},
+    {"name":"phase66_reserved_grid","path":"experiment-results/phase65_pd_graph_correction_development/contracts/phase66_reserved_blind_grid.json","sha256":"2077a9aae1f69fe3ed1fe62dd532f159e0c5036ccf0444afc6913a872b5140fc"},
+    {"name":"phase64_manifest","path":"experiment-results/phase64_pd_multiflow_graph_zero_shot/manifest.sha256","sha256":"a49f02bd177695c38886b88077f360dad43e25c2f8d165dccdd85d08ffdc174b","verify_manifest_directory":"experiment-results/phase64_pd_multiflow_graph_zero_shot"},
+    {"name":"phase64_plan","path":"experiment-results/phase64_pd_multiflow_graph_zero_shot/contracts/topology_plan.json","sha256":"5c05154e13866deb0a30cbad32895f6c1db3936ea6359961e3297f4bbfac1819"},
+    {"name":"phase64_graph_grid","path":"experiment-results/phase64_pd_multiflow_graph_zero_shot/contracts/graph_payload_grid.json","sha256":"16bfb5d61c8828f4c537ed8ca4aeff59cc0781cde31464297168575a566c10a4"},
+    {"name":"r61_baseline","path":"experiment-results/phase64_pd_multiflow_graph_zero_shot/contracts/frozen_contention_correction.json","sha256":"609b3f0cb86d6817f03a5c1712f16340d9a17fe297545bc65bd07fdb874e0f9f"},
+    {"name":"phase51_curves","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/curves/pd_mooncake_physical_curves.json","sha256":"e2278ced7d7ef9743b86df41c9f6d70661b4d2d95514ce28bf7031c6b26e841d"},
+    {"name":"phase51_layouts","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/contracts/model_transfer_layouts.json","sha256":"8dfbd24815e2baacccc7b786bd5fb5b2c2f33d3ad9b302d32f4172ca4f2db4d0"},
+    {"name":"sglang_mooncake_transfer_engine","path":"python/sglang/srt/distributed/device_communicators/mooncake_transfer_engine.py","sha256":"6b3b67ca5e65fdd78f592b43b24717014ddd4bcf464add4fb414cc89975f7030"},
+    {"name":"sglang_mooncake_conn","path":"python/sglang/srt/disaggregation/mooncake/conn.py","sha256":"9106dfc8deb91662bdbac850f41612104a597b7f6a5cd15c8eb7ca17a20c8a0d"}
+  ],
+  "claim_boundary": [
+    "Phase66 is fresh-blind physical validation of the frozen R65 correction for exactly the two measured models and four at-most-four-flow configurations",
+    "a PASS supports unseen-payload and fresh-endpoint generalization across measured L1/L2/L3",
+    "it does not support unseen models, larger/different communication graphs, end-to-end serving, compute, memory, queueing, unrelated-job congestion, online arrivals or scheduler placement selection"
+  ],
+  "stop_and_block_if": [
+    "HEAD is not exact W66 or any pinned input differs",
+    "any Phase64 development page is measured or any R65 coefficient/threshold is changed",
+    "topology inventory is not frozen before raw, reuses a Phase64 endpoint tuple, or lacks one unseen host signature per topology",
+    "an executor requests more than two simultaneous active nodes or five GPU processes for one shard",
+    "two measurement shards run concurrently",
+    "production Mooncake RDMA/dma-buf is unavailable or falls back to TCP, MNNVL, NVLink bypass, staging or custom pool",
+    "model weights, inference, training, downloads, protected raw/cache/PID assets are accessed",
+    "raw would enter Git or an existing Phase66 result directory would be overwritten"
+  ]
+}
