@@ -1,0 +1,312 @@
+{
+  "accepted_result_statuses": [
+    "PASS",
+    "PASS_WITH_RUNTIME_VARIANCE",
+    "PASS_WITH_PLACEMENT_VARIANCE",
+    "PASS_WITH_RUNTIME_AND_PLACEMENT_VARIANCE"
+  ],
+  "baseline_contract": {
+    "comparison_policy": "R67 must improve max-edge, frozen R61 and frozen R65 overall, and improve the best of all three in every configuration",
+    "max_edge": "M",
+    "r61_sha256": "609b3f0cb86d6817f03a5c1712f16340d9a17fe297545bc65bd07fdb874e0f9f",
+    "r61_source": "experiment-results/phase64_pd_multiflow_graph_zero_shot/contracts/frozen_contention_correction.json",
+    "r65_sha256": "bbcab49ced4df9221210a1eab0573d4b9cf3785b1988307c9e2c4c8b298280a9",
+    "r65_source": "experiment-results/phase65_pd_graph_correction_development/model/multiflow_graph_correction.json"
+  },
+  "blind_payload_contract": {
+    "canonical_grid_sha256": "ffa63e564182cc4760efa67906916fef3fc1c646d9a8a45ee1c48e1453044593",
+    "expected_official_points": 240,
+    "expected_replica_points": 480,
+    "expected_unique_vectors": 80,
+    "non_knot_pages": [
+      36,
+      40,
+      56
+    ],
+    "opening_policy": "payload definitions were frozen before Phase67 fitting; Phase68 GPU targets open only after R67 froze the formula",
+    "payload_derivation": "payload_bytes and descriptor_bytes are exact per-page linear products from the frozen Phase51 model layout; curve latency uses bracketed piecewise log2 interpolation",
+    "prior_development_pages": [
+      1,
+      2,
+      3,
+      4,
+      6,
+      8,
+      12,
+      16,
+      24,
+      32
+    ],
+    "reserved_pages": [
+      36,
+      40,
+      48,
+      56,
+      64
+    ],
+    "source": "experiment-results/phase67_pd_graph_page_shape_refinement/contracts/phase68_reserved_blind_grid.json",
+    "source_file_sha256": "029cb7644e49f28b6050c3f3356a75b27e7bc89860ba5699aa0d72f54737b3c7",
+    "vectors_per_model_configuration": 10
+  },
+  "claim_boundary": [
+    "Phase68 is second fresh-blind physical validation of frozen R67 for exactly two measured models and four at-most-four-flow configurations",
+    "a PASS supports extrapolation from prior pages through page64 and fresh endpoint placements across measured L1/L2/L3",
+    "it does not support unseen models, larger/different graphs, end-to-end serving, compute, memory, queueing, unrelated-job congestion, online arrivals or scheduler placement selection"
+  ],
+  "container_contract": {
+    "formal_network_download_permitted": false,
+    "image": "lmsysorg/sglang:v0.5.15",
+    "repo_python_first": true,
+    "required_gpu_class": "CUDA GPU with GPUDirect RDMA; NVIDIA A51 B200 is acceptable",
+    "required_runtime_modules": [
+      "torch",
+      "mooncake.engine",
+      "sglang.srt.distributed.device_communicators.mooncake_transfer_engine"
+    ]
+  },
+  "execution_model": "external fresh topology inventory; 48 sequential GPU shards; frozen-model CPU aggregation with no fitting",
+  "expected_measurements": 48,
+  "expected_official_points": 240,
+  "expected_replica_points": 480,
+  "fresh_blind_acceptance_gate": {
+    "all_predictions_positive": true,
+    "each_configuration_absolute_signed_bias_max": 0.1,
+    "each_configuration_topology_absolute_signed_bias_max": 0.15,
+    "each_configuration_topology_wape_max": 0.15,
+    "each_configuration_wape_max": 0.1,
+    "each_model_absolute_signed_bias_max": 0.1,
+    "each_model_wape_max": 0.1,
+    "overall_absolute_signed_bias_max": 0.1,
+    "overall_wape_max": 0.1,
+    "selection": "mechanical evaluation only; failure is retained honestly and never triggers refit on blind labels",
+    "strictly_improves_all_three_baselines_overall": true,
+    "strictly_improves_best_baseline_each_configuration": true
+  },
+  "fresh_placement_contract": {
+    "claim_boundary": "all endpoint tuples are fresh against both prior physical phases; at least one placement per topology also has an unseen host signature",
+    "every_phase68_endpoint_tuple_fresh": "every (host, physical_gpu, ib_device) tuple must be absent from both Phase64 and Phase66 measurement ranks",
+    "host_signature_definition": "sorted physical host set used by one placement; freshness is checked against the union of Phase64 and Phase66 signatures",
+    "minimum_new_host_signatures_per_topology": 1,
+    "phase64_plan": "experiment-results/phase64_pd_multiflow_graph_zero_shot/contracts/topology_plan.json",
+    "phase66_plan": "experiment-results/phase66_pd_graph_correction_fresh_blind/contracts/topology_plan.json",
+    "replicas_distinct": "the two Phase68 endpoint signatures within each topology must differ",
+    "selection_before_raw": true,
+    "selection_source": "scheduler/asset host, rack and fabric metadata only; never benchmark speed, R67 prediction or observed latency"
+  },
+  "frozen_correction_contract": {
+    "candidate_id": "model_configuration_graph_page_sqrt",
+    "expected_features": 8,
+    "expected_groups": 8,
+    "feature_family": "page_sqrt",
+    "forbidden": [
+      "refit",
+      "recalibration",
+      "coefficient override",
+      "threshold tuning",
+      "using matched-solo or blind actual latency as an inference input"
+    ],
+    "formula": "max(1, beta0 + betaM*M + betaB*(B-M) + betaS*(S-B) + betaPmax*pmax + betaPrest*prest + betaQmax*sqrt(pmax) + betaQrest*sqrt(prest))",
+    "runtime_inputs": [
+      "model_id",
+      "configuration",
+      "M=max edge curve cost",
+      "B=busiest endpoint edge-cost sum",
+      "S=sum edge curve costs",
+      "pmax=max page count",
+      "prest=sum pages minus pmax"
+    ],
+    "sha256": "15372d800c674ed28d634d219bf2d38a04b595ee417f18d775e2c63145b4226e",
+    "source": "experiment-results/phase67_pd_graph_page_shape_refinement/model/multiflow_graph_page_correction.json"
+  },
+  "measurement_contract": {
+    "cross_replica_relative_spread_diagnostic_threshold": 0.25,
+    "data_validation": "outside timed intervals verify every destination byte after each mode",
+    "extra_repeats_per_round": 2,
+    "maximum_independent_repeats": 9,
+    "minimum_independent_repeats": 5,
+    "modes": [
+      "each edge solo",
+      "all graph edges concurrent"
+    ],
+    "official_point_policy": "median across repeats inside each replica, then maximum actual concurrent latency across two pre-frozen replicas",
+    "raw_storage": "all JSONL and per-iteration samples remain outside Git",
+    "repeat_median_cv_threshold": 0.15,
+    "target_bytes_per_mode_block": 536870912,
+    "timed_iterations_max": 30,
+    "timed_iterations_min": 5,
+    "warmup_iterations_max": 3,
+    "warmup_iterations_min": 2,
+    "wave_latency_semantic": "maximum sender-side synchronous call latency across all concurrently admitted graph edges"
+  },
+  "model_recalibration_permitted": false,
+  "model_weights_required": false,
+  "objective": "冻结R67的model×configuration graph+page-shape公式，在拟合前预留的page与同时避开Phase64/66的endpoint tuple上做第二次生产Mooncake RDMA fresh-blind物理验证；禁止训练、重校准和blind后调参。",
+  "phase": "Phase68-second-fresh-blind-physical",
+  "pinned_inputs": [
+    {
+      "name": "phase67_manifest",
+      "path": "experiment-results/phase67_pd_graph_page_shape_refinement/manifest.sha256",
+      "sha256": "1d53b1f51b08cc20a9cb23625c75b2e18746b4991671721ae02a741492687e24",
+      "verify_manifest_directory": "experiment-results/phase67_pd_graph_page_shape_refinement"
+    },
+    {
+      "name": "phase67_summary",
+      "path": "experiment-results/phase67_pd_graph_page_shape_refinement/summary.json",
+      "sha256": "2de499c6d8e58295a05ce754910de2fe79192677d4f2b7dac8e76491f3002eee"
+    },
+    {
+      "name": "phase67_model",
+      "path": "experiment-results/phase67_pd_graph_page_shape_refinement/model/multiflow_graph_page_correction.json",
+      "sha256": "15372d800c674ed28d634d219bf2d38a04b595ee417f18d775e2c63145b4226e"
+    },
+    {
+      "name": "phase68_reserved_grid",
+      "path": "experiment-results/phase67_pd_graph_page_shape_refinement/contracts/phase68_reserved_blind_grid.json",
+      "sha256": "029cb7644e49f28b6050c3f3356a75b27e7bc89860ba5699aa0d72f54737b3c7"
+    },
+    {
+      "name": "phase66_manifest",
+      "path": "experiment-results/phase66_pd_graph_correction_fresh_blind/manifest.sha256",
+      "sha256": "017adc2630b079b45029a79a68d7b639cf4469a8e57bf0233d43ac910fdfc045",
+      "verify_manifest_directory": "experiment-results/phase66_pd_graph_correction_fresh_blind"
+    },
+    {
+      "name": "phase66_plan",
+      "path": "experiment-results/phase66_pd_graph_correction_fresh_blind/contracts/topology_plan.json",
+      "sha256": "1898e3615761c1d7d6230a9e5ea4943f8cd024d60bb98e6e1d24faed4b5d62ba"
+    },
+    {
+      "name": "phase64_plan",
+      "path": "experiment-results/phase64_pd_multiflow_graph_zero_shot/contracts/topology_plan.json",
+      "sha256": "5c05154e13866deb0a30cbad32895f6c1db3936ea6359961e3297f4bbfac1819"
+    },
+    {
+      "name": "phase64_graph_grid",
+      "path": "experiment-results/phase64_pd_multiflow_graph_zero_shot/contracts/graph_payload_grid.json",
+      "sha256": "16bfb5d61c8828f4c537ed8ca4aeff59cc0781cde31464297168575a566c10a4"
+    },
+    {
+      "name": "r61_baseline",
+      "path": "experiment-results/phase64_pd_multiflow_graph_zero_shot/contracts/frozen_contention_correction.json",
+      "sha256": "609b3f0cb86d6817f03a5c1712f16340d9a17fe297545bc65bd07fdb874e0f9f"
+    },
+    {
+      "name": "r65_baseline",
+      "path": "experiment-results/phase65_pd_graph_correction_development/model/multiflow_graph_correction.json",
+      "sha256": "bbcab49ced4df9221210a1eab0573d4b9cf3785b1988307c9e2c4c8b298280a9"
+    },
+    {
+      "name": "phase51_curves",
+      "path": "experiment-results/phase51_pd_l1_l3_physical_curve_library/curves/pd_mooncake_physical_curves.json",
+      "sha256": "e2278ced7d7ef9743b86df41c9f6d70661b4d2d95514ce28bf7031c6b26e841d"
+    },
+    {
+      "name": "phase51_layouts",
+      "path": "experiment-results/phase51_pd_l1_l3_physical_curve_library/contracts/model_transfer_layouts.json",
+      "sha256": "8dfbd24815e2baacccc7b786bd5fb5b2c2f33d3ad9b302d32f4172ca4f2db4d0"
+    },
+    {
+      "name": "sglang_mooncake_transfer_engine",
+      "path": "python/sglang/srt/distributed/device_communicators/mooncake_transfer_engine.py",
+      "sha256": "6b3b67ca5e65fdd78f592b43b24717014ddd4bcf464add4fb414cc89975f7030"
+    },
+    {
+      "name": "sglang_mooncake_conn",
+      "path": "python/sglang/srt/disaggregation/mooncake/conn.py",
+      "sha256": "9106dfc8deb91662bdbac850f41612104a597b7f6a5cd15c8eb7ca17a20c8a0d"
+    }
+  ],
+  "research_scope": {
+    "decision_scope": "none; P/D counts, routing, payload, model and placement are frozen inputs",
+    "decode_parallelism": {
+      "pp": 1,
+      "tp": 1
+    },
+    "fixed_configurations": [
+      "P1D4",
+      "P4D1",
+      "P2D2_MATCHING",
+      "P2D2_ALL_TO_ALL"
+    ],
+    "not_in_scope": [
+      "more than four flows",
+      "P2D4/P4D2/P4D4",
+      "TP or PP inside P/D",
+      "model inference",
+      "histogram retraining",
+      "online arrivals",
+      "dynamic routing",
+      "queueing",
+      "background congestion",
+      "compute overlap",
+      "memory feasibility"
+    ],
+    "placement_replicas": 2,
+    "prefill_parallelism": {
+      "pp": 1,
+      "tp": 1
+    },
+    "topology_levels": [
+      "L1",
+      "L2",
+      "L3"
+    ],
+    "wave_admission": "all ranks and all graph edges ready before synchronized release"
+  },
+  "resource_allocation_contract": {
+    "endpoint_slots": "A0-A3/B0-B3 are eight GPU slots, not eight nodes",
+    "four_node_collective_required": false,
+    "four_node_scheduler_reservation_permitted": true,
+    "global_peak_simultaneous_gpu_processes": 5,
+    "maximum_active_measurement_nodes_per_shard": 2,
+    "maximum_concurrent_measurement_shards": 1,
+    "maximum_scheduler_reserved_nodes": 4,
+    "preferred_scheduler_reserved_nodes": 4,
+    "scheduling": "all 48 shards are independent and run sequentially; four reserved nodes are only a placement pool",
+    "two_measurement_shards_concurrent_forbidden": true,
+    "world_size_by_configuration": {
+      "P1D4": 5,
+      "P2D2_ALL_TO_ALL": 4,
+      "P2D2_MATCHING": 4,
+      "P4D1": 5
+    }
+  },
+  "result_dir": "experiment-results/phase68_pd_graph_page_shape_fresh_blind",
+  "schema_version": "phase68-pd-graph-page-shape-fresh-blind-contract-v1",
+  "selected_models": [
+    "qwen3-8b",
+    "deepseek-v2-lite"
+  ],
+  "source_development_result_commit": "1d76c78e8d1307ccafee7c831055e2aecc591c11",
+  "source_physical_curve_result_commit": "1f69c5e9b2f53af3fb96711875c828b2061bf156",
+  "source_prior_blind_result_commit": "4ddba73c41dddc6543ef26c83ab37f6be694ca9c",
+  "stop_and_block_if": [
+    "HEAD is not exact W68 or any pinned input differs",
+    "any Phase68 reserved payload or R67 coefficient/threshold is changed",
+    "topology inventory is not frozen before raw, reuses a Phase64/66 endpoint tuple, or lacks one unseen host signature per topology",
+    "an executor requests more than two simultaneous active nodes or five GPU processes for one shard",
+    "two measurement shards run concurrently",
+    "production Mooncake RDMA/dma-buf is unavailable or falls back to TCP, MNNVL, NVLink bypass, staging or custom pool",
+    "model weights, inference, training, downloads, protected raw/cache/PID assets are accessed",
+    "raw would enter Git or an existing Phase68 result directory would be overwritten"
+  ],
+  "threshold_tuning_permitted": false,
+  "topology_definitions": {
+    "L1": "one physical node, four or five launched GPU ranks per shard",
+    "L2": "two physical nodes in one rack/network domain, four or five launched GPU ranks per shard",
+    "L3": "two physical nodes in different racks but one RDMA domain, four or five launched GPU ranks per shard"
+  },
+  "training_permitted": false,
+  "transport_contract": {
+    "custom_memory_pool": false,
+    "forced_intranode_nvlink": false,
+    "forced_mnnvl": false,
+    "forced_tcp": false,
+    "mooncake_protocol": "rdma",
+    "production_wrapper": "sglang.srt.distributed.device_communicators.mooncake_transfer_engine.MooncakeTransferEngine.batch_transfer_sync",
+    "rdma_gpu_memory_registration": "dma-buf via WITH_NVIDIA_PEERMEM=0",
+    "staging_buffer": false,
+    "wave_concurrency": "one thread per simultaneous outbound edge on a sender, with per-sender barrier and global gloo release"
+  },
+  "workflow_parent_result_commit": "1d76c78e8d1307ccafee7c831055e2aecc591c11"
+}
