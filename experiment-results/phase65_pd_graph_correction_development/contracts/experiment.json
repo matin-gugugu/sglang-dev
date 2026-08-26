@@ -1,0 +1,205 @@
+{
+  "acceptance_gate": {
+    "all_predictions_positive": true,
+    "each_oof_scheme_each_configuration_absolute_signed_bias_max": 0.1,
+    "each_oof_scheme_each_configuration_topology_absolute_signed_bias_max": 0.15,
+    "each_oof_scheme_each_configuration_topology_wape_max": 0.15,
+    "each_oof_scheme_each_configuration_wape_max": 0.1,
+    "each_oof_scheme_each_model_absolute_signed_bias_max": 0.1,
+    "each_oof_scheme_each_model_wape_max": 0.1,
+    "each_oof_scheme_overall_absolute_signed_bias_max": 0.1,
+    "each_oof_scheme_overall_wape_max": 0.1,
+    "must_improve_best_baseline_each_configuration": true,
+    "must_improve_both_baselines_overall": true
+  },
+  "accepted_result_statuses": [
+    "PASS",
+    "PASS_TARGET_NOT_MET"
+  ],
+  "baselines": [
+    {
+      "candidate_id": "max_edge",
+      "formula": "M"
+    },
+    {
+      "candidate_id": "r61_graph_extension",
+      "formula": "the frozen Phase64 graph_prediction_us"
+    }
+  ],
+  "candidate_contract": {
+    "feature_formula": "max(1.0, intercept + beta_M*M + beta_busy*(B-M) + beta_nonbusy*(S-B))",
+    "fit": "deterministic normal-equation ridge with partial pivoting; ridge is trace(XTX)*1e-10/feature_count only for singularity control",
+    "graph_classes": {
+      "all_to_all": [
+        "P2D2_ALL_TO_ALL"
+      ],
+      "matching": [
+        "P2D2_MATCHING"
+      ],
+      "shared_endpoint_star": [
+        "P1D4",
+        "P4D1"
+      ]
+    },
+    "model_scoped_candidates_boundary": "model identity is a frozen predictor input; a selected model-scoped formula proves only the two development models until Phase66 and later external-model validation",
+    "prediction_floor_us": 1.0,
+    "selection_order": [
+      "global_affine_graph",
+      "graph_class_affine_graph",
+      "model_affine_graph",
+      "model_graph_class_affine_graph",
+      "model_configuration_affine_graph"
+    ],
+    "selection_policy": "choose the first and simplest candidate passing every payload-OOF and topology-OOF gate; never use refit metrics for selection"
+  },
+  "claim_boundary": [
+    "development-only correction selection for the four measured at-most-four-flow graph configurations",
+    "not fresh-blind validation and not permission to claim Phase65 training error as final accuracy",
+    "not unseen-model or unseen-configuration generalization",
+    "not end-to-end latency, compute, memory, queueing, online scheduling or unrelated-job congestion"
+  ],
+  "cross_validation_contract": {
+    "final_refit": "after selection, refit the selected family once on all 240 Phase64 development rows",
+    "model_holdout": "not a selection fold for model-scoped candidates; unseen-model generalization remains prohibited",
+    "primary": {
+      "folds": 10,
+      "held_out_unit": "the same v00-v09 index across both models, all configurations and all topologies",
+      "method": "leave-one-payload-vector-index-out"
+    },
+    "secondary": {
+      "folds": 3,
+      "held_out_unit": "all rows of L1, L2 or L3",
+      "method": "leave-one-topology-out"
+    },
+    "selection_uses_oof_only": true
+  },
+  "dataset_contract": {
+    "configurations": [
+      "P1D4",
+      "P4D1",
+      "P2D2_MATCHING",
+      "P2D2_ALL_TO_ALL"
+    ],
+    "derived_features": [
+      "intercept",
+      "M",
+      "B_minus_M",
+      "S_minus_B"
+    ],
+    "forbidden_inputs": [
+      "matched_solo_max_us",
+      "actual_concurrent_wave_us at inference",
+      "Phase66 target",
+      "runtime/placement variance flags as prediction features"
+    ],
+    "models": [
+      "qwen3-8b",
+      "deepseek-v2-lite"
+    ],
+    "payload_vectors_per_model_configuration": 10,
+    "rows": 240,
+    "runtime_inputs": [
+      "model_id",
+      "configuration",
+      "max_edge_baseline_us",
+      "busiest_endpoint_sum_us",
+      "sum_edge_baseline_us"
+    ],
+    "source": "experiment-results/phase64_pd_multiflow_graph_zero_shot/analysis/multiflow_graph_points.csv",
+    "target": "actual_concurrent_wave_us",
+    "topology_levels": [
+      "L1",
+      "L2",
+      "L3"
+    ]
+  },
+  "execution": {
+    "environment": "local CPU",
+    "gpu_permitted": false,
+    "network_permitted": false,
+    "new_physical_measurement_permitted": false,
+    "phase64_labels_permitted_as_development": true,
+    "phase66_targets_permitted": false,
+    "training_permitted": true
+  },
+  "objective": "将R64的240个有效负结果点明确降级为development数据，在CPU上选择并冻结最简单的多流通信图修正公式；不读取任何Phase66物理target。",
+  "phase": "Phase65-development",
+  "phase66_blind_boundary": {
+    "new_endpoint_tuple_required": true,
+    "next_phase": "Phase66 freezes the selected R65 formula before measuring the reserved payloads and new placements",
+    "page_set": [
+      3,
+      6,
+      12,
+      24,
+      32
+    ],
+    "phase64_page_set": [
+      1,
+      2,
+      4,
+      8,
+      16
+    ],
+    "reserved_features_may_be_audited_only_for_zero_overlap": true,
+    "reserved_grid": "workflows/patterndemand/phase65_pd_graph_correction_development/phase66_reserved_blind_grid.json",
+    "reserved_grid_file_sha256": "515f890bc4104fdf2b727ad9807d6cffdb72271253ef1365133135cb373a116c",
+    "reserved_measurements_or_targets_may_be_read": false,
+    "zero_page_overlap_required": true
+  },
+  "pinned_inputs": [
+    {
+      "name": "phase64_manifest",
+      "path": "experiment-results/phase64_pd_multiflow_graph_zero_shot/manifest.sha256",
+      "sha256": "a49f02bd177695c38886b88077f360dad43e25c2f8d165dccdd85d08ffdc174b",
+      "verify_manifest_directory": "experiment-results/phase64_pd_multiflow_graph_zero_shot"
+    },
+    {
+      "name": "phase64_summary",
+      "path": "experiment-results/phase64_pd_multiflow_graph_zero_shot/summary.json",
+      "sha256": "10b0c8dad09722bbd37c9fe4ca510b471f907079a1824b77193f58048b5d99cc"
+    },
+    {
+      "name": "phase64_points",
+      "path": "experiment-results/phase64_pd_multiflow_graph_zero_shot/analysis/multiflow_graph_points.csv",
+      "sha256": "41ab1724e9e3cf47da702b4e4a402ff513d71044b9ce2746f0d7f6390261f338"
+    },
+    {
+      "name": "phase64_metrics",
+      "path": "experiment-results/phase64_pd_multiflow_graph_zero_shot/analysis/multiflow_graph_metrics.csv",
+      "sha256": "8494d954daf6db42d0e2a56c217df72ff0f12fa7d8b21448cd2192d68058fe32"
+    },
+    {
+      "name": "phase64_graph_grid",
+      "path": "experiment-results/phase64_pd_multiflow_graph_zero_shot/contracts/graph_payload_grid.json",
+      "sha256": "16bfb5d61c8828f4c537ed8ca4aeff59cc0781cde31464297168575a566c10a4"
+    },
+    {
+      "name": "phase64_topology_plan",
+      "path": "experiment-results/phase64_pd_multiflow_graph_zero_shot/contracts/topology_plan.json",
+      "sha256": "5c05154e13866deb0a30cbad32895f6c1db3936ea6359961e3297f4bbfac1819"
+    },
+    {
+      "name": "phase51_layouts",
+      "path": "experiment-results/phase51_pd_l1_l3_physical_curve_library/contracts/model_transfer_layouts.json",
+      "sha256": "8dfbd24815e2baacccc7b786bd5fb5b2c2f33d3ad9b302d32f4172ca4f2db4d0"
+    },
+    {
+      "name": "phase66_reserved_grid",
+      "path": "workflows/patterndemand/phase65_pd_graph_correction_development/phase66_reserved_blind_grid.json",
+      "sha256": "515f890bc4104fdf2b727ad9807d6cffdb72271253ef1365133135cb373a116c"
+    }
+  ],
+  "result_dir": "experiment-results/phase65_pd_graph_correction_development",
+  "schema_version": "phase65-pd-graph-correction-development-contract-v1",
+  "source_two_flow_model_commit": "241043e480457145bcaadc26b6cd750c05693f5e",
+  "stop_and_block_if": [
+    "HEAD is not exact W65 or a pinned input differs",
+    "R64 is not the retained valid MULTIFLOW_GRAPH_ZERO_SHOT_FAIL_RETAIN_FOR_DEVELOPMENT result",
+    "GPU, network, model inference or a new physical measurement is used",
+    "Phase66 raw/measurement/target is opened or reserved pages influence fitting beyond zero-overlap audit",
+    "refit metrics rather than OOF metrics select the candidate",
+    "an existing Phase65 result directory would be overwritten"
+  ],
+  "workflow_parent_result_commit": "891cfcc12794c2b19c95b306213154733ae9ec3f"
+}
