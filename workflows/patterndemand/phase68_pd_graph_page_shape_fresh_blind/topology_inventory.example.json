@@ -1,0 +1,31 @@
+{
+  "schema_version": "phase68-topology-inventory-v1",
+  "blind_inventory_frozen_before_phase68_raw": true,
+  "selection_uses_phase68_latency_prediction_or_error": false,
+  "scheduler_reservation_mode": "FOUR_NODE_SINGLE_ALLOCATION",
+  "freshness_contract": {
+    "all_endpoint_tuples_absent_from_phase64_and_phase66": true,
+    "minimum_new_host_signatures_per_topology": 1,
+    "phase64_plan_sha256": "5c05154e13866deb0a30cbad32895f6c1db3936ea6359961e3297f4bbfac1819",
+    "phase66_plan_sha256": "1898e3615761c1d7d6230a9e5ea4943f8cd024d60bb98e6e1d24faed4b5d62ba"
+  },
+  "phase68_peak_allocation_contract": {
+    "preferred_scheduler_reserved_nodes": 4,
+    "maximum_scheduler_reserved_nodes": 4,
+    "maximum_active_measurement_nodes_per_shard": 2,
+    "global_peak_simultaneous_gpu_processes": 5,
+    "maximum_concurrent_measurement_shards": 1,
+    "four_node_scheduler_reservation_permitted": true,
+    "two_measurement_shards_concurrent_forbidden": true,
+    "inventory_slots_are_not_nodes": true
+  },
+  "placements": [
+    {"placement_id":"l1-r0","topology_level":"L1","replica_id":0,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":true,"fabric_domain":"FILL"},"sides":{"A":[{"host":"FILL_NEW_L1_HOST","host_aliases":["FILL_NEW_L1_HOST"],"physical_gpu":0,"ib_device":"FILL_IB","transfer_hostname":"FILL_NEW_L1_HOST"},{"host":"FILL_NEW_L1_HOST","host_aliases":["FILL_NEW_L1_HOST"],"physical_gpu":1,"ib_device":"FILL_IB","transfer_hostname":"FILL_NEW_L1_HOST"},{"host":"FILL_NEW_L1_HOST","host_aliases":["FILL_NEW_L1_HOST"],"physical_gpu":2,"ib_device":"FILL_IB","transfer_hostname":"FILL_NEW_L1_HOST"},{"host":"FILL_NEW_L1_HOST","host_aliases":["FILL_NEW_L1_HOST"],"physical_gpu":3,"ib_device":"FILL_IB","transfer_hostname":"FILL_NEW_L1_HOST"}],"B":[{"host":"FILL_NEW_L1_HOST","host_aliases":["FILL_NEW_L1_HOST"],"physical_gpu":4,"ib_device":"FILL_IB","transfer_hostname":"FILL_NEW_L1_HOST"},{"host":"FILL_NEW_L1_HOST","host_aliases":["FILL_NEW_L1_HOST"],"physical_gpu":5,"ib_device":"FILL_IB","transfer_hostname":"FILL_NEW_L1_HOST"},{"host":"FILL_NEW_L1_HOST","host_aliases":["FILL_NEW_L1_HOST"],"physical_gpu":6,"ib_device":"FILL_IB","transfer_hostname":"FILL_NEW_L1_HOST"},{"host":"FILL_NEW_L1_HOST","host_aliases":["FILL_NEW_L1_HOST"],"physical_gpu":7,"ib_device":"FILL_IB","transfer_hostname":"FILL_NEW_L1_HOST"}]}},
+    {"placement_id":"l1-r1","topology_level":"L1","replica_id":1,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":true,"fabric_domain":"FILL"},"sides":{"A":[],"B":[]}},
+    {"placement_id":"l2-r0","topology_level":"L2","replica_id":0,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":true,"fabric_domain":"FILL"},"sides":{"A":[],"B":[]}},
+    {"placement_id":"l2-r1","topology_level":"L2","replica_id":1,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":true,"fabric_domain":"FILL"},"sides":{"A":[],"B":[]}},
+    {"placement_id":"l3-r0","topology_level":"L3","replica_id":0,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":false,"fabric_domain":"FILL"},"sides":{"A":[],"B":[]}},
+    {"placement_id":"l3-r1","topology_level":"L3","replica_id":1,"classification_evidence":{"classification_source":"scheduler_asset_metadata","same_rack":false,"fabric_domain":"FILL"},"sides":{"A":[],"B":[]}}
+  ],
+  "operator_note": "Fill every A/B side with four endpoints absent from both Phase64 and Phase66 before raw. Empty sides are invalid. Never select after observing Phase68 latency or prediction error."
+}
