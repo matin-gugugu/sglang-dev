@@ -39,6 +39,7 @@ PHASE_PREFIX = {
     "phase64": "experiment-results/phase64_pd_multiflow_graph_zero_shot/",
     "phase65": "experiment-results/phase65_pd_graph_correction_development/",
     "phase66": "experiment-results/phase66_pd_graph_correction_fresh_blind/",
+    "phase67": "experiment-results/phase67_pd_graph_page_shape_refinement/",
 }
 
 ALLOWED_COMPACT_DATA_PATHS = {

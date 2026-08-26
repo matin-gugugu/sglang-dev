@@ -1,0 +1,73 @@
+{
+  "schema_version": "phase67-pd-graph-page-shape-refinement-contract-v1",
+  "phase": "Phase67-development",
+  "objective": "把R64与R66的480个已公开物理点合并为development集，用固定的低容量候选族学习多流通信图的page-shape修正；在拟合前冻结Phase68第二次fresh-blind网格。",
+  "workflow_parent_result_commit": "4ddba73c41dddc6543ef26c83ab37f6be694ca9c",
+  "result_dir": "experiment-results/phase67_pd_graph_page_shape_refinement",
+  "execution": {"environment":"local CPU isolated clean worktree","gpu_permitted":false,"network_permitted":false,"new_physical_measurement_permitted":false,"phase68_targets_permitted":false},
+  "dataset_contract": {
+    "phase64_source": "experiment-results/phase64_pd_multiflow_graph_zero_shot/analysis/multiflow_graph_points.csv",
+    "phase66_source": "experiment-results/phase66_pd_graph_correction_fresh_blind/analysis/fresh_blind_points.csv",
+    "rows": 480,
+    "rows_per_source": 240,
+    "models": ["qwen3-8b", "deepseek-v2-lite"],
+    "configurations": ["P1D4", "P4D1", "P2D2_MATCHING", "P2D2_ALL_TO_ALL"],
+    "topology_levels": ["L1", "L2", "L3"],
+    "phase64_page_set": [1,2,4,8,16],
+    "phase66_page_set": [3,6,12,24,32],
+    "target": "actual_concurrent_wave_us",
+    "permitted_inputs": ["model_id","configuration","M=max_edge_baseline_us","B-M","S-B","page_max","page_rest","sqrt(page_max)","sqrt(page_rest)"],
+    "forbidden_inputs": ["actual target at inference","replica variance flags","endpoint identity","Phase68 measurement or target"]
+  },
+  "baselines": ["max_edge", "frozen R61 graph extension", "frozen R65 graph correction"],
+  "candidate_contract": {
+    "fixed_complexity_order": ["model_configuration_affine_graph","model_configuration_graph_page_linear","model_configuration_graph_page_sqrt"],
+    "formula_of_selected_family": "max(1, beta0 + betaM*M + betaB*(B-M) + betaS*(S-B) + betaPmax*pmax + betaPrest*prest + betaQmax*sqrt(pmax) + betaQrest*sqrt(prest))",
+    "fit": "deterministic model×configuration normal-equation ridge; RMS feature scaling; ridge trace(XTX)*1e-10/n only for numerical stability",
+    "selection": "first and simplest candidate passing every one of four pre-registered OOF/extrapolation guards; full refit metrics never select a candidate"
+  },
+  "validation_contract": {
+    "payload_cohort": "20 folds: leave one source×vector-index cohort out across models/configurations/topologies",
+    "topology": "3 folds: leave L1, L2 or L3 out",
+    "source_blocked": "2 folds: train Phase64 and test Phase66, then reverse",
+    "tail32": "train every row without page32 and test every row containing page32",
+    "selection_uses_only_held_out_predictions": true
+  },
+  "acceptance_gate": {
+    "overall_wape_max": 0.10,
+    "model_wape_max": 0.10,
+    "configuration_wape_max": 0.10,
+    "configuration_topology_wape_max": 0.15,
+    "overall_absolute_bias_max": 0.10,
+    "model_absolute_bias_max": 0.10,
+    "configuration_absolute_bias_max": 0.10,
+    "configuration_topology_absolute_bias_max": 0.15,
+    "all_predictions_positive": true,
+    "must_improve_all_three_baselines_overall": true,
+    "must_improve_best_baseline_each_configuration": true
+  },
+  "phase68_blind_boundary": {
+    "reserved_grid": "workflows/patterndemand/phase67_pd_graph_page_shape_refinement/phase68_reserved_blind_grid.json",
+    "reserved_grid_file_sha256": "acd0c8ffa2d4d2cc26d0ccb6b488043c8ebaffa43e40a122aba81be918dcbc75",
+    "reserved_grid_canonical_sha256": "ffa63e564182cc4760efa67906916fef3fc1c646d9a8a45ee1c48e1453044593",
+    "page_set": [36,40,48,56,64],
+    "zero_overlap_with_both_development_sources_required": true,
+    "measurements_or_targets_may_be_read": false
+  },
+  "accepted_result_statuses": ["PASS", "PASS_TARGET_NOT_MET"],
+  "pinned_inputs": [
+    {"name":"phase64_manifest","path":"experiment-results/phase64_pd_multiflow_graph_zero_shot/manifest.sha256","sha256":"a49f02bd177695c38886b88077f360dad43e25c2f8d165dccdd85d08ffdc174b","verify_manifest_directory":"experiment-results/phase64_pd_multiflow_graph_zero_shot"},
+    {"name":"phase64_summary","path":"experiment-results/phase64_pd_multiflow_graph_zero_shot/summary.json","sha256":"10b0c8dad09722bbd37c9fe4ca510b471f907079a1824b77193f58048b5d99cc"},
+    {"name":"phase64_points","path":"experiment-results/phase64_pd_multiflow_graph_zero_shot/analysis/multiflow_graph_points.csv","sha256":"41ab1724e9e3cf47da702b4e4a402ff513d71044b9ce2746f0d7f6390261f338"},
+    {"name":"phase66_manifest","path":"experiment-results/phase66_pd_graph_correction_fresh_blind/manifest.sha256","sha256":"017adc2630b079b45029a79a68d7b639cf4469a8e57bf0233d43ac910fdfc045","verify_manifest_directory":"experiment-results/phase66_pd_graph_correction_fresh_blind"},
+    {"name":"phase66_summary","path":"experiment-results/phase66_pd_graph_correction_fresh_blind/summary.json","sha256":"5ba819c42fb856a32b7ca7102a2c5194558463bfaca4b247fde8027c7e30a878"},
+    {"name":"phase66_points","path":"experiment-results/phase66_pd_graph_correction_fresh_blind/analysis/fresh_blind_points.csv","sha256":"664ed7fed6ad8fb7f8d82bae3bcac2b9473ff58427541ea2acdfa34b8bfcc263"},
+    {"name":"r65_model","path":"experiment-results/phase65_pd_graph_correction_development/model/multiflow_graph_correction.json","sha256":"bbcab49ced4df9221210a1eab0573d4b9cf3785b1988307c9e2c4c8b298280a9"},
+    {"name":"r61_model","path":"experiment-results/phase61_pd_contention_correction/model/contention_correction.json","sha256":"609b3f0cb86d6817f03a5c1712f16340d9a17fe297545bc65bd07fdb874e0f9f"},
+    {"name":"phase51_layouts","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/contracts/model_transfer_layouts.json","sha256":"8dfbd24815e2baacccc7b786bd5fb5b2c2f33d3ad9b302d32f4172ca4f2db4d0"},
+    {"name":"phase51_curves","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/curves/pd_mooncake_physical_curves.json","sha256":"e2278ced7d7ef9743b86df41c9f6d70661b4d2d95514ce28bf7031c6b26e841d"},
+    {"name":"phase68_reserved_grid","path":"workflows/patterndemand/phase67_pd_graph_page_shape_refinement/phase68_reserved_blind_grid.json","sha256":"acd0c8ffa2d4d2cc26d0ccb6b488043c8ebaffa43e40a122aba81be918dcbc75"}
+  ],
+  "stop_and_block_if": ["HEAD is not exact W67 or a pinned input differs","GPU/network/new physical measurement is used","any Phase68 measurement or target exists or is opened","candidate order or gate changes after seeing held-out metrics","an existing Phase67 result directory would be overwritten"],
+  "claim_boundary": ["development-only refinement for the two measured models and four at-most-four-flow graph configurations","not fresh-blind validation","not unseen-model/configuration or larger graph generalization","not end-to-end latency, compute, memory, queueing, scheduler placement or unrelated-job congestion"]
+}

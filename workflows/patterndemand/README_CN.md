@@ -48,5 +48,6 @@ workflow commit W
 - `phase64_pd_multiflow_graph_zero_shot`：冻结Phase51单链路曲线与R61系数，零训练实测P1D4、P4D1、P2D2 matching/all-to-all四种最多四流通信图；Qwen3-8B/DeepSeek-V2-Lite、L1–L3、双placement共48个shard。允许一次预约四节点以适配排队，但单shard最多激活两节点五进程。
 - `phase65_pd_graph_correction_development`：将R64未过10%门但执行有效的240个official point降级为development，在本地CPU上按固定复杂度顺序选择可解释的`M/B/S`图修正；同时冻结与Phase64 page零重叠的新placement Phase66 fresh-blind合同，不使用GPU或Phase66 target。
 - `phase66_pd_graph_correction_fresh_blind`：冻结R65的`model×configuration`多流图修正，在预留page `{3,6,12,24,32}` 和避开Phase64的全新endpoint tuple上执行Qwen3-8B/DeepSeek-V2-Lite、四图、L1-L3物理fresh-blind；48个顺序Mooncake/RDMA shard，禁止训练、重校准或blind后调参。
+- `phase67_pd_graph_page_shape_refinement`：把R64/R66共480个已公开物理点降级为development，以四种固定留出协议选择最简单的`M/B/S + page-shape`低容量修正；拟合前冻结Phase68全新page `{36,40,48,56,64}`，本阶段只用本地CPU，不读取Phase68 target。
 
 完整交接见`PatternDemand跨环境GPU执行交接_Phase36_Phase37.md`。
