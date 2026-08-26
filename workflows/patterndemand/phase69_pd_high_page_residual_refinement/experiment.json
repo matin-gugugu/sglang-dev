@@ -1,0 +1,93 @@
+{
+  "schema_version": "phase69-pd-high-page-residual-refinement-contract-v1",
+  "phase": "Phase69-development",
+  "objective": "把R64、R66与R68共720个物理点作为development证据，冻结R67为底座，只学习page>32时的低容量残差修正，解决Qwen大page P1D4与P2D2 all-to-all过预测；拟合前冻结Phase70第三次fresh-blind网格。",
+  "workflow_parent_result_commit": "f478c31e98af4aa5f286bdf1a32517c5ef1126ab",
+  "result_dir": "experiment-results/phase69_pd_high_page_residual_refinement",
+  "execution": {
+    "environment": "local CPU isolated clean worktree",
+    "gpu_permitted": false,
+    "network_permitted": false,
+    "new_physical_measurement_permitted": false,
+    "phase70_targets_permitted": false
+  },
+  "dataset_contract": {
+    "phase64_source": "experiment-results/phase64_pd_multiflow_graph_zero_shot/analysis/multiflow_graph_points.csv",
+    "phase66_source": "experiment-results/phase66_pd_graph_correction_fresh_blind/analysis/fresh_blind_points.csv",
+    "phase68_source": "experiment-results/phase68_pd_graph_page_shape_fresh_blind/analysis/fresh_blind_points.csv",
+    "rows": 720,
+    "rows_per_source": 240,
+    "models": ["qwen3-8b", "deepseek-v2-lite"],
+    "configurations": ["P1D4", "P4D1", "P2D2_MATCHING", "P2D2_ALL_TO_ALL"],
+    "topology_levels": ["L1", "L2", "L3"],
+    "development_page_sets": {
+      "phase64": [1, 2, 4, 8, 16],
+      "phase66": [3, 6, 12, 24, 32],
+      "phase68": [36, 40, 48, 56, 64]
+    },
+    "target": "actual_concurrent_wave_us",
+    "permitted_inputs": ["model_id", "configuration", "frozen R67 prediction", "page_max", "mean_other_pages"],
+    "forbidden_inputs": ["actual target at inference", "replica variance flags", "endpoint identity", "Phase70 measurement or target"]
+  },
+  "baselines": ["max_edge", "frozen R61 graph extension", "frozen R65 graph correction", "frozen R67 graph+page correction"],
+  "candidate_contract": {
+    "anchor": "R67 remains unchanged for every row whose pages are all <=32 and for every P2D2_MATCHING row; the residual applies only to shared-endpoint graphs",
+    "fixed_complexity_order": ["r67_high_page_linear", "r67_high_page_sqrt", "r67_high_page_linear_sqrt"],
+    "formula_of_selected_family": "max(1, R67 + I_shared_endpoint*(gamma_max*max(0,page_max-32) + gamma_rest*max(0,mean_other_pages-32)))",
+    "fit": "deterministic model×configuration residual normal-equation ridge; no intercept; R67 coefficient fixed to one; RMS feature scaling; ridge only for numerical stability",
+    "selection": "first and simplest candidate passing the three primary held-out guards and the source-blocked non-degradation guard; full-refit metrics never select a candidate"
+  },
+  "validation_contract": {
+    "payload_cohort": "30 folds: leave one source×vector-index cohort out across models/configurations/topologies",
+    "topology": "3 folds: leave L1, L2 or L3 out",
+    "tail64": "train without every row containing page64 and test only rows containing page64",
+    "source_blocked": "3 diagnostic folds: leave Phase64, Phase66 or Phase68 out; high-page residual is allowed to equal frozen R67 when no >32 evidence exists",
+    "primary_selection_schemes": ["payload_cohort", "topology", "tail64"],
+    "selection_uses_only_held_out_predictions": true
+  },
+  "acceptance_gate": {
+    "overall_wape_max": 0.10,
+    "model_wape_max": 0.10,
+    "configuration_wape_max": 0.10,
+    "model_configuration_wape_max": 0.10,
+    "configuration_topology_wape_max": 0.15,
+    "source_model_configuration_wape_max": 0.15,
+    "overall_absolute_bias_max": 0.10,
+    "model_absolute_bias_max": 0.10,
+    "configuration_absolute_bias_max": 0.10,
+    "model_configuration_absolute_bias_max": 0.10,
+    "configuration_topology_absolute_bias_max": 0.15,
+    "source_model_configuration_absolute_bias_max": 0.15,
+    "all_predictions_positive": true,
+    "primary_must_improve_all_four_baselines_overall": true,
+    "primary_must_improve_best_baseline_each_shared_endpoint_configuration": true,
+    "primary_must_preserve_p2d2_matching": true,
+    "source_blocked_must_not_degrade_frozen_r67_overall": true
+  },
+  "phase70_blind_boundary": {
+    "reserved_grid": "workflows/patterndemand/phase69_pd_high_page_residual_refinement/phase70_reserved_blind_grid.json",
+    "reserved_grid_file_sha256": "97c61ee4b7150eec8a87fff1d7a5103c928f3d78469fdfe2593935a398bfecad",
+    "reserved_grid_canonical_sha256": "2c878257471a8a438054fed746e2768e8caff99507d5804000171aeeb0ed13f1",
+    "page_set": [34, 38, 44, 52, 60],
+    "zero_overlap_with_all_three_development_sources_required": true,
+    "measurements_or_targets_may_be_read": false
+  },
+  "accepted_result_statuses": ["PASS", "PASS_TARGET_NOT_MET"],
+  "pinned_inputs": [
+    {"name": "phase64_manifest", "path": "experiment-results/phase64_pd_multiflow_graph_zero_shot/manifest.sha256", "sha256": "a49f02bd177695c38886b88077f360dad43e25c2f8d165dccdd85d08ffdc174b", "verify_manifest_directory": "experiment-results/phase64_pd_multiflow_graph_zero_shot"},
+    {"name": "phase64_summary", "path": "experiment-results/phase64_pd_multiflow_graph_zero_shot/summary.json", "sha256": "10b0c8dad09722bbd37c9fe4ca510b471f907079a1824b77193f58048b5d99cc"},
+    {"name": "phase64_points", "path": "experiment-results/phase64_pd_multiflow_graph_zero_shot/analysis/multiflow_graph_points.csv", "sha256": "41ab1724e9e3cf47da702b4e4a402ff513d71044b9ce2746f0d7f6390261f338"},
+    {"name": "phase66_manifest", "path": "experiment-results/phase66_pd_graph_correction_fresh_blind/manifest.sha256", "sha256": "017adc2630b079b45029a79a68d7b639cf4469a8e57bf0233d43ac910fdfc045", "verify_manifest_directory": "experiment-results/phase66_pd_graph_correction_fresh_blind"},
+    {"name": "phase66_summary", "path": "experiment-results/phase66_pd_graph_correction_fresh_blind/summary.json", "sha256": "5ba819c42fb856a32b7ca7102a2c5194558463bfaca4b247fde8027c7e30a878"},
+    {"name": "phase66_points", "path": "experiment-results/phase66_pd_graph_correction_fresh_blind/analysis/fresh_blind_points.csv", "sha256": "664ed7fed6ad8fb7f8d82bae3bcac2b9473ff58427541ea2acdfa34b8bfcc263"},
+    {"name": "phase68_manifest", "path": "experiment-results/phase68_pd_graph_page_shape_fresh_blind/manifest.sha256", "sha256": "232338fdee27605c6c3cc4562966ee455dfcebdf320784986983725a8daf99c7", "verify_manifest_directory": "experiment-results/phase68_pd_graph_page_shape_fresh_blind"},
+    {"name": "phase68_summary", "path": "experiment-results/phase68_pd_graph_page_shape_fresh_blind/summary.json", "sha256": "f525710f10d1042421e2860bf214d72080f6d59b95604fc2a28ae51ed02538da"},
+    {"name": "phase68_points", "path": "experiment-results/phase68_pd_graph_page_shape_fresh_blind/analysis/fresh_blind_points.csv", "sha256": "0ea41513917510ab610a31430d052d766bfaa8077299528b986ff178c8b7b152"},
+    {"name": "r67_model", "path": "experiment-results/phase67_pd_graph_page_shape_refinement/model/multiflow_graph_page_correction.json", "sha256": "15372d800c674ed28d634d219bf2d38a04b595ee417f18d775e2c63145b4226e"},
+    {"name": "r65_model", "path": "experiment-results/phase65_pd_graph_correction_development/model/multiflow_graph_correction.json", "sha256": "bbcab49ced4df9221210a1eab0573d4b9cf3785b1988307c9e2c4c8b298280a9"},
+    {"name": "r61_model", "path": "experiment-results/phase61_pd_contention_correction/model/contention_correction.json", "sha256": "609b3f0cb86d6817f03a5c1712f16340d9a17fe297545bc65bd07fdb874e0f9f"},
+    {"name": "phase70_reserved_grid", "path": "workflows/patterndemand/phase69_pd_high_page_residual_refinement/phase70_reserved_blind_grid.json", "sha256": "97c61ee4b7150eec8a87fff1d7a5103c928f3d78469fdfe2593935a398bfecad"}
+  ],
+  "stop_and_block_if": ["HEAD is not exact W69 or a pinned input differs", "GPU/network/new physical measurement is used", "any Phase70 measurement or target exists or is opened", "candidate order or gate changes after W69", "an existing Phase69 result directory would be overwritten"],
+  "claim_boundary": ["development-only high-page residual refinement for two measured models and four at-most-four-flow graph configurations", "not Phase70 fresh-blind validation", "not unseen-model/configuration or larger graph generalization", "not end-to-end latency, compute, memory, queueing, placement scheduling or unrelated-job congestion"]
+}

@@ -41,6 +41,7 @@ PHASE_PREFIX = {
     "phase66": "experiment-results/phase66_pd_graph_correction_fresh_blind/",
     "phase67": "experiment-results/phase67_pd_graph_page_shape_refinement/",
     "phase68": "experiment-results/phase68_pd_graph_page_shape_fresh_blind/",
+    "phase69": "experiment-results/phase69_pd_high_page_residual_refinement/",
 }
 
 ALLOWED_COMPACT_DATA_PATHS = {
