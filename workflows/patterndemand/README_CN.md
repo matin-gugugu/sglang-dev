@@ -46,5 +46,6 @@ workflow commit W
 - `phase62_pd_contention_fresh_blind`：冻结R61全局max/min修正公式，在生产Mooncake RDMA上只测Phase60预留的20个reserved payload pair，并使用与Phase60 endpoint tuple完全不重合、每种拓扑至少一套host signature全新的placement；不训练、不调参，机械验证P1D2/P2D1两流修正是否达到整体10%、各配置拓扑15%的fresh-blind合同。
 - `phase63_pd_contention_four_model_external`：冻结R61修正公式，对Qwen3-30B-A3B、Llama-3.2-3B、Qwen2.5-14B和Mixtral-8x7B四个held-out KV布局做P1D2/P2D1、L1–L3外部物理验证；48个三rank shard，与R62合并形成六模型证据。
 - `phase64_pd_multiflow_graph_zero_shot`：冻结Phase51单链路曲线与R61系数，零训练实测P1D4、P4D1、P2D2 matching/all-to-all四种最多四流通信图；Qwen3-8B/DeepSeek-V2-Lite、L1–L3、双placement共48个shard。允许一次预约四节点以适配排队，但单shard最多激活两节点五进程。
+- `phase65_pd_graph_correction_development`：将R64未过10%门但执行有效的240个official point降级为development，在本地CPU上按固定复杂度顺序选择可解释的`M/B/S`图修正；同时冻结与Phase64 page零重叠的新placement Phase66 fresh-blind合同，不使用GPU或Phase66 target。
 
 完整交接见`PatternDemand跨环境GPU执行交接_Phase36_Phase37.md`。
