@@ -1,0 +1,109 @@
+{
+  "schema_version": "phase71-pd-multiflow-cost-placement-integration-contract-v1",
+  "phase": "Phase71",
+  "objective": "冻结Phase49/50六模型H0、H0+DNN与Hfull直方图，使用Phase51单链路曲线、经六模型验证的R61两流修正和经两代表模型fresh-blind验证的R69四流修正，在固定守恒分流和预注册wave配对语义下重新计算communication-only代价与L1/L2/L3 placement；不训练、不重算teacher、不使用GPU。",
+  "workflow_parent_result_commit": "e115ff3c7a111df2ec86591b7d9811af3cbc033e",
+  "result_dir": "experiment-results/phase71_pd_multiflow_cost_placement_integration",
+  "execution_environment": "local CPU-only isolated run branch/worktree",
+  "gpu_required": false,
+  "network_required": false,
+  "training_permitted": false,
+  "prediction_recomputation_permitted": false,
+  "teacher_or_label_recomputation_permitted": false,
+  "physical_measurement_permitted": false,
+  "models": ["qwen3-8b", "deepseek-v2-lite", "qwen3-30b-a3b", "llama-3.2-3b-instruct", "qwen2.5-14b-instruct", "mixtral-8x7b-instruct-v0.1"],
+  "prediction_methods": ["h0", "h0_plus_dnn_residual"],
+  "topology_candidates": ["L1", "L2", "L3"],
+  "configuration_contract": {
+    "P1D1": {"flow_count": 1, "physical_model": "phase51_single_link", "model_scope": "all_six"},
+    "P1D2": {"flow_count": 2, "physical_model": "frozen_r61_two_flow", "model_scope": "all_six"},
+    "P2D1": {"flow_count": 2, "physical_model": "frozen_r61_two_flow", "model_scope": "all_six"},
+    "P1D4": {"flow_count": 4, "physical_model": "frozen_r69_multiflow", "model_scope": "qwen3-8b_and_deepseek-v2-lite"},
+    "P4D1": {"flow_count": 4, "physical_model": "frozen_r69_multiflow", "model_scope": "qwen3-8b_and_deepseek-v2-lite"},
+    "P2D2_MATCHING": {"flow_count": 2, "physical_model": "frozen_r69_multiflow", "model_scope": "qwen3-8b_and_deepseek-v2-lite"},
+    "P2D2_ALL_TO_ALL": {"flow_count": 4, "physical_model": "frozen_r69_multiflow", "model_scope": "qwen3-8b_and_deepseek-v2-lite"}
+  },
+  "wave_contract": {
+    "traffic_conservation": "the P1D1 histogram call mass is conserved across graph edges; each of F edges receives exactly 1/F of calls and the synchronized wave mass is total_calls/F",
+    "bin_representative_payload": "logical_bytes_bin/calls_bin, converted to model pages and clamped only to measured Phase51 page support [1,64] with every clamped call audited",
+    "official_policy": "bin_aligned",
+    "diagnostic_policies": ["cyclic_staggered", "opposed_extremes"],
+    "bin_aligned": "all edges consume the same marginal payload quantile in each wave",
+    "cyclic_staggered": "edge e consumes marginal quantile (q+e/F) mod 1",
+    "opposed_extremes": "even edges consume q and odd edges consume 1-q",
+    "integration": "exact piecewise integration over the union of marginal CDF breakpoints; no random sampling",
+    "selection_rule": "only bin_aligned is official; diagnostics are never used to select a favorable policy",
+    "fixed_admission": "all graph edges ready before synchronized release; no online arrivals or dynamic batching"
+  },
+  "physical_cost_contract": {
+    "P1D1": "Phase51 official slower-direction/slower-replica curve",
+    "P1D2_P2D1": "Phase51 per-edge costs followed by frozen R61 global affine max/min correction",
+    "four_graphs": "Phase51 per-edge costs followed by frozen R67 graph+page anchor and frozen R69 high-page residual",
+    "interpolation": "piecewise linear in log2 payload over Phase51 knots without extrapolation",
+    "total_window_cost": "wave mass multiplied by corrected wave latency and summed over the exact marginal quantile intervals",
+    "teacher_oracle": "the same deterministic mapping applied to frozen Phase50 Hfull histogram; not exact per-message replay",
+    "forbidden": ["refit R61/R67/R69", "change topology curves", "recover or invent original request order", "select wave policy after seeing metrics"]
+  },
+  "placement_contract": {
+    "candidate_set": ["L1", "L2", "L3"],
+    "predicted_choice": "minimum predicted official communication cost for fixed profile/model/configuration/method",
+    "teacher_oracle": "minimum frozen-Hfull official communication cost over the same candidates",
+    "tie_break": "L1 then L2 then L3 for exact floating-point ties",
+    "teacher_regret": "(teacher cost at predicted choice - teacher oracle cost)/teacher oracle cost",
+    "diagnostics": "repeat choice under both non-official wave policies and report stability only",
+    "forbidden_decisions": ["TP size", "PP size", "number of P/D instances", "routing", "compute placement", "memory feasibility", "resource availability", "queueing", "background congestion"]
+  },
+  "pre_registered_questions": {
+    "cost": "for every supported configuration and topology, does H0+DNN strictly improve overall cost WAPE and MAPE over H0?",
+    "placement": "for every supported configuration, does H0+DNN weakly improve overall placement agreement and mean teacher regret over H0?",
+    "wave_sensitivity": "how much do cost and placement change under the two fixed diagnostic marginal pairings?",
+    "reporting": "execution PASS is independent of the scientific outcome; a mixed result is retained and never triggers retuning"
+  },
+  "expected_counts": {
+    "prediction_rows": 3600,
+    "target_rows": 1800,
+    "supported_profile_model_method_configurations": 15600,
+    "unit_configuration_topology_cost_rows": 46800,
+    "placement_decision_rows": 15600,
+    "cost_metric_rows": 324,
+    "cost_comparison_rows": 162,
+    "placement_metric_rows": 108,
+    "placement_comparison_rows": 54,
+    "wave_sensitivity_rows": 21
+  },
+  "accepted_result_statuses": ["PASS"],
+  "pinned_inputs": [
+    {"name":"phase49_frozen_predictions","path":"experiment-results/phase49_pd_six_model_blind_prediction_freeze/predictions/pd_six_model_blind_frozen_predictions.csv.gz","sha256":"db7278d2ca54f0f2a2c9f3170063e2530dde1b6fabf8a03b8ad827a4865eb402"},
+    {"name":"phase49_manifest","path":"experiment-results/phase49_pd_six_model_blind_prediction_freeze/manifest.sha256","sha256":"e1a02c3a31f54c13684ce10dfb2527e0432c9e4e73a912cc74809b088302f3da","verify_manifest_directory":"experiment-results/phase49_pd_six_model_blind_prediction_freeze"},
+    {"name":"phase50_hfull_targets","path":"experiment-results/phase50_pd_six_model_blind_evaluation/labels/pd_six_model_blind_hfull_targets.csv.gz","sha256":"cfaee9add708ab0f4fc8757ed4cf778fba97b960ec2c4ee8dc4c8320875005ce"},
+    {"name":"phase50_summary","path":"experiment-results/phase50_pd_six_model_blind_evaluation/summary.json","sha256":"65b2b8537e712973538efd983b902b60a6d73c613b4cd97188a2ee1da73aa585"},
+    {"name":"phase50_manifest","path":"experiment-results/phase50_pd_six_model_blind_evaluation/manifest.sha256","sha256":"3613fb8577bc2bc16ca3592a1456f7f34f413ea9e612f4954305b0aaa2020a0c","verify_manifest_directory":"experiment-results/phase50_pd_six_model_blind_evaluation"},
+    {"name":"phase51_curves","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/curves/pd_mooncake_physical_curves.json","sha256":"e2278ced7d7ef9743b86df41c9f6d70661b4d2d95514ce28bf7031c6b26e841d"},
+    {"name":"phase51_layouts","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/contracts/model_transfer_layouts.json","sha256":"8dfbd24815e2baacccc7b786bd5fb5b2c2f33d3ad9b302d32f4172ca4f2db4d0"},
+    {"name":"phase51_summary","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/summary.json","sha256":"ab336e7506180e0b3810dc8748aa33addd5199b80e2ae6ad954c0bc58c85a913"},
+    {"name":"phase51_manifest","path":"experiment-results/phase51_pd_l1_l3_physical_curve_library/manifest.sha256","sha256":"ebb909c06524f314ffdaf11ea58cc2553a96439f52fa29c77b7c4f05236a0b11","verify_manifest_directory":"experiment-results/phase51_pd_l1_l3_physical_curve_library"},
+    {"name":"phase52_summary","path":"experiment-results/phase52_pd_physical_cost_placement_validation/summary.json","sha256":"a276b515b36a824f293a20dce8559efc579d9075ce753b666a56b4ba32d0b673"},
+    {"name":"phase52_manifest","path":"experiment-results/phase52_pd_physical_cost_placement_validation/manifest.sha256","sha256":"436857ac741eb3029dbcbde99e07bcf93bba0c83324c23f361df5ffbb2b86d1e","verify_manifest_directory":"experiment-results/phase52_pd_physical_cost_placement_validation"},
+    {"name":"r61_model","path":"experiment-results/phase64_pd_multiflow_graph_zero_shot/contracts/frozen_contention_correction.json","sha256":"609b3f0cb86d6817f03a5c1712f16340d9a17fe297545bc65bd07fdb874e0f9f"},
+    {"name":"phase63_summary","path":"experiment-results/phase63_pd_contention_four_model_external/summary.json","sha256":"95ba1913994d35b4f214c867899aa82f803a576a5139472819232f254e1bf48e"},
+    {"name":"phase63_manifest","path":"experiment-results/phase63_pd_contention_four_model_external/manifest.sha256","sha256":"6db5ae66be619ab788324a8b243000bde9e6bd1c39ca36432bfc3541f39de84e","verify_manifest_directory":"experiment-results/phase63_pd_contention_four_model_external"},
+    {"name":"r67_model","path":"experiment-results/phase67_pd_graph_page_shape_refinement/model/multiflow_graph_page_correction.json","sha256":"15372d800c674ed28d634d219bf2d38a04b595ee417f18d775e2c63145b4226e"},
+    {"name":"r69_model","path":"experiment-results/phase69_pd_high_page_residual_refinement/model/multiflow_high_page_residual.json","sha256":"a45593ed626554585215326678c091e6a16596bed48ee786c099b859d410616f"},
+    {"name":"phase70_summary","path":"experiment-results/phase70_pd_high_page_residual_fresh_blind/summary.json","sha256":"5ac19c013bd421fc3e6acc2e975d4c98dbf006a5f20364cdbffbbd3ed23df793"},
+    {"name":"phase70_manifest","path":"experiment-results/phase70_pd_high_page_residual_fresh_blind/manifest.sha256","sha256":"73c7b37633370920a3997cbc534e29870da139373509656de11287e6e348fdc4","verify_manifest_directory":"experiment-results/phase70_pd_high_page_residual_fresh_blind"}
+  ],
+  "claim_boundary": [
+    "Phase71 is repeated deterministic engineering on the already-open Phase50 target; it is not a new blind evaluation",
+    "the official wave policy preserves histogram marginals but does not recover original message concurrency or request order",
+    "R61 configurations have six-model physical evidence; R69 configurations remain limited to qwen3-8b and deepseek-v2-lite",
+    "placement means communication-only choice among frozen L1/L2/L3 and is not a complete scheduler",
+    "no result covers larger graphs, end-to-end latency, compute, memory, availability, queueing, background congestion, overlap or online arrivals"
+  ],
+  "stop_and_block_if": [
+    "HEAD is not exact W71 or any pinned input/manifest differs",
+    "Phase49 prediction, Phase50 Hfull, Phase51 curve or R61/R67/R69 coefficient would be changed or recomputed",
+    "R69 is applied to any model outside qwen3-8b and deepseek-v2-lite",
+    "a diagnostic wave policy is selected as official after metrics are observed",
+    "execution would use GPU, network, model weights, raw trace, protected data or create files outside the result allowlist"
+  ]
+}

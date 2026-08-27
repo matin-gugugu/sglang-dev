@@ -1,0 +1,12 @@
+{
+  "schema_version": "phase71-wave-policies-v1",
+  "official_policy": "bin_aligned",
+  "policies": [
+    {"name": "bin_aligned", "role": "official", "quantile_map": "q_e=q"},
+    {"name": "cyclic_staggered", "role": "diagnostic_only", "quantile_map": "q_e=(q+e/F) mod 1"},
+    {"name": "opposed_extremes", "role": "diagnostic_only", "quantile_map": "q_e=q for even e; 1-q for odd e"}
+  ],
+  "traffic_conservation": "Every policy gives each edge the same marginal histogram and total_calls/F mass.",
+  "selection_after_results_forbidden": true,
+  "original_request_order_recovery_claimed": false
+}
