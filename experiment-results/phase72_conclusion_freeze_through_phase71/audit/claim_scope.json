@@ -1,0 +1,171 @@
+{
+  "frozen_claims": [
+    {
+      "claim": "最终预测输入是常态历史流量的低维画像、模型结构、固定执行策略和固定并行配置，不含完整请求列表。",
+      "evidence": "Phase26-35与Phase40-50合同",
+      "id": "F01"
+    },
+    {
+      "claim": "预测目标是在fixed-draining语义下的拓扑无关12-bin消息调用数和逻辑字节直方图。",
+      "evidence": "Phase34D、Phase40/47、Phase50",
+      "id": "F02"
+    },
+    {
+      "claim": "TP/PP size与纯PD的P1/D1均是预测器输入；当前placement模块只选冻结的L1/L2/L3，不选并行度。",
+      "evidence": "Phase35、Phase39、Phase52",
+      "id": "F03"
+    },
+    {
+      "claim": "Hfull是经过代表性GPU实验验证的scheduler-faithful离线teacher；完整请求只用于离线标签。",
+      "evidence": "TP/PP teacher链与Phase40/41/47",
+      "id": "F04"
+    },
+    {
+      "claim": "TP在六个已知模型的fresh-blind集合上保留H0+DNN residual并正式优于H0。",
+      "evidence": "Phase34D",
+      "id": "F05"
+    },
+    {
+      "claim": "PP在六个已知模型的fresh-blind集合上保留H0+DNN residual并正式优于H0。",
+      "evidence": "Phase34D",
+      "id": "F06"
+    },
+    {
+      "claim": "纯PD六模型teacher的请求级、聚合级和12-bin语义已与GPU sender-side事件精确对齐。",
+      "evidence": "Phase40、Phase47",
+      "id": "F07"
+    },
+    {
+      "claim": "纯PD在300画像×六模型fresh-blind集合上，H0+DNN residual的四项主直方图指标均严格优于H0。",
+      "evidence": "Phase49/50",
+      "id": "F08"
+    },
+    {
+      "claim": "TP2/4/8和PP的L1/L2/L3物理通信曲线已在冻结环境中补全，可用于Phase34直方图的确定性代价卷积。",
+      "evidence": "Phase39",
+      "id": "F09"
+    },
+    {
+      "claim": "纯PD六模型L1/L2/L3 Mooncake/RDMA物理曲线库已完成，共18条曲线和396个knots。",
+      "evidence": "Phase51",
+      "id": "F10"
+    },
+    {
+      "claim": "在固定并行配置与冻结候选placement内，TP/PP和PD均完成了communication-only cost与placement验证。",
+      "evidence": "Phase39、Phase52",
+      "id": "F11"
+    },
+    {
+      "claim": "Phase43的小样本负结果没有被删除；Phase44-50通过扩大互斥开发/盲测和H0保护门后才形成最终正结论。",
+      "evidence": "Phase43-50",
+      "id": "F12"
+    },
+    {
+      "claim": "Phase58/59在受保护development上继续改善H0，但严格逐模型、逐segment直方图精度门没有通过；这些结果不是fresh-blind正结论。",
+      "evidence": "Phase58/59",
+      "id": "F13"
+    },
+    {
+      "claim": "冻结R61两流拥塞修正在reserved payload和新placement上通过fresh-blind，并由Phase63扩展为六模型两流物理证据。",
+      "evidence": "Phase60-63",
+      "id": "F14"
+    },
+    {
+      "claim": "四流图公式的Phase64零样本失败、Phase66第一次盲测失败和Phase68第二次盲测失败均被保留，未用盲测标签回调。",
+      "evidence": "Phase64/66/68",
+      "id": "F15"
+    },
+    {
+      "claim": "R69高page残差在两个代表模型、四种已测图、L1-L3和最多四条流的第三次fresh-blind上通过预注册精度门。",
+      "evidence": "Phase69/70",
+      "id": "F16"
+    },
+    {
+      "claim": "在bin_aligned边际wave合同下，Phase71的21/21配置×拓扑cost比较和7/7配置placement比较均显示H0+DNN弱或严格优于H0。",
+      "evidence": "Phase71",
+      "id": "F17"
+    },
+    {
+      "claim": "12-bin边际直方图不能唯一恢复并发消息配对；Phase71敏感性分析显示P2D2 all-to-all的代价和placement可明显随wave配对改变。",
+      "evidence": "Phase71",
+      "id": "F18"
+    }
+  ],
+  "future_scheduler_dimensions": [
+    "compute_time",
+    "memory_feasibility",
+    "resource_availability",
+    "queueing_and_congestion",
+    "communication_compute_overlap",
+    "constrained_L2_L3_choice_when_L1_unavailable"
+  ],
+  "governance": {
+    "curve_status": "freeze Phase39 TP/PP, Phase51 P1D1 and Phase60-70 measured PD multi-flow physical evidence",
+    "gpu_status": "no mandatory B200 rerun remains inside the frozen scope",
+    "next_research_boundary": "either add a genuinely different low-dimensional workload reconstruction baseline on CPU, or open a separately contracted scheduler study",
+    "predictor_status": "freeze TP/PP/PD accepted predictor evidence; Phase59 strict histogram target remains open"
+  },
+  "prohibited_claims": [
+    {
+      "claim": "不能宣称对未见第七模型或任意新模型泛化。",
+      "id": "N01"
+    },
+    {
+      "claim": "不能宣称覆盖所有流量分布、所有policy或任意线上工作负载。",
+      "id": "N02"
+    },
+    {
+      "claim": "12-bin卷积不能恢复bin内每条消息的精确物理代价。",
+      "id": "N03"
+    },
+    {
+      "claim": "不能把通信代价写成端到端请求延迟或吞吐收益。",
+      "id": "N04"
+    },
+    {
+      "claim": "当前placement没有处理计算时间和显存可行性。",
+      "id": "N05"
+    },
+    {
+      "claim": "当前placement没有处理资源空闲、排队、拥塞或通信计算重叠。",
+      "id": "N06"
+    },
+    {
+      "claim": "fixed-draining结果不证明online arrival-aware调度。",
+      "id": "N07"
+    },
+    {
+      "claim": "Phase39/52不是完整scheduler验证，也不是线上收益实验。",
+      "id": "N08"
+    },
+    {
+      "claim": "纯PD结果不包含P或D内部TP/PP，也不证明混合并行PD。",
+      "id": "N09"
+    },
+    {
+      "claim": "调度器尚不能选择TP/PP size、P/D实例数或扩缩容策略。",
+      "id": "N10"
+    },
+    {
+      "claim": "不能宣称PD calls/bytes histogram WAPE已经达到统一10%或15%的逐模型、逐segment绝对门。",
+      "id": "N11"
+    },
+    {
+      "claim": "不能把R69四流修正外推到Phase70没有测量的另外四个模型。",
+      "id": "N12"
+    },
+    {
+      "claim": "不能外推到超过四条并发流、P2D4/P4D2/P4D4或未测通信图。",
+      "id": "N13"
+    },
+    {
+      "claim": "不能宣称边际12-bin直方图恢复了真实wave配对，或placement对任意并发配对都稳定。",
+      "id": "N14"
+    },
+    {
+      "claim": "Phase71仍是communication-only确定性重算，不是完整scheduler或端到端线上收益证明。",
+      "id": "N15"
+    }
+  ],
+  "schema_version": "phase72-claim-scope-v1"
+}
