@@ -54,5 +54,6 @@ workflow commit W
 - `phase70_pd_high_page_residual_fresh_blind`：冻结R69高page残差与其R67底座，在预注册page `{34,38,44,52,60}` 和同时避开Phase64/66/68的全新endpoint tuple上做第三次物理fresh-blind；48个顺序Mooncake/RDMA shard，新增逐模型×配置10%门并机械比较max-edge、R61、R65、R67和R69。
 - `phase71_pd_multiflow_cost_placement_integration`：本地CPU冻结Phase49/50直方图、Phase51曲线、R61与R69，在calls守恒、均衡分流和预注册边际wave配对下重新计算P1D1/两流/四流communication-only代价与L1-L3 placement；六模型覆盖到两流，R69四流严格限于两个代表模型，另外两种wave配对仅作敏感性。
 - `phase72_conclusion_freeze_through_phase71`：本地CPU核验Phase53与当前正式Git树中的Phase58–71，生成截至Phase71的新总导引、证据索引、F01–F18/N01–N15结论边界和四张确定性论文图；明确保留PD严格直方图精度未达标、Phase64/66/68失败以及Phase71边际wave不可识别限制，不产生新实验数据。
+- `phase73_direct_gbdt_baseline`：本地CPU建立完全不使用H0、32伪请求或teacher推理的Direct-GBDT独立基线；候选只在Phase48 development选择并refit，再在冻结Phase50六模型300画像上与H0/H0+DNN做target-open固定基准比较。结果无论好坏均保留，且不得写成fresh blind。
 
 完整交接见`PatternDemand跨环境GPU执行交接_Phase36_Phase37.md`。
