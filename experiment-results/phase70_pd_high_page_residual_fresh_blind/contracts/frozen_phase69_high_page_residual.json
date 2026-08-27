@@ -1,0 +1,249 @@
+{
+  "activation_page_threshold": 32,
+  "anchor_coefficient": 1.0,
+  "anchor_model": "frozen_phase67_graph_page_shape",
+  "blind_status": {
+    "fresh_blind_validated": false,
+    "phase70_grid_sha256": "2c878257471a8a438054fed746e2768e8caff99507d5804000171aeeb0ed13f1",
+    "phase70_targets_opened": false
+  },
+  "candidate_id": "r67_high_page_linear",
+  "complexity_rank": 1,
+  "feature_family": "high_linear",
+  "feature_names": [
+    "page_max_excess32",
+    "mean_other_pages_excess32"
+  ],
+  "frozen_r67_model_sha256": "15372d800c674ed28d634d219bf2d38a04b595ee417f18d775e2c63145b4226e",
+  "groups": {
+    "deepseek-v2-lite|P1D4": {
+      "coefficients": [
+        3.591553040252023,
+        -6.389447149768785
+      ],
+      "feature_scales": [
+        13.9522996909709,
+        9.221552853887301
+      ],
+      "ridge_absolute": 8.999999999999999e-05,
+      "training_rows": 90
+    },
+    "deepseek-v2-lite|P2D2_ALL_TO_ALL": {
+      "coefficients": [
+        -10.914794589645577,
+        10.347133466374308
+      ],
+      "feature_scales": [
+        13.9522996909709,
+        9.221552853887301
+      ],
+      "ridge_absolute": 8.999999999999999e-05,
+      "training_rows": 90
+    },
+    "deepseek-v2-lite|P2D2_MATCHING": {
+      "coefficients": [
+        0.0,
+        0.0
+      ],
+      "feature_scales": [
+        1e-12,
+        1e-12
+      ],
+      "ridge_absolute": 1e-08,
+      "training_rows": 90
+    },
+    "deepseek-v2-lite|P4D1": {
+      "coefficients": [
+        2.7472228168494537,
+        -6.190022077281441
+      ],
+      "feature_scales": [
+        13.9522996909709,
+        9.221552853887301
+      ],
+      "ridge_absolute": 8.999999999999999e-05,
+      "training_rows": 90
+    },
+    "qwen3-8b|P1D4": {
+      "coefficients": [
+        -1.4310586229907434,
+        -2.366943986019255
+      ],
+      "feature_scales": [
+        13.9522996909709,
+        9.221552853887301
+      ],
+      "ridge_absolute": 8.999999999999999e-05,
+      "training_rows": 90
+    },
+    "qwen3-8b|P2D2_ALL_TO_ALL": {
+      "coefficients": [
+        -1.0640352457107107,
+        -1.9089592851266315
+      ],
+      "feature_scales": [
+        13.9522996909709,
+        9.221552853887301
+      ],
+      "ridge_absolute": 8.999999999999999e-05,
+      "training_rows": 90
+    },
+    "qwen3-8b|P2D2_MATCHING": {
+      "coefficients": [
+        0.0,
+        0.0
+      ],
+      "feature_scales": [
+        1e-12,
+        1e-12
+      ],
+      "ridge_absolute": 1e-08,
+      "training_rows": 90
+    },
+    "qwen3-8b|P4D1": {
+      "coefficients": [
+        -0.8866128442349124,
+        -2.6443075378508802
+      ],
+      "feature_scales": [
+        13.9522996909709,
+        9.221552853887301
+      ],
+      "ridge_absolute": 8.999999999999999e-05,
+      "training_rows": 90
+    }
+  },
+  "inference_formula": "max(1, R67 + I_shared_endpoint*(gamma_max*max(0,page_max-32) + gamma_rest*max(0,mean_other_pages-32)))",
+  "prediction_floor_us": 1.0,
+  "schema_version": "phase69-multiflow-high-page-residual-v1",
+  "scope": [
+    "model_id",
+    "configuration"
+  ],
+  "selection_evidence": {
+    "first_simplest_passing": true,
+    "refit_metrics_used_for_selection": false,
+    "schemes": {
+      "payload_cohort": {
+        "checks": {
+          "each_configuration_bias": true,
+          "each_configuration_topology_bias": true,
+          "each_configuration_topology_wape": true,
+          "each_configuration_wape": true,
+          "each_model_bias": true,
+          "each_model_configuration_bias": true,
+          "each_model_configuration_wape": true,
+          "each_model_wape": true,
+          "each_source_model_configuration_bias": true,
+          "each_source_model_configuration_wape": true,
+          "improves_all_baselines_overall": true,
+          "improves_best_baseline_each_shared_endpoint_configuration": true,
+          "overall_bias": true,
+          "overall_wape": true,
+          "positive": true,
+          "preserves_p2d2_matching": true
+        },
+        "max_configuration_topology_wape": 0.02913708000960298,
+        "max_configuration_wape": 0.014220999916397277,
+        "max_model_configuration_absolute_bias": 0.009439116405476197,
+        "max_model_configuration_wape": 0.03157269691805855,
+        "max_model_wape": 0.022248739854198354,
+        "max_source_model_configuration_wape": 0.041932182071317804,
+        "overall_signed_bias": 0.0012358578687600222,
+        "overall_wape": 0.007239112491105581,
+        "pass": true,
+        "points": 720
+      },
+      "source_blocked": {
+        "checks": {
+          "does_not_degrade_r67_overall": true,
+          "each_configuration_bias": true,
+          "each_configuration_topology_bias": true,
+          "each_configuration_topology_wape": true,
+          "each_configuration_wape": true,
+          "each_model_bias": true,
+          "each_model_configuration_bias": true,
+          "each_model_configuration_wape": true,
+          "each_model_wape": true,
+          "each_source_model_configuration_bias": true,
+          "each_source_model_configuration_wape": true,
+          "overall_bias": true,
+          "overall_wape": true,
+          "positive": true
+        },
+        "max_configuration_topology_wape": 0.029860363553617215,
+        "max_configuration_wape": 0.026250538488158517,
+        "max_model_configuration_absolute_bias": 0.07469128045750534,
+        "max_model_configuration_wape": 0.09156729508980549,
+        "max_model_wape": 0.07067329176270996,
+        "max_source_model_configuration_wape": 0.13091820010747357,
+        "overall_signed_bias": 0.009461792894663392,
+        "overall_wape": 0.014290865218680117,
+        "pass": true,
+        "points": 720
+      },
+      "tail64": {
+        "checks": {
+          "each_configuration_bias": true,
+          "each_configuration_topology_bias": true,
+          "each_configuration_topology_wape": true,
+          "each_configuration_wape": true,
+          "each_model_bias": true,
+          "each_model_configuration_bias": true,
+          "each_model_configuration_wape": true,
+          "each_model_wape": true,
+          "each_source_model_configuration_bias": true,
+          "each_source_model_configuration_wape": true,
+          "improves_all_baselines_overall": true,
+          "improves_best_baseline_each_shared_endpoint_configuration": true,
+          "overall_bias": true,
+          "overall_wape": true,
+          "positive": true,
+          "preserves_p2d2_matching": true
+        },
+        "max_configuration_topology_wape": 0.03500574408347777,
+        "max_configuration_wape": 0.013147002949928781,
+        "max_model_configuration_absolute_bias": 0.015962506960726125,
+        "max_model_configuration_wape": 0.021829948853030207,
+        "max_model_wape": 0.015216309932789005,
+        "max_source_model_configuration_wape": 0.021829948853030207,
+        "overall_signed_bias": -0.00034448605010667886,
+        "overall_wape": 0.006163055828145747,
+        "pass": true,
+        "points": 90
+      },
+      "topology": {
+        "checks": {
+          "each_configuration_bias": true,
+          "each_configuration_topology_bias": true,
+          "each_configuration_topology_wape": true,
+          "each_configuration_wape": true,
+          "each_model_bias": true,
+          "each_model_configuration_bias": true,
+          "each_model_configuration_wape": true,
+          "each_model_wape": true,
+          "each_source_model_configuration_bias": true,
+          "each_source_model_configuration_wape": true,
+          "improves_all_baselines_overall": true,
+          "improves_best_baseline_each_shared_endpoint_configuration": true,
+          "overall_bias": true,
+          "overall_wape": true,
+          "positive": true,
+          "preserves_p2d2_matching": true
+        },
+        "max_configuration_topology_wape": 0.02913708000960298,
+        "max_configuration_wape": 0.014220999916397277,
+        "max_model_configuration_absolute_bias": 0.009439116405476197,
+        "max_model_configuration_wape": 0.033927381748846484,
+        "max_model_wape": 0.022752594396916282,
+        "max_source_model_configuration_wape": 0.041932182071317804,
+        "overall_signed_bias": 0.0012421585563901307,
+        "overall_wape": 0.0075778413317066804,
+        "pass": true,
+        "points": 720
+      }
+    }
+  },
+  "source_result_commit": "f478c31e98af4aa5f286bdf1a32517c5ef1126ab",
+  "workflow_commit": "8c78d4b9cd336e75f800a55415d116eca7bff315"
+}

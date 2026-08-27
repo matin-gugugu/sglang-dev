@@ -1,0 +1,154 @@
+{
+  "blind_status": {
+    "fresh_blind_validated": false,
+    "phase66_features_used_for_fit": false,
+    "phase66_measurements_or_targets_used": false,
+    "phase66_reserved_grid_sha256": "0e2086d7eece867a194670ef4740d382d834bee62d8de1a8e6a3c2f1d5c6cc78"
+  },
+  "candidate_id": "model_configuration_affine_graph",
+  "complexity_rank": 5,
+  "family": "affine_graph",
+  "feature_names": [
+    "intercept",
+    "M",
+    "B_minus_M",
+    "S_minus_B"
+  ],
+  "groups": {
+    "deepseek-v2-lite|P1D4": {
+      "beta_M": 0.88005773826242,
+      "beta_busy": 0.8108750180909488,
+      "beta_nonbusy": -3.0835778676069297e-09,
+      "intercept_us": -127.57301468257992,
+      "ridge_absolute": 0.0011003288108306375,
+      "training_rows": 30
+    },
+    "deepseek-v2-lite|P2D2_ALL_TO_ALL": {
+      "beta_M": 0.8974276780050183,
+      "beta_busy": 0.7554467311100306,
+      "beta_nonbusy": 0.04538945268012749,
+      "intercept_us": -34.9163314116912,
+      "ridge_absolute": 0.0007283279062918501,
+      "training_rows": 30
+    },
+    "deepseek-v2-lite|P2D2_MATCHING": {
+      "beta_M": 0.9348555181654292,
+      "beta_busy": 0.0,
+      "beta_nonbusy": 0.013100383255351816,
+      "intercept_us": -6.482837531819616,
+      "ridge_absolute": 0.0003561225544783125,
+      "training_rows": 30
+    },
+    "deepseek-v2-lite|P4D1": {
+      "beta_M": 0.7603133377114486,
+      "beta_busy": 0.8525894563129147,
+      "beta_nonbusy": -1.2178516737304345e-09,
+      "intercept_us": -118.61522904500544,
+      "ridge_absolute": 0.0011003288108306375,
+      "training_rows": 30
+    },
+    "qwen3-8b|P1D4": {
+      "beta_M": 1.2639941412640279,
+      "beta_busy": 0.2881424038305458,
+      "beta_nonbusy": -1.775300768588405e-08,
+      "intercept_us": -96.192751744947,
+      "ridge_absolute": 7.96804546955625e-05,
+      "training_rows": 30
+    },
+    "qwen3-8b|P2D2_ALL_TO_ALL": {
+      "beta_M": 1.3370553647721084,
+      "beta_busy": -0.3874356791349811,
+      "beta_nonbusy": 0.37306605231884704,
+      "intercept_us": -65.50715976498043,
+      "ridge_absolute": 4.8307001278100005e-05,
+      "training_rows": 30
+    },
+    "qwen3-8b|P2D2_MATCHING": {
+      "beta_M": 0.7173517266016083,
+      "beta_busy": 0.0,
+      "beta_nonbusy": 0.06306018888227516,
+      "intercept_us": 6.309602203901997,
+      "ridge_absolute": 1.753669921540625e-05,
+      "training_rows": 30
+    },
+    "qwen3-8b|P4D1": {
+      "beta_M": 0.461475681431859,
+      "beta_busy": 0.9674753247888076,
+      "beta_nonbusy": -2.669331021914451e-08,
+      "intercept_us": -224.61798518842915,
+      "ridge_absolute": 7.96804546955625e-05,
+      "training_rows": 30
+    }
+  },
+  "inference_formula": "max(1.0, intercept + beta_M*M + beta_busy*(B-M) + beta_nonbusy*(S-B))",
+  "prediction_floor_us": 1.0,
+  "required_runtime_inputs": [
+    "model_id",
+    "configuration",
+    "max_edge_baseline_us",
+    "busiest_endpoint_sum_us",
+    "sum_edge_baseline_us"
+  ],
+  "ridge_relative": 1e-10,
+  "schema_version": "phase65-multiflow-graph-correction-v1",
+  "scope": [
+    "model_id",
+    "configuration"
+  ],
+  "selection_evidence": {
+    "payload_gate": {
+      "checks": {
+        "each_configuration_bias": true,
+        "each_configuration_topology_bias": true,
+        "each_configuration_topology_wape": true,
+        "each_configuration_wape": true,
+        "each_model_bias": true,
+        "each_model_wape": true,
+        "improves_best_baseline_each_configuration": true,
+        "improves_both_baselines_overall": true,
+        "overall_bias": true,
+        "overall_wape": true,
+        "positive_predictions": true
+      },
+      "max_configuration_absolute_signed_bias": 0.015285347529482185,
+      "max_configuration_topology_absolute_signed_bias": 0.023627575755072152,
+      "max_configuration_topology_wape": 0.04820799395876371,
+      "max_configuration_wape": 0.04741303159366441,
+      "max_model_absolute_signed_bias": 0.0314207656875387,
+      "max_model_wape": 0.09542476044808745,
+      "overall_signed_bias": -0.011464578994434923,
+      "overall_wape": 0.03928222823802074,
+      "pass": true
+    },
+    "payload_oof_folds": 10,
+    "refit_metrics_used_for_selection": false,
+    "simplest_passing_candidate": true,
+    "topology_gate": {
+      "checks": {
+        "each_configuration_bias": true,
+        "each_configuration_topology_bias": true,
+        "each_configuration_topology_wape": true,
+        "each_configuration_wape": true,
+        "each_model_bias": true,
+        "each_model_wape": true,
+        "improves_best_baseline_each_configuration": true,
+        "improves_both_baselines_overall": true,
+        "overall_bias": true,
+        "overall_wape": true,
+        "positive_predictions": true
+      },
+      "max_configuration_absolute_signed_bias": 0.0007140611355682053,
+      "max_configuration_topology_absolute_signed_bias": 0.021670755500345158,
+      "max_configuration_topology_wape": 0.031977214960481136,
+      "max_configuration_wape": 0.029533082148476233,
+      "max_model_absolute_signed_bias": 0.0025097164093720982,
+      "max_model_wape": 0.06514357358656062,
+      "overall_signed_bias": -0.0003229789803942595,
+      "overall_wape": 0.025435879519218073,
+      "pass": true
+    },
+    "topology_oof_folds": 3
+  },
+  "source_result_commit": "891cfcc12794c2b19c95b306213154733ae9ec3f",
+  "workflow_commit": "627bb0175b8313c61075949dd617be80c5c72bae"
+}
