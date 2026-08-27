@@ -1,0 +1,213 @@
+{
+  "benchmark_contract": {
+    "absolute_target": {
+      "each_model_calls_bytes_wape_max": 0.15,
+      "each_segment_calls_bytes_wape_max": 0.15,
+      "overall_bytes_wape_max": 0.1,
+      "overall_calls_wape_max": 0.1
+    },
+    "classification": "target-open fixed benchmark; never fresh blind",
+    "methods": [
+      "h0",
+      "h0_plus_dnn_residual",
+      "direct_gbdt"
+    ],
+    "models": 6,
+    "profiles": 300,
+    "relative_questions": [
+      "does Direct-GBDT beat H0 on both histogram WAPEs",
+      "does Direct-GBDT beat H0+DNN on both histogram WAPEs"
+    ],
+    "units": 1800
+  },
+  "candidate_selection": {
+    "candidates": [
+      {
+        "candidate_id": "direct_gbdt_small",
+        "estimators": 40,
+        "feature_fraction": 0.35,
+        "learning_rate": 0.08,
+        "max_depth": 2,
+        "min_leaf": 72,
+        "row_subsample": 0.8,
+        "threshold_quantiles": [
+          0.15,
+          0.3,
+          0.45,
+          0.6,
+          0.75,
+          0.9
+        ]
+      },
+      {
+        "candidate_id": "direct_gbdt_medium",
+        "estimators": 70,
+        "feature_fraction": 0.5,
+        "learning_rate": 0.06,
+        "max_depth": 2,
+        "min_leaf": 56,
+        "row_subsample": 0.8,
+        "threshold_quantiles": [
+          0.1,
+          0.25,
+          0.4,
+          0.55,
+          0.7,
+          0.85
+        ]
+      },
+      {
+        "candidate_id": "direct_gbdt_deep",
+        "estimators": 70,
+        "feature_fraction": 0.5,
+        "learning_rate": 0.05,
+        "max_depth": 3,
+        "min_leaf": 48,
+        "row_subsample": 0.8,
+        "threshold_quantiles": [
+          0.1,
+          0.25,
+          0.4,
+          0.55,
+          0.7,
+          0.85
+        ]
+      }
+    ],
+    "data": "Phase48 expanded_train fits each candidate; Phase48 expanded_validation selects one candidate",
+    "objective": "minimum mean of calls histogram WAPE and bytes histogram WAPE",
+    "phase50_labels_forbidden_during_selection": true,
+    "refit": "selected candidate refits once on all 7200 Phase48 rows before Phase49 feature prediction",
+    "seed": 730001,
+    "tie_break": "lower tree depth, then fewer estimators, then candidate_id"
+  },
+  "execution_environment": "local CPU-only isolated run branch/worktree with NumPy",
+  "expected_counts": {
+    "benchmark_methods": 3,
+    "benchmark_units": 1800,
+    "candidate_rows": 3,
+    "features_min": 50,
+    "figures": 2,
+    "per_bin_rows": 72,
+    "per_unit_rows": 5400,
+    "phase48_rows": 7200,
+    "phase48_train_rows": 5760,
+    "phase48_validation_rows": 1440,
+    "phase49_feature_rows": 1800,
+    "phase49_frozen_prediction_rows": 3600,
+    "phase50_target_rows": 1800
+  },
+  "feature_contract": {
+    "allowed": "only numeric columns whose names start with feature_",
+    "constant_features": "removed using Phase48 expanded_train only",
+    "forbidden": [
+      "h0_*",
+      "target_*",
+      "residual_*",
+      "complete requests",
+      "raw trace",
+      "teacher events"
+    ],
+    "test_feature_schema": "Phase49 target-free rows must contain the exact selected feature names"
+  },
+  "gpu_required": false,
+  "h0_as_direct_input_permitted": false,
+  "network_required": false,
+  "objective": "建立不依赖H0、不构造伪请求、预测时不调用teacher的Direct-GBDT独立基线，并在Phase48 development选择容量后，在冻结Phase50六模型300画像target-open基准上与H0和H0+DNN机械比较",
+  "phase": "Phase73",
+  "pinned_inputs": [
+    {
+      "name": "phase48_manifest",
+      "path": "experiment-results/phase48_pd_six_model_expanded_training/manifest.sha256",
+      "sha256": "ca3bb8727fe69f32b9402b31bfce223ae7db2b200d9c1b4a31e16e18b877901b",
+      "verify_manifest_directory": "experiment-results/phase48_pd_six_model_expanded_training"
+    },
+    {
+      "name": "phase48_examples",
+      "path": "experiment-results/phase48_pd_six_model_expanded_training/dataset/pd_six_model_h0_residual_examples.csv.gz",
+      "sha256": "ae8ccbb9206e3c2e7cb6e4bafc6c60fcc99c5f11d203b91ad34ea788cbcd8bcd"
+    },
+    {
+      "name": "phase48_summary",
+      "path": "experiment-results/phase48_pd_six_model_expanded_training/summary.json",
+      "sha256": "e9cdd860bbdbb8baca3c085e5e7d2bbc5d279fb5332852cb516523972f253e04"
+    },
+    {
+      "name": "phase49_manifest",
+      "path": "experiment-results/phase49_pd_six_model_blind_prediction_freeze/manifest.sha256",
+      "sha256": "e1a02c3a31f54c13684ce10dfb2527e0432c9e4e73a912cc74809b088302f3da",
+      "verify_manifest_directory": "experiment-results/phase49_pd_six_model_blind_prediction_freeze"
+    },
+    {
+      "name": "phase49_features",
+      "path": "experiment-results/phase49_pd_six_model_blind_prediction_freeze/dataset/pd_six_model_blind_target_free_features.csv.gz",
+      "sha256": "27d102ed887e835723efa357476f47f79b9a924232a02a65e95e76a1e0efd86f"
+    },
+    {
+      "name": "phase49_predictions",
+      "path": "experiment-results/phase49_pd_six_model_blind_prediction_freeze/predictions/pd_six_model_blind_frozen_predictions.csv.gz",
+      "sha256": "db7278d2ca54f0f2a2c9f3170063e2530dde1b6fabf8a03b8ad827a4865eb402"
+    },
+    {
+      "name": "phase49_summary",
+      "path": "experiment-results/phase49_pd_six_model_blind_prediction_freeze/summary.json",
+      "sha256": "8e13c62c09ab28ede6b3b4c06da0b8d01603ee75f4ed144548db374063cfc16a"
+    },
+    {
+      "name": "phase50_manifest",
+      "path": "experiment-results/phase50_pd_six_model_blind_evaluation/manifest.sha256",
+      "sha256": "3613fb8577bc2bc16ca3592a1456f7f34f413ea9e612f4954305b0aaa2020a0c",
+      "verify_manifest_directory": "experiment-results/phase50_pd_six_model_blind_evaluation"
+    },
+    {
+      "name": "phase50_targets",
+      "path": "experiment-results/phase50_pd_six_model_blind_evaluation/labels/pd_six_model_blind_hfull_targets.csv.gz",
+      "sha256": "cfaee9add708ab0f4fc8757ed4cf778fba97b960ec2c4ee8dc4c8320875005ce"
+    },
+    {
+      "name": "phase50_summary",
+      "path": "experiment-results/phase50_pd_six_model_blind_evaluation/summary.json",
+      "sha256": "65b2b8537e712973538efd983b902b60a6d73c613b4cd97188a2ee1da73aa585"
+    }
+  ],
+  "pseudo_request_construction_permitted": false,
+  "raw_required": false,
+  "result_dir": "experiment-results/phase73_direct_gbdt_baseline",
+  "schema_version": "phase73-direct-gbdt-baseline-contract-v1",
+  "source_results": [
+    {
+      "directory": "phase48_pd_six_model_expanded_training",
+      "expected_status": "PASS",
+      "phase": "Phase48",
+      "result_commit": "f573507abd1b59fa08cdf09030d2f62048c7ee5c"
+    },
+    {
+      "directory": "phase49_pd_six_model_blind_prediction_freeze",
+      "expected_status": "PASS",
+      "phase": "Phase49",
+      "result_commit": "1b9227753f941cf9c790af69bf0acb7cf8bc3796"
+    },
+    {
+      "directory": "phase50_pd_six_model_blind_evaluation",
+      "expected_status": "PASS",
+      "phase": "Phase50",
+      "result_commit": "a8ed946e3afa9d96c71a18fb1ea7aa155fdf3e57"
+    }
+  ],
+  "stop_and_block_if": [
+    "NumPy不可用，或Phase48/49/50任一冻结输入、manifest、result commit身份不匹配",
+    "Direct-GBDT输入包含任何h0、target、residual、raw或完整请求字段",
+    "候选选择读取Phase50标签，或根据Phase50结果改变候选、阈值、投影、训练轮数",
+    "执行需要GPU、网络、teacher、伪请求或受保护data",
+    "报告把target-open固定基准写成fresh blind"
+  ],
+  "target_contract": {
+    "bin_consistency_projection": "bytes_i is clipped into calls_i times the frozen bin byte interval; no target value is used",
+    "decoding": "nonnegative totals and softmax-normalized shares",
+    "encoding": "independently for calls and bytes: log1p(total) plus log-smoothed 12-bin shares",
+    "labels": "Phase48 target_* Hfull histograms for training; Phase50 target_* Hfull histograms only for fixed benchmark scoring",
+    "outputs": 26
+  },
+  "teacher_execution_permitted": false,
+  "workflow_base_result_commit": "c48e57aebec66e74f3974d4eae37740e56e19168"
+}
