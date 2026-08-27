@@ -44,6 +44,7 @@ PHASE_PREFIX = {
     "phase69": "experiment-results/phase69_pd_high_page_residual_refinement/",
     "phase70": "experiment-results/phase70_pd_high_page_residual_fresh_blind/",
     "phase71": "experiment-results/phase71_pd_multiflow_cost_placement_integration/",
+    "phase72": "experiment-results/phase72_conclusion_freeze_through_phase71/",
 }
 
 ALLOWED_COMPACT_DATA_PATHS = {
